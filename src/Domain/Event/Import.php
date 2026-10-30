@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace GeorgianTax\Domain\Event;
 
 use DateTimeImmutable;
+use GeorgianTax\Domain\Goods\Commodity;
+use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Income\SupplyCategory;
@@ -27,7 +29,21 @@ final readonly class Import implements TaxableEvent
         public ?SupplyCategory $goods = null,
         /** VAT 168.3 — Government-listed HS 8401–9033 goods: VAT due within 45 days. */
         public bool $onDeferredPaymentList = false,
+        /** Excise and import tax — HS code and measurements. */
+        public ?Commodity $commodity = null,
+        /** Import tax (199) and excise (194.5) relief, if any. */
+        public ?ImportRelief $relief = null,
+        /** Import tax 199.რ — country of origin. */
+        public ?string $originCountry = null,
+        /** Import tax 197.3 — GEL per euro on the day, for euro-denominated rates on alcohol. */
+        public ?float $eurToGel = null,
     ) {}
+
+    /** Whether the importer named its own duties; if not, VAT takes them from excise and import tax. */
+    public function dutiesGiven(): bool
+    {
+        return $this->dutiesAndFees !== null;
+    }
 
     public function taxableAmount(): Money
     {

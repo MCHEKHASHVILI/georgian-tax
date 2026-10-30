@@ -39,6 +39,11 @@ return [
     '134.1.ე'   => ['2011-01-01' => 10],   // other Georgian-source income
     '134.1¹'    => ['2011-01-01' => 15],   // payee in a preferential-tax country
 
+    // Profit tax — Art. 98, 23
+    '98.1'      => ['2017-01-01' => 15],   // distributed profit and other outflows
+    '98.4'      => ['2023-01-01' => 20],   // banks and lenders, on annual profit
+    '23.10'     => ['2017-01-01' => 5],    // international company
+
     // VAT — Art. 166
     '166'       => ['2011-01-01' => 18],
 ];

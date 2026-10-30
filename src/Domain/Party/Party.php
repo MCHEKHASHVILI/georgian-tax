@@ -55,9 +55,9 @@ final readonly class Party
         return new self('state', PartyKind::State);
     }
 
-    public function is(Status $status): bool
+    public function is(Status ...$statuses): bool
     {
-        return in_array($status, $this->statuses, true);
+        return array_any($statuses, fn (Status $s) => in_array($s, $this->statuses, true));
     }
 
     public function isResident(): bool

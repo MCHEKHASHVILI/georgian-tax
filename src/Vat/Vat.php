@@ -8,7 +8,9 @@ use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\Engine\Pipeline\Pipeline;
+use GeorgianTax\Domain\Money;
 use GeorgianTax\Engine\Tax;
+use GeorgianTax\Engine\TaxReport;
 use GeorgianTax\Ledger\YearToDate;
 use GeorgianTax\Rates\RateTable;
 use GeorgianTax\Vat\Exemption as E;
@@ -75,10 +77,21 @@ final class Vat extends Tax
 
     public function assess(TaxableEvent $event): Outcome
     {
+        return $this->assessWith($event, null);
+    }
+
+    /** On import, excise and import tax already levied in this report join the VAT base (164¹.2.ა). */
+    public function assessIn(TaxReport $report): Outcome
+    {
+        return $this->assessWith($report->event, $report->amountOf('excise', 'import'));
+    }
+
+    private function assessWith(TaxableEvent $event, ?Money $earlierDuties): Outcome
+    {
         if ($event instanceof Refund) {
             return $this->assess($event->original)->reversed($event->share());
         }
 
-        return $this->pipeline->process(new Supply($event, $this->ledger, $this->rates));
+        return $this->pipeline->process(new Supply($event, $this->ledger, $this->rates, $earlierDuties));
     }
 }

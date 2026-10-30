@@ -38,5 +38,8 @@ interface YearToDate
     /** Turnover a tax counted for this party since a date — e.g. VAT's rolling 12 months (165.1). */
     public function turnover(Party $party, string $tax, DateTimeImmutable $since): Money;
 
+    /** What a company spent this year on one category — 'charity', or an ExpenseNature value such as '98⁴'. */
+    public function spent(Party $company, int $year, string $category): Money;
+
     public function record(TaxableEvent $event, TaxReport $report): void;
 }

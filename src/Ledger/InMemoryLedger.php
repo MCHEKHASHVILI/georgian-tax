@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Ledger;
 
 use DateTimeImmutable;
+use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Inherit;
 use GeorgianTax\Domain\Event\TaxableEvent;
@@ -12,6 +13,7 @@ use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Money;
 use GeorgianTax\Domain\Party\Party;
+use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Engine\Outcome\CountsAsTurnover;
 use GeorgianTax\Engine\Outcome\Taxable;
 use GeorgianTax\Engine\TaxReport;
@@ -23,6 +25,9 @@ final class InMemoryLedger implements YearToDate
 
     /** @var list<array{party: string, tax: string, date: DateTimeImmutable, amount: Money}> */
     private array $turnover = [];
+
+    /** @var array<string, Money> keyed "company|year|category" */
+    private array $spending = [];
 
     public function received(Party $recipient, int $year, IncomeKind ...$kinds): Money
     {
@@ -72,8 +77,15 @@ final class InMemoryLedger implements YearToDate
         return $total;
     }
 
+    public function spent(Party $company, int $year, string $category): Money
+    {
+        return $this->spending["{$company->id}|$year|$category"] ?? Money::zero();
+    }
+
     public function record(TaxableEvent $event, TaxReport $report): void
     {
+        $this->recordSpending($event);
+
         foreach ($report->outcomes as $outcome) {
             if ($outcome instanceof CountsAsTurnover && $outcome->turnoverOf() !== null && !$outcome->turnover()->isZero()) {
                 $this->turnover[] = [
@@ -109,6 +121,20 @@ final class InMemoryLedger implements YearToDate
             'recipient' => $recipient->id, 'payer' => $payer?->id, 'kind' => $kind,
             'year' => $year, 'income' => $income, 'heir' => null, 'taxableBase' => Money::zero(),
         ];
+    }
+
+    private function recordSpending(TaxableEvent $event): void
+    {
+        [$company, $category, $amount] = match (true) {
+            $event instanceof Expense => [$event->company, $event->nature->value, $event->amount],
+            $event instanceof Gift && $event->recipient->is(Status::CharityOrganization) => [$event->donor, 'charity', $event->value],
+            default => [null, null, null],
+        };
+
+        if ($company !== null) {
+            $key = "{$company->id}|{$event->date()->format('Y')}|$category";
+            $this->spending[$key] = $this->spent($company, (int) $event->date()->format('Y'), $category)->plus($amount);
+        }
     }
 
     private function matches(array $entry, array $kinds): bool

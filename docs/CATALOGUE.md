@@ -1,10 +1,16 @@
 # Taxable events — Tax Code of Georgia
 
 Source: consolidated publication of 30/09/2026 (matsne.gov.ge, document 1043717, publication 247).
-Every class in `src/IncomeTax` and `src/Vat` cites one of the rows below through its `#[Article]` attribute.
+Every rule, stage and exemption cites one of the rows below through its `#[Article]` attribute.
+
+Art. 6 lists the taxes: five national — income, profit, VAT, excise, import — and one local, property tax. All six are here.
 
 - [Income tax](#income-tax)
 - [VAT](#vat)
+- [Profit tax](#profit-tax)
+- [Excise](#excise)
+- [Import tax](#import-tax)
+- [Property tax](#property-tax)
 
 # Income tax
 
@@ -364,3 +370,251 @@ Only a registered VAT payer credits input VAT (174.3), and only against a tax in
 | Margin-scheme purchases | 161².5–6 |
 
 Refunds: excess credit is refunded (181.1). Foreign citizens get VAT back on goods over 200 GEL per receipt taken out within 3 months (181.5–181.6).
+
+# Profit tax
+
+Georgia taxes profit when it leaves the company, not when it is earned (the "Estonian model"). The tax is 15% of the payout grossed up: a 850 GEL dividend carries 150 GEL (98.1, 97.10).
+
+## Who pays, on what (Art. 96–97)
+
+| Event | Profit tax | Article |
+|---|---|---|
+| Resident company or organization, or a non-resident's Georgian PE | Taxpayer | 96 |
+| Company receives income | Nothing until distributed | 97.1 |
+| Foreign company's Georgian-source income | Left to withholding (income tax) | 97.4, 134 |
+| Bank, credit union, microfinance or lender | On annual net profit at 20%, not on distributions | 97.12, 98.4 |
+| Non-profit organization | Only on non-purpose costs and free supplies | 97.2 |
+| Ordinary business payment | Not taxed | 97.1 |
+
+## Taxed outflows (Art. 98¹–98⁴)
+
+| Outflow | Article |
+|---|---|
+| Dividend — distributed profit | 98¹.1 |
+| Deal with a related party below market (or buying above) — the shortfall is a deemed distribution | 98¹.4 |
+| Free supply of goods or services, including inventory shortages | 98³ |
+| Undocumented, not-for-profit, or excess-interest costs; markups to special trading companies | 98².1.ა–ვ |
+| Payments to preferential-regime or exempt parties: bonds, penalties, advances, loans, claim losses, equity | 98².3.ა–ვ |
+| Loan to an individual or non-resident, cash collateral for a partner's loan, lender loan to a partner — unless the lender is licensed | 98².3.ზ–თ |
+| Representation costs over 1% of last year's revenue (or costs, if higher); in the founding year 1% of the year's own costs | 98⁴ |
+
+## Not distributions, and untaxed free supplies (Art. 98¹.2, 98³.3)
+
+| Case | Article |
+|---|---|
+| Dividend to a resident commercial company | 98¹.2.გ |
+| State-majority company returning assets to the state | 98¹.2.დ |
+| Dividend paid out of exempt profit (foreign dividends and the like) — deemed paid first | 98¹.5, 99.3 |
+| Charity donations up to 10% of last year's net profit | 98³.3.ა |
+| Gift to an individual — taxed at source as income instead | 98³.3.ბ |
+| Free hotel stays of up to 60 days for room owners | 98³.3.გ |
+| Gift to the state, a municipality or a public-law entity | 98³.3.დ |
+| Free guarantees and servitudes | 98³.3.ვ |
+| Gift to another resident company that pays profit tax | 98³.3.ზ |
+| Food donated to a charity or food bank | 98³.3.თ |
+
+## Exempt companies and rates (Art. 99, 23, 23¹)
+
+| Company | Profit tax | Article |
+|---|---|---|
+| Free-industrial-zone company, permitted activity | Exempt | 99.1.ნ |
+| Company in bankruptcy | Exempt | 99.1.ფ |
+| High-mountain enterprise, 10 years from status | Exempt | 99.1.ღ |
+| Investment fund, permitted activity | Exempt | 23¹.8 |
+| International company | 5%, grossed up by 0.95 | 23.10 |
+| Everyone else | 15%, grossed up by 0.85, by the 15th of next month | 98.1 |
+
+# Excise
+
+Excise is charged once, at the start of the chain. A shop reselling excise goods pays none.
+
+## Who pays, on what (Art. 182–187)
+
+| Operation | Taxpayer | Article |
+|---|---|---|
+| Supply by the producer | Producer | 184.1.ა |
+| Natural gas sold for vehicles | Supplier | 184.1.დ |
+| Terminating an international call on a Georgian network | Operator | 184.1.ე |
+| Importer's supply of raw tobacco it imported | Importer | 184.1.ვ |
+| Import | Importer, at customs | 186, 190.3 |
+| Export | Exempt with credit | 187, 194.6.ა |
+| Reseller's supply | Not taxed | 182–184 |
+
+Due by the 15th of the month after the operation (190.2); on import, with the import payments (190.3).
+
+## Rates (Art. 188, 188¹)
+
+| Goods | Rate | Article |
+|---|---|---|
+| Raw tobacco, smoking, homogenized, chewing and snuff tobacco | 30 GEL/kg | 188.1 |
+| Cigars | 2.10 GEL/stick | 188.1 |
+| Cigarettes | 2.75 GEL per 20 + 20% of retail price | 188.1¹.ა |
+| Local cigarettes within the 35-million-pack quota | 1.30 GEL per 20 + 15% of retail price | 188.1¹.ა¹ |
+| Heated tobacco, capsules | 2.70 GEL per 20 + 20% of retail price | 188.1¹.ბ |
+| Cigarillos | 2.40 GEL per 20 + 30% of retail price | 188.1¹.გ |
+| Nicotine liquids | 1.20 GEL/ml | 188.1 |
+| Motorcycles and mopeds, by age (under 1 year … over 14) | 1.5 … 0.7 … 2.4 GEL/cm³ | 188.1 |
+| Gas condensate, liquefied gases, acyclic hydrocarbons | 300 GEL/t | 188.1 |
+| Natural gas, gaseous | 200 GEL per 1,000 m³ | 188.1 |
+| Petrol | 500 GEL/t | 188.1 |
+| Kerosene, jet fuel | 440 GEL/t | 188.1 |
+| Diesel and gas oils | 400 GEL/t | 188.1 |
+| Heavy and lubricating oils, waste oils | 800 GEL/t | 188.1 |
+| Bilge water and tank washings | 100 GEL/t | 188.1 |
+| Biodiesel | 150 GEL/t | 188.1 |
+| Coal-tar oils | 350 GEL/t | 188.1 |
+| Additives, solvents, aromatics, alcohols, ethers, formaldehyde, pyrolysis product | 400 GEL/t | 188.1 |
+| Lubricating preparations | 800 GEL/t | 188.1 |
+| International call termination — mobile / fixed | 0.15 / 0.08 GEL/min | 188.3 |
+| Sports car | 100 GEL | 188.9 |
+| Classic car | 1.00 GEL/cm³ | 188.10 |
+| Car up to 6 years | 1.50 GEL/cm³ | 188.12 |
+| Car over 6 years | 4.50 GEL/cm³ | 188.13 |
+| Left-hand-drive hybrid up to 6 years | 60% less | 188.14 |
+| Right-hand drive | three times the rate | 188.15–16 |
+| Right-hand-drive electric car | 3,000 GEL | 188.17 |
+| Beer over 0.5% | 0.12 GEL per litre per % vol | 188¹.1 row 1 |
+| Other fermented drinks over 5% / up to 5% | 5.00 / 0.60 GEL/l | 188¹.1 rows 2–3 |
+| Intermediate drinks up to 22% | 5.00 GEL/l | 188¹.1 row 4 |
+| Spirits (2208), and 2205/2206 over 22% | 22.50 GEL per litre of pure alcohol | 188¹.1 row 5 |
+| Ethyl alcohol (2207) | 7.50 GEL per litre of pure alcohol | 188¹.1 row 6 |
+| Grape brandy, vodka, liqueurs and others in 2208 20, 60, 90 330/380/480/710 | 15.00 GEL per litre of pure alcohol | 188¹.1 row 7 |
+| Wine | Not excise goods | 188¹.2 |
+
+Car age is the year of the operation (or customs declaration) minus the year made (188.18).
+
+## Exemptions (Art. 194)
+
+| Case | Excise | Article |
+|---|---|---|
+| Export | Exempt with credit | 194.6.ა |
+| Duty-free supply | Exempt with credit | 194.6.ბ |
+| Property seized for the budget | Exempt with credit | 194.6.გ |
+| Under an international treaty | Exempt with credit | 194.7 |
+| Passenger allowance of tobacco and alcohol | Exempt | 194.5.ბ–ბ² |
+| Small postal parcels | Exempt | 194.5.ბ¹ |
+| Fuel in a vehicle's standard tank | Exempt | 194.5.გ |
+| Aviation and ship supplies | Exempt | 194.5.ე |
+| Oil and gas operations | Exempt | 194.5.ვ |
+| Returning residents and relocation | Exempt | 194.5.თ |
+| Returned goods | Exempt | 194.5.ი |
+| Diplomatic missions | Exempt | 194.5.კ |
+| Electric left-hand-drive cars and electric motorcycles | Exempt | 194.5.ლ |
+| Cars adapted for disabled persons | Exempt | 194.5.ლ¹ |
+| Pharmaceutical alcohol | Exempt | 194.5.მ |
+| Confiscated state property | Exempt | 194.5.ო |
+
+Not modelled: excise credit for excise raw materials (189), the 100% refund for cars re-exported within 180 days (189.8).
+
+# Import tax
+
+## Who pays, on what (Art. 195–198)
+
+Whoever moves goods across Georgia's customs border, other than for export (195), on their customs value (196). Paid at customs with the other import payments (198.2). Import tax joins the VAT base on import (164¹.2.ა).
+
+| Goods | Rate | Article |
+|---|---|---|
+| 176 listed rows — poultry, meat, dairy in retail packs, eggs, honey, vegetables, fruit, flour, sugar, chapter 19, tobacco (chapter 24), salt and minerals (chapter 25), building materials, plastics, glass, iron and steel articles | 12% of customs value | 197.1 |
+| 37 listed rows — pork, cheese, chocolate, hair and toilet products, soap, polishes, plastic tubes, sheets and articles, towers, doors, cables | 5% of customs value | 197.2 |
+| Sparkling wine | €1.50/l | 197.3 |
+| Wine and vermouth in containers of 2 l or less | €0.50/l | 197.3 |
+| Wine in larger containers, grape must, other vermouth | €0.20/l | 197.3 |
+| Cider, perry, mead and other fermented drinks | €0.50/l | 197.3 |
+| Ethyl alcohol | €3.00/l | 197.3 |
+| Spirits (2208) | €1.50 per % vol per hectolitre | 197.3 |
+| Vinegar | €0.40/l | 197.3 |
+| Passenger car | 0.05 GEL/cm³ + 5% of that for each year in use | 197.6 |
+| Anything else | 0% | 197 |
+
+The lists live in `config/import.php`.
+
+## Exemptions (Art. 199)
+
+| Case | Article |
+|---|---|
+| Disaster relief, humanitarian aid | 199.ა |
+| Under a grant agreement | 199.ბ |
+| Funded by grants or concessional credit with ≥ 25% grant element | 199.გ |
+| Traveller's food (chapters 02, 04, 06–12, 15–21; 0302–0307, 2201–2202) up to 500 GEL and 30 kg, once a day | 199.დ.ა |
+| Personal goods (chapters 28–97) up to 500 GEL and 30 kg, once in 30 days | 199.დ.ბ |
+| Passenger allowance of tobacco and alcohol | 199.დ.გ–დ.გ¹ |
+| Returning resident after 6+ months abroad, chapters 28–97 except 87, up to 15,000 GEL | 199.დ.დ |
+| Moving to Georgia permanently | 199.დ.ე |
+| Postal parcel, chapters 28–97, up to 300 GEL and 30 kg | 199.დ.ვ |
+| By air, chapters 28–97, up to 3,000 GEL and 30 kg | 199.დ.ზ |
+| Baby and diabetic food, X-ray film, insulin syringes, glucometers, test systems | 199.ე |
+| Aviation and ship supplies | 199.ვ |
+| Oil and gas operations | 199.ზ |
+| Confiscated property turned over to the state | 199.თ |
+| Raw tobacco, until 1 January 2028 | 199.ი |
+| Temporary admission in the cases of 173 | 199.კ–კ² |
+| Customs procedures, re-export, free-trade points | 199.ლ |
+| Made in a free industrial zone | 199.მ |
+| Returned goods | 199.ნ |
+| Salt, minerals, abrasives and undenatured alcohol by code (not 2526 20) | 199.პ |
+| Electric passenger cars | 199.ჟ |
+| Origin in a state party to the 1994 CIS free-trade agreement | 199.რ |
+| Released from customs duty under the Customs Code | 199.ს |
+
+Not modelled: temporary admission at 3% a month (197.4–5), the refund for cars re-exported within 180 days (198.3). Quantity and frequency limits on traveller and postal reliefs are the caller's to check.
+
+# Property tax
+
+Property tax is local: the Code sets caps and base rates, and each municipal council sets the rate it charges (`MunicipalRates`).
+
+## Who pays, on what (Art. 201, 203)
+
+| Owner | Taxed on | Article |
+|---|---|---|
+| Resident company or organization | Fixed assets, uninstalled equipment, unfinished construction, property leased out, property taken from a debtor | 201.1.ა |
+| Non-resident company | Its property in Georgia, including property let out | 201.1.ბ |
+| Individual | Real estate, yachts, helicopters, aircraft, passenger cars | 201.1.გ.ა |
+| Individual, economic activity | Also fixed assets and uninstalled equipment | 201.1.გ.გ |
+| Anyone, on 1 April | Land owned, or state land used or held | 203 |
+
+## Rates (Art. 202, 204)
+
+| Property | Rate | Article |
+|---|---|---|
+| Company property | Up to 1% of average annual net book value | 202.1 |
+| Company real estate on historic cost | Value ×3 (before 2000 or unknown), ×2 (2000–2003), ×1.5 (2004) — not with audited revaluation | 202.1.ა–დ, 202.2 |
+| Property leased out | Up to 1% of book value at leasing | 202.3 |
+| Leasing company | Up to 0.6% of initial book value, for the whole lease | 202.3¹ |
+| Individual property | 0.8%–1% of market value at the end of the previous year, by months owned | 202.5, 202.9 |
+| Arable land and homesteads | 56–100 GEL/ha by municipality | 204.1.ა |
+| Hayfields / pastures | 16–20 / 5–16 GEL/ha by municipality | 204.1.ბ |
+| Agricultural land, council multiplier | Up to 150% of base | 204.1.დ |
+| Non-agricultural land | 0.24 GEL/m² × territorial coefficient up to 1.5 | 204.2 |
+| Natural-resource land | Up to 3 GEL/ha | 204.3 |
+
+Due: companies declare and pay by 1 April for the past year (205.2), land by 15 November (205.7); individuals by 15 November (205.14).
+
+## Exemptions (Art. 206)
+
+| Case | Article |
+|---|---|
+| Individual's property (not land), family income last year 100,000 GEL or less | 206.1.ა |
+| Roads, power lines, cable lines | 206.1.დ |
+| Organization's property not used in economic activity, other than land | 206.1.ე |
+| Oil and gas property and land | 206.1.ვ, მ |
+| State land given to a budget body; monument land; parks, cemeteries, protected areas; windbreaks | 206.1.ზ–ი¹ |
+| Reservoirs, transport corridors, water-supply reservoirs | 206.1.კ–ლ |
+| Land with soil or harvest destroyed by disaster | 206.1.ნ, შ |
+| Occupied territories and land next to them; property housing displaced persons | 206.1.ო–ო² |
+| Unused state agricultural land; airports and ports | 206.1.პ–ჟ |
+| Newly developed agricultural land, 5 years; resettled families, 5 years | 206.1.რ–ს |
+| Up to 5 ha owned since 1 March 2004, or by a displaced person since 2011 | 206.1.ტ–ტ¹ |
+| Irrigation infrastructure; war-disabled persons' privatized land; high-mountain residents' land | 206.1.უ–ქ |
+| Research land; social-care and school land | 206.1.ღ–ყ |
+| Free industrial zone | 206.1.ჩ |
+| Biological assets; property leased from a resident | 206.1.ც–ძ |
+| Medical property and land | 206.1.წ–ჭ |
+| Tourist-zone hotels, until 1 January 2026 | 206.1.ხ |
+| Farmers' movables; agricultural cooperatives until 2028 | 206.1.ჯ–ჯ¹ |
+| Public schools; apartment-building land; house and garage plots within the council limit | 206.1.ჰ–ჰ² |
+| Yachts and boats (HS 8903) | 206.1.ჰ3 |
+| Bankruptcy | 206.1.ჰ4 |
+| State universities' property | 206.1.ჰ⁵ |
+| High-mountain enterprises, 10 years from status | 206.1.ჰ6 |
+
+An exemption does not cover land leased out, nor a company's buildings leased out, except a state university's (206.2).

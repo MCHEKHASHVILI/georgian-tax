@@ -43,6 +43,8 @@ final readonly class Supply
         public TaxableEvent $event,
         public YearToDate $ledger,
         public RateTable $rates,
+        /** Excise and import tax the earlier stages levied — part of the import base (164¹.2.ა). */
+        public ?Money $earlierDuties = null,
     ) {}
 
     /* ── Who and what ──────────────────────────────────────── */
@@ -139,7 +141,9 @@ final readonly class Supply
     public function base(): Money
     {
         return match (true) {
-            $this->event instanceof Import => $this->event->taxableAmount(),
+            $this->event instanceof Import => $this->event->dutiesGiven() || $this->earlierDuties === null
+                ? $this->event->taxableAmount()
+                : $this->event->taxableAmount()->plus($this->earlierDuties),
             $this->usesMarginScheme() => $this->event->price->minus($this->event->asset->cost)->atLeastZero()->scale(1 / self::VAT_FRACTION),
             $this->event instanceof Sell => $this->event->price,
             $this->event instanceof Gift => $this->event->value,

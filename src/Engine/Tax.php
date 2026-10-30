@@ -18,9 +18,18 @@ abstract class Tax
 
     abstract public function assess(TaxableEvent $event): Outcome;
 
+    /**
+     * Assess with sight of what the taxes earlier in the pipeline decided. Most taxes don't need it;
+     * VAT does, because excise and import tax form part of the VAT base on import (Art. 164¹.2.ა).
+     */
+    public function assessIn(TaxReport $report): Outcome
+    {
+        return $this->assess($report->event);
+    }
+
     /** @param Closure(TaxReport): TaxReport $next */
     final public function __invoke(TaxReport $report, Closure $next): TaxReport
     {
-        return $next($report->with($this->assess($report->event)));
+        return $next($report->with($this->assessIn($report)));
     }
 }

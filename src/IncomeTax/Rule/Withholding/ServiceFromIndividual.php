@@ -32,12 +32,10 @@ final class ServiceFromIndividual implements Rule
 
         $rate = $a->is(IncomeKind::ResidentialRent) && $a->payment()?->noDeductionsOnResidentialRent ? '81.2' : '81.1';
 
-        foreach (self::NOT_WITHHELD as $status) {
-            if ($a->taxpayer()->is($status)) {
-                return $a->declared($this, $rate, Collection::AnnualDeclaration, ["Not withheld for a {$status->name} (154.1.დ)."]);
-            }
-        }
+        $excluded = array_find(self::NOT_WITHHELD, fn (Status $status) => $a->taxpayer()->is($status));
 
-        return $a->withheld($this, $rate);
+        return $excluded === null
+            ? $a->withheld($this, $rate)
+            : $a->declared($this, $rate, Collection::AnnualDeclaration, ["Not withheld for a {$excluded->name} (154.1.დ)."]);
     }
 }

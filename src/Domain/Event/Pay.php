@@ -6,6 +6,8 @@ namespace GeorgianTax\Domain\Event;
 
 use DateTimeImmutable;
 use GeorgianTax\Domain\Asset\AssetType;
+use GeorgianTax\Domain\Goods\Commodity;
+use GeorgianTax\Domain\Income\ExemptProfit;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Income\SupplyCategory;
@@ -49,6 +51,10 @@ final readonly class Pay implements TaxableEvent
         public ?SupplyCategory $supply = null,
         /** VAT — $amount already includes VAT (164.1 taxes the price without it). */
         public bool $pricesIncludeVat = false,
+        /** Excise — the excise goods supplied, for a producer's supply (184). */
+        public ?Commodity $commodity = null,
+        /** Profit tax 99.3 — the dividend is paid out of profit the Code exempts. */
+        public ?ExemptProfit $fromExemptProfit = null,
     ) {
         $this->place = $place ?? Place::georgia();
     }
