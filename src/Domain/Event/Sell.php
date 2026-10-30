@@ -24,6 +24,8 @@ final readonly class Sell implements TaxableEvent
         public Money $price,
         public DateTimeImmutable $on,
         public ?Party $broker = null,
+        /** VAT 161² — a taxable dealer sells second-hand goods, art or antiques under the margin scheme. */
+        public bool $marginScheme = false,
     ) {}
 
     public function gain(): Money

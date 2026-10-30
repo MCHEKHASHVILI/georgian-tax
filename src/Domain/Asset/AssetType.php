@@ -12,7 +12,8 @@ enum AssetType
     case ListedGeorgianShares;   // Art. 82.1.უ³
     case ListedGeorgianBonds;    // Art. 82.1.უ¹
     case StateOrIfiBonds;        // Art. 82.1.უ
-    case RealEstate;             // non-dwelling
+    case RealEstate;             // non-residential building — always economic activity for VAT (158.3)
+    case Land;                   // VAT-exempt without credit (171.1.გ)
     case IntellectualProperty;   // Art. 8.21
     case Other;
 }

@@ -33,4 +33,6 @@ enum Status
     case WineOrAgroTourism;             // Art. 88.3 — 700,000 GEL threshold
     case PreferentialTaxJurisdiction;   // Art. 134.1¹
     case RegisteredTaxpayer;            // Art. 154.1.ლ
+    case TaxableDealer;                 // VAT Art. 157.ქ, 161² — second-hand, art, antiques
+    case ExciseProducer;                // VAT Art. 165.3 — must register before the first supply
 }

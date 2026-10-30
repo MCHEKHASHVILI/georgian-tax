@@ -1,7 +1,12 @@
-# Income tax events — Tax Code of Georgia
+# Taxable events — Tax Code of Georgia
 
 Source: consolidated publication of 30/09/2026 (matsne.gov.ge, document 1043717, publication 247).
-Every class in `src/IncomeTax` cites one of the rows below through its `#[Article]` attribute.
+Every class in `src/IncomeTax` and `src/Vat` cites one of the rows below through its `#[Article]` attribute.
+
+- [Income tax](#income-tax)
+- [VAT](#vat)
+
+# Income tax
 
 ## Who is in scope (Art. 79, 134)
 
@@ -169,3 +174,193 @@ These are set by acts outside the Code or are periodic, so the engine returns `U
 - Fixed-tax amounts per object (95³.1.ა, Government resolution)
 - Gaming hall and online gambling organizers' monthly net (80.7)
 - Annual net-income recalculation with deductions (80.1, Chapter XV)
+
+# VAT
+
+VAT is 18% (Art. 166), declared and paid monthly by the 15th of the next month (167, 168.1).
+
+## What is taxed (Art. 158–160³)
+
+| Operation | Taxed when | Article |
+|---|---|---|
+| Supply of goods | By a taxable person, in Georgia, for consideration | 159.1.ა, 160 |
+| Supply of services — anything that isn't goods, including IP transfer | By a taxable person, in Georgia, for consideration | 159.1.ბ, 160¹ |
+| Import of goods | Release into free circulation | 159.1.გ, 160² |
+| Free supply of goods whose input VAT was credited | Always — except samples and gifts ≤ 50 GEL per person a year | 160.3.ა, 157.ი |
+| Goods or services for employees' personal use or non-business purposes | Input VAT was credited | 160.3.გ, 160¹.2.ა |
+| Own-built building put into use; own-performed building repair | Full credit wouldn't have been available on purchase | 160.3.ბ, 160¹.2.ბ |
+| Goods kept after activity ends, or on deregistration | Input VAT was credited | 160.3.დ–ე |
+| Goods given to a partner for a share | Always | 160.3.ვ |
+| Tourist enterprise status ends | Always | 160.3.ზ |
+| Inventory shortage | Always | 160.3.თ |
+
+**Not supplies:**
+- a transfer of a business or an independent unit to another taxable person, a capital contribution, or a reorganization (160.7);
+- money and crypto (160.2, 160¹.4).
+
+**Taxable person (158):** anyone doing economic activity independently.
+- A one-off supply is not economic activity, except selling a non-residential building, which always is (158.2–158.3).
+- Employment, charity and religious activity are not economic activity (158.4.ა, 9.2).
+- A state body acting as an authority is not a taxable person, except in 14 listed trades (158.4.ბ).
+
+## Where it is supplied (Art. 162–162¹)
+
+| Supply | Place | Article |
+|---|---|---|
+| Goods not shipped | Where they are at supply | 162.1 |
+| Goods shipped | Where transport starts | 162.2 |
+| Service to a business (anyone except a non-entrepreneur individual) | The customer's establishment, or the fixed establishment served | 162¹.3.ა, 162¹.2 |
+| Service to a consumer | The supplier's establishment, or the fixed establishment supplying it | 162¹.3.ბ |
+| Service linked to immovable property | Where the property is | 162¹.4 |
+| Intermediary for a consumer | Where the underlying operation happens | 162¹.5 |
+| Cultural, educational, sports or entertainment events (and admission for businesses) | Where held | 162¹.6–7 |
+| Transport-ancillary services; work on movable property, for consumers | Where performed | 162¹.8 |
+| Passenger transport; goods transport for consumers | Where transported, by distance | 162¹.9–10 |
+| Restaurant and catering | Where performed | 162¹.11 |
+| Short-term vehicle rental (≤ 30 days; ships ≤ 90) | Where handed over | 162¹.12 |
+| Telecom, broadcasting, electronic services, IP, advertising, consulting, legal, accounting, engineering, data, finance, insurance, staffing, movable rental — for consumers | The customer's location | 162¹.14 |
+
+## Who pays (Art. 161, 165, 165², 168)
+
+| Case | Who pays | When | Article |
+|---|---|---|---|
+| Registered supplier | Supplier | By the 15th of next month | 165², 168.1 |
+| Unregistered supplier whose 12-month taxable turnover passes 100,000 GEL | Supplier — from that operation; registers within 2 working days | By the 15th of next month | 165.1–165.2 |
+| Unregistered supplier below 100,000 GEL | Nobody — but the operation counts toward the threshold | — | 165.1 |
+| Supplier with a fixed establishment in Georgia | Supplier, from the first operation | By the 15th of next month | 165.9 |
+| Excise goods producer | Must register before the first supply | — | 165.3 |
+| Foreign supplier with no Georgian establishment, service supplied in Georgia, to a business established in Georgia (not a FIZ company) | Customer — reverse charge on the amount paid | By the 15th of next month | 161.1.ა, 161.2.ა, 168.4 |
+| Same, to a consumer | Foreign supplier, on Minister of Finance terms | Monthly | 165².2.ე |
+| Import | Importer | With import duties; 45 days for Government-listed HS 8401–9033 goods | 165².2.ა, 168.2–168.3 |
+| Second-hand goods, art, antiques sold by a taxable dealer under the margin scheme | Dealer, on margin ÷ 1.18; no credit for dealer or buyer | Monthly | 161² |
+
+Not covered: forced sales by enforcement or insolvency administrators (161¹), and collateral taken over by a creditor (161.1.ბ).
+
+Taxable amount (164.1): the consideration excluding VAT. For import (164¹): customs value plus import taxes and fees other than VAT, plus transport and insurance to the first destination.
+
+## Exempt without credit (Art. 170–171)
+
+The supplier charges no VAT and cannot credit input VAT on related costs (169.2).
+
+| Supply | Article |
+|---|---|
+| Medical and dental care by licensed providers | 170.1.ა–გ |
+| Patient transport in special vehicles | 170.1.დ |
+| Education by an educational institution | 170.1.ე |
+| Private school and university tutoring | 170.1.ვ |
+| Arts and sports teaching for under-18s | 170.1.ზ |
+| Social care: childcare, care for the sick, disabled and over-60s | 170.1.თ |
+| Child protection by guardianship bodies | 170.1.ი |
+| Organizations' services to members for membership fees | 170.1.კ |
+| Restoration of listed heritage monuments | 170.1.ლ |
+| Universal postal service; postage stamps at face value | 170.1.ო–პ |
+| Funeral services | 170.1.ჟ |
+| Diabetic bread | 170.1.რ |
+| Religious items from the Patriarchate; church restoration | 170.1.ს–ტ |
+| Financial operations and services | 171.1.ა |
+| Lotteries and gambling | 171.1.ბ |
+| Land | 171.1.გ |
+| Returning a seized home to the individual it came from | 171.1.დ |
+| Educational lecture courses on disc | 171.1.ე |
+| Selling and printing periodicals; periodicals' advertising | 171.1.ვ |
+| State property; privatization | 171.1.ზ–თ |
+| Partnership shares without allocated property | 171.1.ი |
+| Leasing goods whose supply is exempt without credit | 171.1.კ |
+| Regulated city bus routes (not taxis) | 171.1.ლ |
+| Municipal cleaning and waste | 171.1.მ |
+| Mandatory excise marking | 171.1.ნ |
+| Hotel room changing hands within a tourist-enterprise contract | 171.1.ო |
+| Distribution by an individuals-only partnership | 171.1.პ |
+| FIZ company to another FIZ company | 171.1.რ–ს |
+| Goods from the occupied territories to a special enterprise | 171.1.ტ |
+| Disaster relief and humanitarian services funded from abroad | 171.1.ფ |
+| Oil and gas operations | 171.1.ქ |
+| Free servitude | 171.1.ყ |
+
+The supplier may opt to tax financial operations and land anyway (169.5).
+
+## Exempt with credit (Art. 172)
+
+The supplier charges no VAT but keeps the right to credit input VAT (169.3, 175.2).
+
+| Supply | Article |
+|---|---|
+| Ship and aircraft fuel, stores, supply, repair, charter and related services | 172.1.ა–ზ |
+| Transport of goods in export, re-export or transit, and directly related services | 172.1.თ |
+| International passenger and baggage transport on a single document | 172.1.ი |
+| Intermediaries in those operations or in operations abroad | 172.2 |
+| Supplies to foreign diplomatic missions and their members | 172.3 |
+| Natural gas for thermal power plants | 172.4.ა |
+| Asset withdrawals to the state by state-majority companies; free transfers to the state | 172.4.ბ–გ |
+| Treaty project goods via authorized public bodies | 172.4.დ |
+| Export and re-export of goods | 172.4.ე |
+| Inbound transport before customs, and from border to destination | 172.4.ვ–ზ |
+| Domestic aviation fuel, flights and aviation work | 172.4.თ, ც |
+| Empty containers and wagons; foreign and Georgian wagons' use across the border | 172.4.ი–ლ |
+| Special enterprise supplies into the occupied territories | 172.4.მ |
+| Duty-free shops | 172.4.ნ |
+| Gold to the National Bank; investment gold | 172.4.ო–ო¹ |
+| Inbound tourism by a tour operator | 172.4.პ |
+| Ship services on import | 172.4.ჟ |
+| Foreign goods in a customs warehouse | 172.4.რ |
+| State-majority lottery | 172.4.ს |
+| Property seized for the budget | 172.4.ტ |
+| Primary agricultural produce (not eggs or fresh chicken) | 172.4.უ |
+| Georgian meat, cheese and shelled hazelnuts | 172.4.ფ |
+| Hotel assets supplied for leaseback; free owner stays ≤ 60 days | 172.4.ქ–ღ |
+| Terminating incoming international calls | 172.4.ყ |
+| Inward processing services | 172.4.შ |
+| Electricity and capacity, except to end consumers for own use; transmission and dispatch | 172.4.ჩ |
+| Ferrous and non-ferrous scrap (buyer deemed to have credited) | 172.4.ძ |
+| Books and e-books, their sale and printing | 172.4.წ |
+| Electric buses | 172.4.ჭ |
+| Services already in an import's taxable amount | 172.4.ხ |
+| Georgian-made medical goods and pharmaceuticals | 172.4.ჯ |
+| Food donated to charity or a food bank | 172.4.ჰ |
+| Under ratified international treaties | 172.5 |
+
+Exports and the 172.1–172.2 operations count toward the 100,000 GEL threshold. Other exempt operations don't, unless financial or real-estate operations are the main business (165.7).
+
+## Exempt imports (Art. 173)
+
+| Goods | Article |
+|---|---|
+| Listed medical goods, pharma inputs, disability aids, baby food and hygiene | 173.ა |
+| Pharmaceuticals (HS 30) | 173.ბ |
+| Registered radiopharmaceuticals and medical equipment | 173.გ |
+| Certain paper | 173.დ |
+| Certain pharma raw materials and gelatin capsules | 173.ე |
+| Breeding animals, seedlings, fertilizers, pesticides | 173.ვ |
+| Passenger cars and motorcycles (HS 8703, 8711) | 173.ზ |
+| Boats (HS 8903) | 173.თ |
+| Excise stamps | 173.ი |
+| Treasure; state-owned movables | 173.კ |
+| Diabetic bread | 173.ლ |
+| Periodicals | 173.მ |
+| Money and securities | 173.ო |
+| Tractor parts | 173.პ |
+| Gas for power plants | 173.ჟ |
+| Listed agrochemicals and seeds | 173.რ |
+| Fuel in a vehicle's standard tank | 173.ს |
+| Civil aircraft and their goods | 173.ტ |
+| Gold for the National Bank; investment gold | 173.უ–უ¹ |
+| Returned goods; outward-processing products | 173.ფ |
+| Disaster and humanitarian aid | 173.ქ |
+| Goods for diplomatic missions | 173.ღ, ყ, წ |
+| Grant-funded goods | 173.ც |
+| Oil and gas operations | 173.ჭ |
+| Books; electric buses | 173.ჰ¹–ჰ² |
+
+## Credit (Art. 174–178)
+
+Only a registered VAT payer credits input VAT (174.3), and only against a tax invoice, an import declaration, or its own reverse-charge VAT (176.1).
+
+| Credited | Article |
+|---|---|
+| VAT paid to Georgian suppliers, on imports and by reverse charge, for taxable operations | 175.1 |
+| VAT on costs of operations abroad, exempt-with-credit operations, and financial services to foreign customers or for exports | 175.2 |
+| Mixed use: in proportion to annual turnover; full credit if non-creditable turnover is under 5% | 177 |
+| Never: entertainment, social and representation costs; faulty, fictitious or over-3-year-old invoices | 178 |
+| Margin-scheme purchases | 161².5–6 |
+
+Refunds: excess credit is refunded (181.1). Foreign citizens get VAT back on goods over 200 GEL per receipt taken out within 3 months (181.5–181.6).

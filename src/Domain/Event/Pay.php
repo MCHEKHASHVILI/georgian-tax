@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
+use GeorgianTax\Domain\Income\SupplyCategory;
 use GeorgianTax\Domain\Money;
 use GeorgianTax\Domain\Party\Party;
 
@@ -44,6 +45,10 @@ final readonly class Pay implements TaxableEvent
         public ?AssetType $instrument = null,
         /** Art. 131.8 — the bond is listed on a recognized foreign exchange. */
         public bool $listedAbroad = false,
+        /** VAT — what is supplied, where an exemption or place-of-supply rule turns on it. */
+        public ?SupplyCategory $supply = null,
+        /** VAT — $amount already includes VAT (164.1 taxes the price without it). */
+        public bool $pricesIncludeVat = false,
     ) {
         $this->place = $place ?? Place::georgia();
     }

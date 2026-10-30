@@ -6,6 +6,7 @@ namespace GeorgianTax\Engine;
 
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Money;
+use GeorgianTax\Engine\Outcome\Collection;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\Engine\Outcome\Taxable;
 
@@ -47,13 +48,23 @@ final readonly class TaxReport
         return $total;
     }
 
+    /** VAT the supplier adds on top of the price — what the customer pays beyond the event amount. */
+    public function vatCharged(): Money
+    {
+        $outcome = $this->for('vat');
+
+        return $outcome instanceof Taxable && $outcome->collection === Collection::MonthlyDeclaration
+            ? $outcome->amount
+            : Money::zero();
+    }
+
     /** What the payer actually transfers to the recipient after withholding. */
     public function netToRecipient(): Money
     {
         $net = $this->event->income();
 
         foreach ($this->outcomes as $outcome) {
-            if ($outcome instanceof Taxable && $outcome->agent !== null) {
+            if ($outcome instanceof Taxable && $outcome->collection === Collection::WithheldAtSource) {
                 $net = $net->minus($outcome->amount);
             }
         }

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
+use GeorgianTax\Domain\Income\SupplyCategory;
 use GeorgianTax\Domain\Money;
 use GeorgianTax\Domain\Party\Party;
 
@@ -22,6 +23,8 @@ final readonly class Gift implements TaxableEvent
         /** Art. 82.1.თ — gifts from an employer never use the 1,000 GEL allowance. */
         public bool $fromEmployer = false,
         public bool $propertyInGeorgia = true,
+        /** VAT — what is given, e.g. FoodDonation (172.4.ჰ). */
+        public ?SupplyCategory $what = null,
     ) {}
 
     public function recipient(): Party { return $this->recipient; }

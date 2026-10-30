@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Ledger;
 
+use DateTimeImmutable;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
@@ -33,6 +34,9 @@ interface YearToDate
 
     /** Income-tax base already assessed this year — for the Art. 82.2 allowances. */
     public function taxableIncome(Party $taxpayer, int $year): Money;
+
+    /** Turnover a tax counted for this party since a date — e.g. VAT's rolling 12 months (165.1). */
+    public function turnover(Party $party, string $tax, DateTimeImmutable $since): Money;
 
     public function record(TaxableEvent $event, TaxReport $report): void;
 }

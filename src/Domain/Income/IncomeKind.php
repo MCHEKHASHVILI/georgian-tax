@@ -92,6 +92,12 @@ enum IncomeKind
         ], true);
     }
 
+    /** For VAT: the payment is consideration for a supply of goods or services (Art. 159). */
+    public function isSupply(): bool
+    {
+        return $this->isBusinessIncome() || in_array($this, [self::Royalty, self::Interest], true);
+    }
+
     /** Income a special regime taxes — Art. 86, 90.3 (salary is excluded), 95⁵. */
     public function isBusinessIncome(): bool
     {

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Income tax rates, keyed by the article that sets them.
+ * Tax rates, keyed by the article that sets them.
  * Each entry maps an effective-from date to a percent; add a row when the law changes.
  * Source: Tax Code of Georgia, consolidated publication of 30/09/2026.
  *
@@ -38,4 +38,7 @@ return [
     '134.1.დ'   => ['2011-01-01' => 4],    // oil and gas subcontractors
     '134.1.ე'   => ['2011-01-01' => 10],   // other Georgian-source income
     '134.1¹'    => ['2011-01-01' => 15],   // payee in a preferential-tax country
+
+    // VAT — Art. 166
+    '166'       => ['2011-01-01' => 18],
 ];
