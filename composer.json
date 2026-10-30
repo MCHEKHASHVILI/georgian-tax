@@ -1,0 +1,25 @@
+{
+    "name": "mchekhashvili/georgian-tax",
+    "description": "Domain model and pipeline for applying the Tax Code of Georgia to transactions — income tax first.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GeorgianTax\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GeorgianTax\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit tests"
+    }
+}
