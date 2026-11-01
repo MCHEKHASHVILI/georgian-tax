@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Ledger\Eloquent\Models;
 
+use GeorgianTax\Database\Model;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Mchekhashvili\Money\Laravel\MoneyCast;

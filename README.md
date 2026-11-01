@@ -127,6 +127,20 @@ Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($acc
 
 **Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `RateTable`, `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace.
 
+## Legislation history
+
+Tax law changes, so the package records it. The first piece is the list of taxes itself: `GeorgianTax\Legislation\Models\TaxType`, one row per tax per period it was in force.
+
+```php
+TaxType::query()->current()->get();                 // the taxes in force today
+TaxType::query()->inForceOn('2007-06-01')->get();   // the taxes on a past day
+TaxType::query()->historyOf('vat')->get();          // every period of one tax
+$vat->replaces;                                     // the tax it took over from
+$tax->abolish('2008-01-01', by: 'Law №…');
+```
+
+`php artisan db:seed --class="GeorgianTax\Database\Seeders\TaxTypeSeeder"` loads the six taxes Art. 6 lists today.
+
 ## Structure
 
 ```
@@ -156,11 +170,13 @@ src/
   Excise/         Duty → IdentifyOperation → ApplyExemptions → ApplyRate
   ImportTax/      Clearance → IdentifyImport → ApplyExemptions → ApplyRules
   PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
+  Legislation/    TaxType, TaxLevel — the taxes the law has had, over time
+  Database/       the base model: table prefix and connection from config
   Rates/          rates keyed by article and effective date
   Ledger/         YearToDate, CompanyBooks; InMemoryLedger; Eloquent/ ledger, books and models
   Events/ Jobs/ Listeners/
 config/georgian-tax.php
-database/migrations/
+database/migrations/ database/seeders/
 resources/law/    rates.php, excise.php, import.php, property.php — the Code's tables
 ```
 

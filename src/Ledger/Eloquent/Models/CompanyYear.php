@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Ledger\Eloquent\Models;
 
+use GeorgianTax\Database\Model;
 use Mchekhashvili\Money\Laravel\MoneyCast;
 
 /**

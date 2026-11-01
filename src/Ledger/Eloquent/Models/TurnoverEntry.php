@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Ledger\Eloquent\Models;
 
+use GeorgianTax\Database\Model;
 use Mchekhashvili\Money\Laravel\MoneyCast;
 
 /** Turnover a tax counted for a party on a day — VAT's rolling 12 months (165.1). */

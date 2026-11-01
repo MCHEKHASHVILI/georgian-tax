@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GeorgianTax\Ledger\Eloquent\Models;
+namespace GeorgianTax\Database;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Ledger\Eloquent\Models;
 
+use GeorgianTax\Database\Model;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use Illuminate\Database\Eloquent\Builder;
