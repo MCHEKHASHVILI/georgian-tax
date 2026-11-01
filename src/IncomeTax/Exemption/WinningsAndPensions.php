@@ -19,7 +19,7 @@ final class WinningsAndPensions implements Exemption
 {
     public function exempts(Assessment $a): ?Exempt
     {
-        if ($a->is(IncomeKind::LotteryWin) && $a->income()->lessThanOrEqual(Money::GEL(1000))) {
+        if ($a->is(IncomeKind::LotteryWin) && $a->income()->lessThanOrEqual($a->threshold('lottery_win'))) {
             return $a->exempt(new Citation('82.1.ღ'), 'A lottery win of 1,000 GEL or less is exempt.');
         }
 
@@ -29,7 +29,7 @@ final class WinningsAndPensions implements Exemption
 
         if ($a->is(IncomeKind::PrivatePensionContribution)
             && $a->ledger->received($a->taxpayer(), $a->year(), IncomeKind::PrivatePensionContribution)
-                ->plus($a->income())->lessThanOrEqual(Money::GEL(6000))) {
+                ->plus($a->income())->lessThanOrEqual($a->threshold('private_pension'))) {
             return $a->exempt(new Citation('82.1.ბ⁴.ა'), 'Private pension contributions up to 6,000 GEL a year are exempt.');
         }
 

@@ -41,7 +41,7 @@ final class ApplySpecialRegime implements Stage
     /** 1% of turnover; 3% from the month turnover crosses 500,000 GEL (700,000 for wine or agro-tourism). */
     private function smallBusiness(Assessment $a): Outcome
     {
-        $threshold = Money::GEL($a->taxpayer()->is(Status::WineOrAgroTourism) ? 700_000 : 500_000);
+        $threshold = $a->threshold($a->taxpayer()->is(Status::WineOrAgroTourism) ? 'small_business_wine' : 'small_business');
         $businessKinds = array_filter(IncomeKind::cases(), fn (IncomeKind $k) => $k->isBusinessIncome());
         $turnover = $a->ledger->received($a->taxpayer(), $a->year(), ...$businessKinds)->plus($a->income());
 

@@ -27,6 +27,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Ledger\YearToDate;
 use Mchekhashvili\TaxLegislation\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * The subject flowing through the VAT stages: the event read as a supply — who supplies, who
@@ -44,9 +45,16 @@ final readonly class Supply
         public TaxableEvent $event,
         public YearToDate $ledger,
         public RateTable $rates,
+        public ThresholdTable $thresholds,
         /** Excise and import tax the earlier stages levied — part of the import base (164¹.2.ა). */
         public ?Money $earlierDuties = null,
     ) {}
+
+    /** A VAT threshold as it stood on the event's day. */
+    public function threshold(string $key): Money
+    {
+        return $this->thresholds->threshold(self::TAX, $key, $this->event->date());
+    }
 
     /* ── Who and what ──────────────────────────────────────── */
 

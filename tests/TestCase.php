@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Tests;
 
 use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
+use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
 use GeorgianTax\Facades\GeorgianTax;
 use GeorgianTax\GeorgianTaxServiceProvider;
 use Mchekhashvili\Countries\CountriesServiceProvider;
@@ -21,6 +22,20 @@ use Orchestra\Testbench\TestCase as Testbench;
  */
 abstract class TestCase extends Testbench
 {
+    /**
+     * With GEORGIAN_TAX_LAW_SOURCE=database every test runs on Georgia's law as recorded in
+     * tax-legislation's tables — the same cases, answered from the database instead of the files.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (config('georgian-tax.law.source') === 'database') {
+            $this->artisan('migrate');
+            $this->seed(GeorgiaLegislationSeeder::class);
+        }
+    }
+
     protected function getPackageProviders($app): array
     {
         return [CountriesServiceProvider::class, TaxLegislationServiceProvider::class, GeorgianTaxServiceProvider::class];

@@ -42,7 +42,7 @@ final class SalaryExemptions implements Exemption
         }
 
         if ($payer->is(Status::AgriculturalProducer) && $a->before('2028-01-01')
-            && $a->ledger->received($payer, $a->year(), IncomeKind::GoodsSupply)->lessThanOrEqual(Money::GEL(200_000))) {
+            && $a->ledger->received($payer, $a->year(), IncomeKind::GoodsSupply)->lessThanOrEqual($a->threshold('agricultural_salary'))) {
             return $a->exempt(new Citation('82.1.ც'), 'Salary in small-scale agricultural production is exempt until 2028.');
         }
 
@@ -51,7 +51,7 @@ final class SalaryExemptions implements Exemption
         }
 
         if ($payer->regime === Regime::SmallBusiness && $this->smallEmployerQualifies($a)
-            && $a->ledger->paid($payer, $a->year(), IncomeKind::Salary)->plus($a->income())->lessThanOrEqual(Money::GEL(6000))) {
+            && $a->ledger->paid($payer, $a->year(), IncomeKind::Salary)->plus($a->income())->lessThanOrEqual($a->threshold('small_business_salaries'))) {
             return $a->exempt(new Citation('94.4'), "The first 6,000 GEL a year of a small business's salaries is not taxed at source.");
         }
 
@@ -64,6 +64,6 @@ final class SalaryExemptions implements Exemption
         $registered = $payer->since(Status::RegisteredTaxpayer);
 
         return ($registered !== null && (int) $registered->format('Y') === $a->year())
-            || $a->ledger->received($payer, $a->year() - 1)->lessThanOrEqual(Money::GEL(50_000));
+            || $a->ledger->received($payer, $a->year() - 1)->lessThanOrEqual($a->threshold('small_employer_last_year'));
     }
 }

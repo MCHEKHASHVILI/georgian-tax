@@ -30,7 +30,7 @@ final class RegistrationThreshold implements Rule
         $since = $s->event->date()->modify('-12 months');
         $turnover = $s->ledger->turnover($s->supplier(), Supply::TAX, $since)->plus($s->base());
 
-        if ($turnover->greaterThan(Money::GEL(100_000))) {
+        if ($turnover->greaterThan($s->threshold('registration'))) {
             return $s->charged($this, Collection::MonthlyDeclaration, [
                 "Taxable turnover over the last 12 months reached $turnover; VAT applies from this supply (165.2). Register within 2 working days.",
             ]);

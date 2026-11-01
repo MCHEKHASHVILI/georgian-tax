@@ -77,7 +77,7 @@ it('records the thresholds the engine draws lines at', function () {
 
     expect((string) $vat->amount)->toBe('100000.00 GEL')
         ->and($vat->article)->toBe('165.1')
-        ->and(Threshold::query()->count())->toBe(5);
+        ->and(Threshold::query()->count())->toBe(13);
 });
 
 it('reseeds without duplicating', function () {

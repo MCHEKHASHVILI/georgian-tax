@@ -30,8 +30,6 @@ use GeorgianTax\PropertyTax\Holding;
 #[Article('206', 'Property tax exemptions')]
 final class ApplyExemptions implements Stage
 {
-    private const FAMILY_INCOME_LIMIT = 100_000;
-
     public function handle(Holding $h, Closure $next): Outcome
     {
         $owner = $h->holding->owner;
@@ -81,7 +79,7 @@ final class ApplyExemptions implements Stage
                 return $h->unresolved(new Citation('206.1.ა'), 'An individual\'s property tax turns on last year\'s family income — give it.');
             }
 
-            if ($income->lessThanOrEqual(Money::GEL(self::FAMILY_INCOME_LIMIT))) {
+            if ($income->lessThanOrEqual($h->threshold('family_income'))) {
                 return $h->exempt(new Citation('206.1.ა'), 'Family income of 100,000 GEL or less last year.');
             }
         }

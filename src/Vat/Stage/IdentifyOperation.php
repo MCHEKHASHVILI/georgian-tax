@@ -78,7 +78,7 @@ final class IdentifyOperation implements Stage
             return $s->notTaxable(new Citation('160.3.ა'), 'A free supply by someone who credited no input VAT is not a supply for consideration.');
         }
 
-        if ($gift->recipient->isIndividual() && $gift->value->lessThanOrEqual(Money::GEL(50))) {
+        if ($gift->recipient->isIndividual() && $gift->value->lessThanOrEqual($s->threshold('gift_to_person'))) {
             return $s->notTaxable(new Citation('157.ი'), 'A gift worth 50 GEL or less a year to one person is not a supply.');
         }
 

@@ -19,6 +19,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Ledger\YearToDate;
 use Mchekhashvili\TaxLegislation\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * The subject that flows through the income tax stages: the event plus what the stages
@@ -33,8 +34,15 @@ final readonly class Assessment
         public TaxableEvent $event,
         public YearToDate $ledger,
         public RateTable $rates,
+        public ThresholdTable $thresholds,
         public ?bool $georgianSource = null,
     ) {}
+
+    /** An income tax threshold as it stood on the event's day (resources/law/thresholds.php or the database). */
+    public function threshold(string $key): Money
+    {
+        return $this->thresholds->threshold(self::TAX, $key, $this->event->date());
+    }
 
     /* ── Facts ─────────────────────────────────────────────── */
 
@@ -73,7 +81,7 @@ final readonly class Assessment
 
     public function withGeorgianSource(bool $georgianSource): self
     {
-        return new self($this->event, $this->ledger, $this->rates, $georgianSource);
+        return new self($this->event, $this->ledger, $this->rates, $this->thresholds, $georgianSource);
     }
 
     /* ── Outcome builders ──────────────────────────────────── */

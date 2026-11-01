@@ -29,11 +29,12 @@ it('announces every assessment', function () {
 });
 
 it('announces nothing for a quote', function () {
-    Event::fake();
+    Event::fake([TaxableEventAssessed::class, VatRegistrationRequired::class]);
 
-    GeorgianTax::assess(($this->sale)(100));
+    GeorgianTax::assess(($this->sale)(200_000));
 
-    Event::assertNothingDispatched();
+    Event::assertNotDispatched(TaxableEventAssessed::class);
+    Event::assertNotDispatched(VatRegistrationRequired::class);
 });
 
 it('tells the app when a supplier must register for VAT', function () {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\ImportTax;
 
 use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent;
+use GeorgianTax\Engine\LawTables;
 use GeorgianTax\Engine\Tax;
 use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -26,7 +27,7 @@ final class ImportTax extends Tax
     public function __construct(
         Container $container,
         Config $config,
-        private readonly ImportTable $table,
+        private readonly LawTables $tables,
     ) {
         parent::__construct($container, $config);
     }
@@ -47,6 +48,6 @@ final class ImportTax extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Clearance($event, $this->table);
+        return new Clearance($event, $this->tables->import($event->date()));
     }
 }

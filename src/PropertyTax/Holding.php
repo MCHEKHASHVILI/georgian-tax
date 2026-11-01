@@ -17,6 +17,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Citation;
+use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * The subject of the property tax pipeline: one item held in one tax year.
@@ -36,12 +37,19 @@ final readonly class Holding
         public TaxableEvent $event,
         public array $land,
         public MunicipalRates $rates,
+        public ThresholdTable $thresholds,
         public ?OwnProperty $holding = null,
     ) {}
 
     public function of(OwnProperty $holding): self
     {
-        return new self($this->event, $this->land, $this->rates, $holding);
+        return new self($this->event, $this->land, $this->rates, $this->thresholds, $holding);
+    }
+
+    /** A property tax threshold as it stood in the tax year. */
+    public function threshold(string $key): Money
+    {
+        return $this->thresholds->threshold(self::TAX, $key, $this->event->date());
     }
 
     public function item(): PropertyItem

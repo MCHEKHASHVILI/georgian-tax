@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Excise;
 
 use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent;
+use GeorgianTax\Engine\LawTables;
 use GeorgianTax\Engine\Tax;
 use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -25,7 +26,7 @@ final class Excise extends Tax
     public function __construct(
         Container $container,
         Config $config,
-        private readonly ExciseTable $table,
+        private readonly LawTables $tables,
     ) {
         parent::__construct($container, $config);
     }
@@ -46,6 +47,6 @@ final class Excise extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Duty($event, $this->table);
+        return new Duty($event, $this->tables->excise($event->date()));
     }
 }

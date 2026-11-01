@@ -69,10 +69,12 @@ return [
     | own file to follow an amendment before the package catches up.
     */
     'law' => [
-        // 'file': rates from resources/law/rates.php. 'database': from the tax_rates table of
-        // mchekhashvili/tax-legislation, with their history — seed it with GeorgiaLegislationSeeder.
+        // 'file': rates, thresholds and tables from resources/law/. 'database': from
+        // mchekhashvili/tax-legislation's tables, with their history — seed them with
+        // GeorgiaLegislationSeeder, then amend through its forms.
         'source' => env('GEORGIAN_TAX_LAW_SOURCE', 'file'),
         'rates' => null,
+        'thresholds' => null,
         'excise' => null,
         'import' => null,
         'land' => null,

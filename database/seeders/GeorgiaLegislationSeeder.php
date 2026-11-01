@@ -16,13 +16,14 @@ use Mchekhashvili\Countries\Database\Seeders\CountrySeeder;
 use Mchekhashvili\Countries\Models\Country;
 use Mchekhashvili\Money\Money;
 use Mchekhashvili\TaxLegislation\Legislation\ActKind;
+use Mchekhashvili\TaxLegislation\Legislation\Models\Exemption;
 use Mchekhashvili\TaxLegislation\Legislation\Models\LegalAct;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TableEntry;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxRate;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
 use Mchekhashvili\TaxLegislation\Legislation\Models\Threshold;
 use Mchekhashvili\TaxLegislation\Legislation\TaxLevel;
-use Mchekhashvili\TaxLegislation\Legislation\ThresholdPeriod;
+use Mchekhashvili\TaxLegislation\Revisions\Editor;
 
 /**
  * Georgia's tax law as it stands, into mchekhashvili/tax-legislation's tables:
@@ -33,11 +34,12 @@ use Mchekhashvili\TaxLegislation\Legislation\ThresholdPeriod;
  *   tax types    the six taxes Art. 6.5–6.6 lists
  *   rates        resources/law/rates.php, by article
  *   tables       the excise (188.1), import tax (197, 199.პ) and land (204.1) tables
- *   thresholds   the amounts the engine draws lines at, where the article is plain
+ *   thresholds   resources/law/thresholds.php — every amount the engine draws a line at
+ *   exemptions   resources/law/exemptions.php — that each exemption exists; conditions stay in code
  *
  * Values come from the consolidated publication of 30/09/2026. Their start dates are left open
  * (`null`: in force since before the history recorded here); add the history with amend().
- * Exemptions are not seeded yet — the engine applies them in code.
+ * Its changes are logged as revisions by "seeder:…", with the consolidation as source.
  *
  * Safe to run again: it replaces what it seeded before for Georgia.
  *
@@ -55,8 +57,14 @@ final class GeorgiaLegislationSeeder extends Seeder
 
         $georgia = Country::code('GE');
 
-        DB::transaction(function () use ($georgia) {
-            TaxType::query()->ofCountry($georgia)->delete();   // cascades to rates, thresholds, exemptions, tables
+        app(Editor::class)->as('seeder:' . self::class, 'Georgian tax law as consolidated on 30/09/2026', 'https://matsne.gov.ge/ka/document/view/1043717')->run(fn () => DB::transaction(function () use ($georgia) {
+            $types = TaxType::query()->ofCountry($georgia)->pluck('id');
+            foreach ([TaxRate::class, Threshold::class, Exemption::class, TableEntry::class] as $model) {
+                $model::query()->whereIn('tax_type_id', $types)->delete();
+            }
+            TaxType::query()->whereIn('id', $types)->update(['replaces_id' => null]);
+            TaxType::query()->whereIn('id', $types)->delete();
+            LegalAct::query()->ofCountry($georgia)->update(['amends_id' => null]);
             LegalAct::query()->ofCountry($georgia)->delete();
 
             [$code] = $this->acts($georgia);
@@ -65,7 +73,8 @@ final class GeorgiaLegislationSeeder extends Seeder
             $this->rates($taxes, $code);
             $this->tables($taxes, $code);
             $this->thresholds($taxes, $code);
-        });
+            $this->exemptions($taxes, $code);
+        }));
     }
 
     /** @return array{0: LegalAct, 1: LegalAct, 2: LegalAct} */
@@ -203,22 +212,47 @@ final class GeorgiaLegislationSeeder extends Seeder
         }
     }
 
-    /** Only lines whose article is plain in the Code. @param array<string, TaxType> $taxes */
+    /** resources/law/thresholds.php. @param array<string, TaxType> $taxes */
     private function thresholds(array $taxes, LegalAct $code): void
     {
-        $lines = [
-            ['vat', 'registration', '165.1', 'VAT registration — taxable turnover', 100_000, ThresholdPeriod::Rolling12Months],
-            ['income', 'small_business', '90.2', 'Small business turnover', 500_000, ThresholdPeriod::CalendarYear],
-            ['income', 'gifts', '82.1.თ', 'Gifts exempt from income tax', 1_000, ThresholdPeriod::CalendarYear],
-            ['income', 'distant_heirs', '82.1.ი', 'Gifts and inheritance from III- and IV-order heirs', 150_000, ThresholdPeriod::CalendarYear],
-            ['property', 'family_income', '206.1.ა', 'Family income below which an individual\'s property is exempt', 100_000, ThresholdPeriod::CalendarYear],
-        ];
+        foreach (require self::LAW . 'thresholds.php' as $tax => $lines) {
+            foreach ($lines as $key => [$article, $history]) {
+                ksort($history);
+                $first = true;
 
-        foreach ($lines as [$tax, $key, $article, $name, $gel, $period]) {
-            Threshold::query()->create([
-                'tax_type_id' => $taxes[$tax]->id, 'key' => $key, 'article' => $article, 'name' => $name,
-                'amount' => Money::GEL($gel), 'period' => $period, 'legal_act_id' => $code->id,
-            ]);
+                foreach ($history as $from => $gel) {
+                    $values = ['amount' => Money::GEL($gel), 'name' => self::label($key)];
+
+                    $first
+                        ? Threshold::query()->create([...$values, 'tax_type_id' => $taxes[$tax]->id, 'key' => $key, 'article' => $article, 'legal_act_id' => $code->id])
+                        : Threshold::amend($taxes[$tax], $key, $values, from: (string) $from, by: $code, article: $article);
+
+                    $first = false;
+                }
+            }
         }
+    }
+
+    /** resources/law/exemptions.php — that each exemption the engine applies exists; its conditions stay in code. @param array<string, TaxType> $taxes */
+    private function exemptions(array $taxes, LegalAct $code): void
+    {
+        $rows = [];
+
+        foreach (require self::LAW . 'exemptions.php' as $tax => $exemptions) {
+            foreach ($exemptions as $article => [$name, $withCredit]) {
+                $rows[] = [
+                    'tax_type_id' => $taxes[$tax]->id, 'key' => (string) $article, 'article' => (string) $article,
+                    'name' => mb_substr($name, 0, 255), 'with_credit' => $withCredit, 'legal_act_id' => $code->id,
+                    'created_at' => now(), 'updated_at' => now(),
+                ];
+            }
+        }
+
+        Exemption::query()->insert($rows);
+    }
+
+    private static function label(string $key): string
+    {
+        return ucfirst(str_replace('_', ' ', $key));
     }
 }

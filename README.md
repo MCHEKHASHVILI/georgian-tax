@@ -125,7 +125,7 @@ Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($acc
 | `pipelines.<tax>` | — | Replace a tax's stages and rules without forking: same shape as `Tax::stages()` |
 | `ledger` | `eloquent` | `memory` for per-request quotes and tests |
 | `books` | `EloquentBooks` | Your `CompanyBooks` implementation |
-| `law.source` | `file` | `database` reads rates, with their history, from tax-legislation's tables |
+| `law.source` | `file` | `database` reads rates, thresholds, tables and exemptions, with their history, from tax-legislation's tables |
 | `database.*` | default connection, `georgian_tax_` | Connection, table prefix, whether to run the migrations |
 | `property.*` | the Code's caps | Your municipal councils' property and land rates, checked against the caps |
 | `law.*` | package tables | Point at your own copy of a law table to follow an amendment early (`vendor:publish --tag=georgian-tax-law`) |
@@ -141,12 +141,19 @@ Georgia's law lives in `mchekhashvili/tax-legislation`'s tables, per country, wi
 | Legal acts | The Tax Code №3591-IIს of 17 September 2010, in force from 1 January 2011 (Art. 310.1); the 2004 Tax Code it repealed; Law №6942 of 15 July 2020, the latest amendment of Art. 6 |
 | Tax types | The six taxes of Art. 6.5–6.6, with their engine classes |
 | Rates | Every rate in `resources/law/rates.php`, plus the 204.2 and 204.3 land rates |
+| Thresholds | Every amount the engine draws a line at (`resources/law/thresholds.php`): VAT registration, gift and heir limits, small business, agricultural, pension, lottery, family income |
 | Tables | The excise table (188.1), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
-| Thresholds | VAT registration 100,000 GEL (165.1), small business 500,000 GEL (90.2), gifts 1,000 GEL (82.1.თ), distant heirs 150,000 GEL (82.1.ი), family income 100,000 GEL (206.1.ა) |
+| Exemptions | Each of the 244 exemptions the engine applies (`resources/law/exemptions.php`, generated from the code); their conditions stay in code |
 
-Start dates are left open, meaning in force since before the recorded history. Exemptions aren't seeded yet, because the engine still applies them in code. Past taxes (the social tax and others) and earlier rates are added with `amend()`, `abolish()` and new `TaxType` rows.
+Start dates are left open, meaning in force since before the recorded history. Past taxes and earlier values are added through tax-legislation's forms (`RecordTaxType`, `AmendLaw`, `RepealLaw`, `AbolishTaxType`). Every change logs a revision with its editor, reason and source.
 
-With `GEORGIAN_TAX_LAW_SOURCE=database`, the engine reads rates from that history instead of the file. A rate change recorded with `TaxRate::amend($vat, '166', ['percent' => 20], from: '2027-01-01', by: $law)` then applies to events from that day on, with no code change.
+With `GEORGIAN_TAX_LAW_SOURCE=database`, the engine reads the law from that history instead of the files:
+
+- **Rates, thresholds and tables** come from the values in force on the event's day. A change entered with `AmendLaw` applies from its date, with no code change.
+- **Exemptions** apply only while recorded in force. A repealed one stops applying from its repeal date.
+- **Taxes** run only within their recorded period. A past tax recorded without an engine (the social tax, say) shows in the report as `NotComputed` for events while it was in force.
+
+The whole test suite runs both ways — law from the files and law from the database — with the same results, and CI checks both on Laravel 12 and 13.
 
 ## Structure
 
@@ -165,6 +172,7 @@ src/
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
+    LawTables.php the excise, import and land tables as they stood on a day
   IncomeTax/      Assessment → IdentifyTaxpayer → ResolveSource → ApplyExemptions
                   → ApplySpecialRegime → ApplyAnnualAllowance → ApplyRules
   Vat/            Supply → IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
@@ -179,7 +187,7 @@ src/
   Listeners/      FlagVatRegistration
 config/georgian-tax.php
 database/migrations/ database/seeders/ — GeorgiaLegislationSeeder
-resources/law/    rates.php, excise.php, import.php, property.php — the Code's tables
+resources/law/    rates.php, thresholds.php, exemptions.php, excise.php, import.php, property.php
 ```
 
 ## The two pipelines
@@ -290,4 +298,10 @@ composer install
 composer test
 ```
 
-Pest on Orchestra Testbench. `tests/Taxes` has one file per tax with one test per catalogued case, plus checks that every rule cites an article; `tests/Laravel` covers the provider, config, facade, Eloquent ledger, stored reports, events, queue, and the Georgia legislation seeder with the engine on database rates. CI runs both on Laravel 12 and 13.
+Pest on Orchestra Testbench. `tests/Taxes` has one file per tax with one test per catalogued case, plus checks that every rule cites an article. `tests/Laravel` covers the provider, config, facade, Eloquent ledger, stored reports, events, queue, the Georgia legislation seeder, and amending the law through the forms.
+
+```
+GEORGIAN_TAX_LAW_SOURCE=database composer test    # the same suite, the law read from the database
+```
+
+CI runs both modes on Laravel 12 and 13.

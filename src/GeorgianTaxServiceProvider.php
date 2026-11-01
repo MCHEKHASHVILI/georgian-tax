@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax;
 
+use GeorgianTax\Engine\LawTables;
 use GeorgianTax\Engine\Tax;
 use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\ImportTax\ImportTable;
@@ -28,6 +29,9 @@ use Mchekhashvili\TaxLegislation\Events\TaxableEventAssessed;
 use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
 use Mchekhashvili\TaxLegislation\Rates\EloquentRateTable;
 use Mchekhashvili\TaxLegislation\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\ConfigThresholdTable;
+use Mchekhashvili\TaxLegislation\Rates\EloquentThresholdTable;
+use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * Georgia's law on top of mchekhashvili/tax-legislation: registers Georgia's six taxes with the
@@ -48,6 +52,10 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
         $this->app->singleton(RateTable::class, fn () => config('georgian-tax.law.source') === 'database'
             ? new EloquentRateTable(Tax::COUNTRY)
             : ConfigRateTable::standard($this->law('rates') ?? __DIR__ . '/../resources/law/rates.php'));
+        $this->app->singleton(ThresholdTable::class, fn () => config('georgian-tax.law.source') === 'database'
+            ? new EloquentThresholdTable(Tax::COUNTRY)
+            : ConfigThresholdTable::fromFile($this->law('thresholds') ?? __DIR__ . '/../resources/law/thresholds.php', 'GEL'));
+        $this->app->scoped(LawTables::class);
         $this->app->singleton(ExciseTable::class, fn () => ExciseTable::standard($this->law('excise')));
         $this->app->singleton(ImportTable::class, fn () => ImportTable::standard($this->law('import')));
         $this->app->singleton(LandRates::class, fn () => LandRates::standard($this->law('land')));
