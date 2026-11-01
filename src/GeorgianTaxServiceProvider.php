@@ -5,32 +5,49 @@ declare(strict_types=1);
 namespace GeorgianTax;
 
 use GeorgianTax\Engine\Tax;
-use GeorgianTax\Engine\TaxEngine;
-use GeorgianTax\Events\TaxableEventAssessed;
 use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\ImportTax\ImportTable;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\Eloquent\EloquentLedger;
 use GeorgianTax\Ledger\InMemoryLedger;
 use GeorgianTax\Ledger\YearToDate;
-use GeorgianTax\Listeners\StoreAssessment;
+use GeorgianTax\Listeners\FlagVatRegistration;
 use GeorgianTax\PropertyTax\LandRates;
 use GeorgianTax\PropertyTax\MunicipalRates;
-use GeorgianTax\Rates\ConfigRateTable;
-use GeorgianTax\Rates\RateTable;
-use Illuminate\Contracts\Bus\Dispatcher as Bus;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
+use Mchekhashvili\Money\Money;
+use Mchekhashvili\TaxLegislation\Contracts\Ledger;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
+use Mchekhashvili\TaxLegislation\Engine\TaxRegistry;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Events\TaxableEventAssessed;
+use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
+use Mchekhashvili\TaxLegislation\Rates\EloquentRateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
+/**
+ * Georgia's law on top of mchekhashvili/tax-legislation: registers Georgia's six taxes with the
+ * engine, binds the Georgian ledger and tables, and adds Georgian questions to the TaxReport.
+ */
 final class GeorgianTaxServiceProvider extends ServiceProvider
 {
+    public const ENGINE = 'georgian-tax.engine';
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/georgian-tax.php', 'georgian-tax');
 
-        // The law: rate tables, read once.
-        $this->app->singleton(RateTable::class, fn () => ConfigRateTable::standard($this->law('rates')));
+        // Georgia's taxes, in order, into the shared engine.
+        $this->callAfterResolving(TaxRegistry::class, fn (TaxRegistry $registry) => $registry->register(...(array) config('georgian-tax.taxes')));
+
+        // The law: rates from the database (with their history) or from the package's files.
+        $this->app->singleton(RateTable::class, fn () => config('georgian-tax.law.source') === 'database'
+            ? new EloquentRateTable(Tax::COUNTRY)
+            : ConfigRateTable::standard($this->law('rates') ?? __DIR__ . '/../resources/law/rates.php'));
         $this->app->singleton(ExciseTable::class, fn () => ExciseTable::standard($this->law('excise')));
         $this->app->singleton(ImportTable::class, fn () => ImportTable::standard($this->law('import')));
         $this->app->singleton(LandRates::class, fn () => LandRates::standard($this->law('land')));
@@ -49,28 +66,37 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
             );
         });
 
-        // Year-to-date history and company figures.
+        // Year-to-date history — the engine's ledger — and company figures.
         $this->app->singleton(YearToDate::class, fn (Container $app) => match (config('georgian-tax.ledger')) {
             'memory' => new InMemoryLedger(),
             default => $app->make(EloquentLedger::class),
         });
+        $this->app->singleton(Ledger::class, fn (Container $app) => $app->make(YearToDate::class));
         $this->app->bindIf(CompanyBooks::class, fn (Container $app) => $app->make(config('georgian-tax.books')));
 
-        // The engine, with the configured taxes in order.
-        $this->app->scoped(TaxEngine::class, fn (Container $app) => new TaxEngine(
-            $app,
-            $app->make(YearToDate::class),
-            $app->make('events'),
-            $app->make(Bus::class),
-            array_map(fn (string $tax): Tax => $app->make($tax), (array) config('georgian-tax.taxes')),
-        ));
+        // The engine narrowed to Georgia — what the GeorgianTax facade resolves.
+        $this->app->scoped(self::ENGINE, fn (Container $app) => $app->make(TaxEngine::class)->forCountry(Tax::COUNTRY));
     }
 
     public function boot(Dispatcher $events): void
     {
-        if (config('georgian-tax.store_reports') && config('georgian-tax.ledger') !== 'memory') {
-            $events->listen(TaxableEventAssessed::class, StoreAssessment::class);
-        }
+        $events->listen(TaxableEventAssessed::class, FlagVatRegistration::class);
+
+        /** VAT the supplier adds on top of the price — what the customer pays beyond the event amount. */
+        TaxReport::macro('vatCharged', function (): Money {
+            /** @var TaxReport $this */
+            $vat = $this->for('vat');
+
+            return $vat instanceof Taxable && $vat->collection === Collection::MonthlyDeclaration ? $vat->amount : Money::GEL(0);
+        });
+
+        /** What the payer actually transfers to the recipient after withholding. */
+        TaxReport::macro('netToRecipient', function (): Money {
+            /** @var TaxReport $this */
+            return $this->charges()
+                ->filter(fn ($o) => $o instanceof Taxable && $o->collection === Collection::WithheldAtSource)
+                ->reduce(fn (Money $net, Taxable $o) => $net->minus($o->amount), $this->event->income());
+        });
 
         if (config('georgian-tax.database.run_migrations')) {
             $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

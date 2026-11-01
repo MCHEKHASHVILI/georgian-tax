@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GeorgianTax\IncomeTax\Rule\NonResident;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Catch-all for non-residents without a Georgian PE — including services sourced in Georgia by

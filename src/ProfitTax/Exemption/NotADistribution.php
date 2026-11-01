@@ -7,8 +7,8 @@ namespace GeorgianTax\ProfitTax\Exemption;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\ProfitTax\Outflow;
 use GeorgianTax\ProfitTax\OutflowKind;
 

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Stage;
 
 use Closure;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Source\SourceRule;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Decides whether the income is from a Georgian source (Art. 104). The first rule with an opinion wins.

@@ -23,8 +23,10 @@ jobs:
           php-version: '8.4'
           extensions: bcmath, pdo_sqlite
           coverage: none
-      # mchekhashvili/money is not on Packagist yet
+      # not on Packagist yet
       - run: composer config repositories.money vcs https://github.com/MCHEKHASHVILI/money
+      - run: composer config repositories.countries vcs https://github.com/MCHEKHASHVILI/countries
+      - run: composer config repositories.tax-legislation vcs https://github.com/MCHEKHASHVILI/tax-legislation
       - run: composer require "illuminate/support:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --dev --no-update
       - run: composer update --no-interaction --no-progress --with-all-dependencies
       - run: composer test

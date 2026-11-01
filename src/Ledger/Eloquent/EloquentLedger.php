@@ -9,7 +9,8 @@ use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent as Event;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use GeorgianTax\Ledger\Eloquent\Models\IncomeEntry;
 use GeorgianTax\Ledger\Eloquent\Models\SpendingEntry;
 use GeorgianTax\Ledger\Eloquent\Models\TurnoverEntry;
@@ -61,7 +62,7 @@ final readonly class EloquentLedger implements YearToDate
         return self::gel(SpendingEntry::query()->where('company', $company->id)->where('year', $year)->where('category', $category)->sum('amount'));
     }
 
-    public function record(TaxableEvent $event, TaxReport $report): void
+    public function record(Event $event, TaxReport $report): void
     {
         $entries = LedgerEntries::for($event, $report);
         $connection = new IncomeEntry()->getConnectionName();

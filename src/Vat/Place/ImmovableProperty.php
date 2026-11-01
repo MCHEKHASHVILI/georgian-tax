@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Vat\Place;
 
 use GeorgianTax\Domain\Income\SupplyCategory;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Vat\Supply;
 
 /** Services linked to immovable property — including estate agents, experts and site supervision — follow the property. */

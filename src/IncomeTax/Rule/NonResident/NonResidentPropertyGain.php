@@ -6,11 +6,11 @@ namespace GeorgianTax\IncomeTax\Rule\NonResident;
 
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Event\Sell;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * A non-resident individual selling property with a Georgian source is not withheld under 134 (80.3);

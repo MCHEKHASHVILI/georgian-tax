@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GeorgianTax\ImportTax\Stage;
 
 use Closure;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Stage\FirstMatch;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Stage\FirstMatch;
 use GeorgianTax\ImportTax\Rule\Rule;
 
 /**

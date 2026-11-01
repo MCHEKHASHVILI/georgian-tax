@@ -9,14 +9,14 @@ use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Property\PropertyItem;
-use GeorgianTax\Domain\Rate;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\Levied;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Rate;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * The subject of the property tax pipeline: one item held in one tax year.

@@ -9,10 +9,10 @@ use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Relief;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Art. 82.2–82.3 — veterans, single parents, people with disabilities and others have an annual

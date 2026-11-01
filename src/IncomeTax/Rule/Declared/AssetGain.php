@@ -7,12 +7,12 @@ namespace GeorgianTax\IncomeTax\Rule\Declared;
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Event\Sell;
 use GeorgianTax\Domain\Party\PartyKind;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * A resident individual's gain on a sale not exempted by 82.1.ვ:

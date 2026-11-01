@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Rule\NonResident;
 
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Rent paid to a non-resident individual is taxed at the Art. 81 rate. When the payer isn't a tax

@@ -18,11 +18,11 @@ use GeorgianTax\Domain\Party\Regime;
 use GeorgianTax\Domain\Party\Relief;
 use GeorgianTax\Domain\Party\Residency;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use GeorgianTax\IncomeTax\IncomeTax;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Tests\Support\IncomeTaxCase;
 use Mchekhashvili\Money\Money;
 

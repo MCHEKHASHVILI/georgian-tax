@@ -10,12 +10,12 @@ use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\Levied;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\TaxEngine;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
 use GeorgianTax\Tests\TestCase;
 use Mchekhashvili\Money\Money;
 

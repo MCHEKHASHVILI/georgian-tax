@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GeorgianTax\Vat\Rule;
 
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Vat\Supply;
 
 /**

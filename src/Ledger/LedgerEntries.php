@@ -12,9 +12,9 @@ use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\CountsAsTurnover;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\CountsAsTurnover;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Mchekhashvili\Money\Money;
 
 /**
@@ -41,7 +41,7 @@ final readonly class LedgerEntries
 
         $turnover = [];
         foreach ($report->outcomes as $outcome) {
-            if ($outcome instanceof CountsAsTurnover && $outcome->turnoverOf() !== null && !$outcome->turnover()->isZero()) {
+            if ($outcome instanceof CountsAsTurnover && $outcome->turnoverOf() !== null && $outcome->turnover()?->isZero() === false) {
                 $turnover[] = ['party' => $outcome->turnoverOf()->id, 'tax' => $outcome->tax(), 'on' => $on, 'amount' => $outcome->turnover()];
             }
         }

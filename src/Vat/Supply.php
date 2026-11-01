@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Vat;
 
+use GeorgianTax\Engine\Deadline;
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Import;
@@ -17,15 +18,15 @@ use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\ExemptWithCredit;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\ExemptWithCredit;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Ledger\YearToDate;
-use GeorgianTax\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
  * The subject flowing through the VAT stages: the event read as a supply — who supplies, who
@@ -169,7 +170,7 @@ final readonly class Supply
 
         return new Taxable(
             self::TAX, self::cite($basis), $this->supplier(), $base, $rate, $base->percent($rate->percent),
-            $collection, $agent, $collection->deadline($this->event->date()), $notes,
+            $collection, $agent, Deadline::of($collection, $this->event->date()), $notes,
             creditableBy: $this->creditor($agent),
             countsAsTurnover: $chargedBySupplier,
         );

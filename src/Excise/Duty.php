@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise;
 
+use GeorgianTax\Engine\Deadline;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Goods\Commodity;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\ExemptWithCredit;
-use GeorgianTax\Engine\Outcome\Levied;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\ExemptWithCredit;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /** The subject of the excise pipeline: excise goods, who is liable, and which operation. */
 final readonly class Duty
@@ -52,7 +53,7 @@ final readonly class Duty
 
         return new Levied(
             self::TAX, self::cite($basis), $this->taxpayer, $quantity, $unit, Money::GEL($ratePerUnit), $amount,
-            $collection, $collection->deadline($this->event->date()), $notes,
+            $collection, Deadline::of($collection, $this->event->date()), $notes,
         );
     }
 

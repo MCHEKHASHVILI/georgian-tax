@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GeorgianTax\Excise\Rate;
 
 use Mchekhashvili\Money\Money;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Cigarettes, cigarillos and heated tobacco: a specific rate per 20 plus a share of the retail

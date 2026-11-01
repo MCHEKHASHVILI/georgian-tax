@@ -6,11 +6,11 @@ namespace GeorgianTax\IncomeTax\Rule\Withholding;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /** A brokerage pays out the gain on securities it sold for someone not registered as a taxpayer. */
 #[Article('154.1.ლ', 'Securities gain paid out by a broker')]

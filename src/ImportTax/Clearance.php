@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ImportTax;
 
+use GeorgianTax\Engine\Deadline;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Goods\Commodity;
 use Mchekhashvili\Money\Money;
-use GeorgianTax\Domain\Rate;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\Levied;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Rate;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * The subject of the import tax pipeline: goods crossing the customs border into Georgia (Art. 195–196).
@@ -50,7 +51,7 @@ final readonly class Clearance
 
         return new Taxable(
             self::TAX, self::cite($basis), $this->import->importer, $base, $rate, $base->percent($rate->percent),
-            Collection::AtCustoms, null, Collection::AtCustoms->deadline($this->event->date()),
+            Collection::AtCustoms, null, Deadline::of(Collection::AtCustoms, $this->event->date()),
             countsAsTurnover: false,
         );
     }
@@ -66,7 +67,7 @@ final readonly class Clearance
         return new Levied(
             self::TAX, self::cite($basis), $this->import->importer, $quantity, $unit, Money::GEL($ratePerUnit),
             Money::GEL($quantity * $ratePerUnit)->plus($extra ?? Money::GEL(0)),
-            Collection::AtCustoms, Collection::AtCustoms->deadline($this->event->date()), $notes,
+            Collection::AtCustoms, Deadline::of(Collection::AtCustoms, $this->event->date()), $notes,
         );
     }
 

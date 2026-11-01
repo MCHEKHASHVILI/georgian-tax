@@ -63,44 +63,13 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['company', 'year']);
         });
-
-        Schema::create($t('assessments'), function (Blueprint $table) {
-            $table->id();
-            $table->string('event_type');
-            $table->longText('payload');
-            $table->date('occurred_on')->index();
-            $table->bigInteger('total_tax');
-            $table->timestamps();
-        });
-
-        Schema::create($t('outcomes'), function (Blueprint $table) use ($t) {
-            $table->id();
-            $table->foreignId('assessment_id')->constrained($t('assessments'))->cascadeOnDelete();
-            $table->string('tax', 20);
-            $table->string('outcome', 20);
-            $table->string('article', 40);
-            $table->string('title')->nullable();
-            $table->string('taxpayer')->nullable()->index();
-            $table->string('agent')->nullable()->index();
-            $table->bigInteger('base')->nullable();
-            $table->decimal('rate', 8, 4)->nullable();
-            $table->decimal('quantity', 18, 4)->nullable();
-            $table->string('unit', 30)->nullable();
-            $table->bigInteger('amount')->nullable();
-            $table->string('collection', 30)->nullable();
-            $table->date('due_on')->nullable()->index();
-            $table->text('summary');
-            $table->json('notes')->nullable();
-            $table->timestamps();
-            $table->index(['tax', 'outcome']);
-        });
     }
 
     public function down(): void
     {
         $t = fn (string $name) => config('georgian-tax.database.table_prefix', 'georgian_tax_') . $name;
 
-        foreach (['outcomes', 'assessments', 'company_years', 'spending_entries', 'turnover_entries', 'income_entries'] as $name) {
+        foreach (['company_years', 'spending_entries', 'turnover_entries', 'income_entries'] as $name) {
             Schema::dropIfExists($t($name));
         }
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Vat\Place;
 
 use GeorgianTax\Domain\Income\SupplyCategory as C;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Vat\Supply;
 
 /**

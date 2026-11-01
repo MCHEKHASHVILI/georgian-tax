@@ -7,12 +7,12 @@ namespace GeorgianTax\IncomeTax\Rule\Declared;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Inherit;
 use GeorgianTax\Domain\Income\HeirOrder;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * A gift or inheritance no exemption released, received from someone who isn't a tax agent.

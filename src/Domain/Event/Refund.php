@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Domain\Event;
 
+use Mchekhashvili\TaxLegislation\Contracts\Reverses;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
@@ -14,13 +15,18 @@ use GeorgianTax\Domain\Party\Party;
  * Reverses all or part of an earlier event. Taxes assess the original and negate the result
  * in proportion, so no rule needs refund-specific logic.
  */
-final readonly class Refund implements TaxableEvent
+final readonly class Refund implements TaxableEvent, Reverses
 {
     public function __construct(
         public TaxableEvent $original,
         public DateTimeImmutable $on,
         public ?Money $portion = null,
     ) {}
+
+    public function original(): TaxableEvent
+    {
+        return $this->original;
+    }
 
     /** Share of the original being reversed, 0–1. */
     public function share(): float

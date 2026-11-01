@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GeorgianTax\IncomeTax;
 
-use GeorgianTax\Domain\Event\TaxableEvent;
+use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent;
 use GeorgianTax\Engine\Tax;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use GeorgianTax\IncomeTax\Exemption as E;
@@ -15,7 +15,7 @@ use GeorgianTax\IncomeTax\Rule\NonResident as N;
 use GeorgianTax\IncomeTax\Rule\Withholding as W;
 use GeorgianTax\IncomeTax\Source as S;
 use GeorgianTax\Ledger\YearToDate;
-use GeorgianTax\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
  * Income tax as one stage of the engine, and a pipeline of its own:

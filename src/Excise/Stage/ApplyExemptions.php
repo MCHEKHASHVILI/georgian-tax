@@ -9,10 +9,10 @@ use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Income\SupplyCategory;
 use Mchekhashvili\Money\Money;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
 use GeorgianTax\Excise\Operation;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Art. 194. Exempt with credit (194.6–7): exports, duty-free supplies, property seized for the

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace GeorgianTax\IncomeTax\Rule\Declared;
 
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Catch-all: Georgian-source income of an individual that nobody withheld — an entrepreneur's sales,

@@ -10,7 +10,7 @@ use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Contracts\Ledger;
 
 /**
  * Annual thresholds need history: the 1,000 GEL gift allowance, 150,000 GEL from distant heirs,
@@ -18,7 +18,7 @@ use GeorgianTax\Engine\TaxReport;
  * the current event and records the event after assessing it.
  * Back it with your own database; InMemoryLedger is for tests.
  */
-interface YearToDate
+interface YearToDate extends Ledger
 {
     /** Income the recipient received this year, optionally only of some kinds. */
     public function received(Party $recipient, int $year, IncomeKind ...$kinds): Money;
@@ -41,5 +41,4 @@ interface YearToDate
     /** What a company spent this year on one category — 'charity', or an ExpenseNature value such as '98⁴'. */
     public function spent(Party $company, int $year, string $category): Money;
 
-    public function record(TaxableEvent $event, TaxReport $report): void;
 }

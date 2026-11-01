@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ProfitTax\Rule;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ProfitTax\Outflow;
 
 interface Rule

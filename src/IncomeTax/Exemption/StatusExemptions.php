@@ -7,9 +7,9 @@ namespace GeorgianTax\IncomeTax\Exemption;
 use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Income released by the recipient's status:

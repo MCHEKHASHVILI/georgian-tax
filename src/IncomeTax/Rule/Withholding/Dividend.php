@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Rule\Withholding;
 
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /** To individuals, non-profits and non-resident companies alike (134.1.ა points here). Final tax (130.3). */
 #[Article('130.1', 'Dividend')]

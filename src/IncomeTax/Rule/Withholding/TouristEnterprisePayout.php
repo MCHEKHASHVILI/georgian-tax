@@ -6,10 +6,10 @@ namespace GeorgianTax\IncomeTax\Rule\Withholding;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /** A tourist enterprise paying the individual owner of a hotel room. Final tax (133².2). */
 #[Article('133².1', 'Tourist enterprise payout to a room owner')]

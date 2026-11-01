@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\IncomeTax\Rule;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 
 /**

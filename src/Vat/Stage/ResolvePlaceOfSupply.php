@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GeorgianTax\Vat\Stage;
 
 use Closure;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Vat\Place\PlaceRule;
 use GeorgianTax\Vat\Supply;
 

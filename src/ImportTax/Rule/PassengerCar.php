@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace GeorgianTax\ImportTax\Rule;
 
 use Mchekhashvili\Money\Money;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Passenger cars (HS 8703): 0.05 GEL per cm³ of engine, plus 5% of that amount for each year the

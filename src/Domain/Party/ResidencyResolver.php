@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Domain\Party;
 
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Cites;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Cites;
 
 /**
  * An individual is resident for the whole tax year if physically in Georgia 183+ days in any continuous

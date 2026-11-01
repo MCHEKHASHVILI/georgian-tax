@@ -9,10 +9,10 @@ use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Tests\Support\ImportTaxCase;
 use Mchekhashvili\Money\Money;
 

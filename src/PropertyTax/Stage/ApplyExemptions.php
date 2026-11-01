@@ -10,9 +10,9 @@ use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Domain\Property\PropertyKind as K;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\Holding;
 
 /**

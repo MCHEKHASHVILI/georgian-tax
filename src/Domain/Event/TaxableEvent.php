@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Domain\Event;
 
+use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent as Contract;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
@@ -14,7 +15,7 @@ use GeorgianTax\Domain\Party\Party;
  * A verb: something happened that may create a tax. Pay, Sell, Gift, Inherit and Refund implement it.
  * Each tax in the engine reads the same event and decides for itself.
  */
-interface TaxableEvent
+interface TaxableEvent extends Contract
 {
     /** Who receives the income — the potential income taxpayer. */
     public function recipient(): Party;

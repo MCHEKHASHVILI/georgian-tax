@@ -6,7 +6,7 @@ namespace GeorgianTax\IncomeTax\Source;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Dividends from a resident company (104.1.ვ), interest and royalty paid by a resident or charged to a

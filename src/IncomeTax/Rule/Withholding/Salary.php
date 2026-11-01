@@ -6,12 +6,12 @@ namespace GeorgianTax\IncomeTax\Rule\Withholding;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * The employer withholds 20%. Three employers are carved out:

@@ -6,10 +6,10 @@ namespace GeorgianTax\IncomeTax\Rule\Withholding;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 #[Article('23.7', 'Salary from an international company')]
 final class InternationalCompanySalary implements Rule

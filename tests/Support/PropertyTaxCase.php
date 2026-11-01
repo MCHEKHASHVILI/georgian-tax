@@ -7,12 +7,12 @@ namespace GeorgianTax\Tests\Support;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Property\PropertyItem;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\Levied;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\TaxEngine;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
 use GeorgianTax\PropertyTax\MunicipalRates;
 use GeorgianTax\Tests\TestCase;
 use Mchekhashvili\Money\Money;
@@ -38,7 +38,7 @@ abstract class PropertyTaxCase extends TestCase
     {
         if ($rates !== null) {
             $this->app->instance(MunicipalRates::class, $rates);
-            $this->app->forgetInstance(TaxEngine::class);
+            $this->refreshEngine();
         }
 
         return $this->taxEngine();

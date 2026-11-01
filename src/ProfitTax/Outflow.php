@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ProfitTax;
 
+use GeorgianTax\Engine\Deadline;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\YearToDate;
-use GeorgianTax\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
  * The subject of the profit tax pipeline: value leaving a company. Georgia taxes profit when it is
@@ -67,7 +68,7 @@ final readonly class Outflow
 
         return new Taxable(
             self::TAX, self::cite($basis), $this->company, $base, $rate, $base->percent($rate->percent),
-            $collection, null, $collection->deadline($this->event->date()),
+            $collection, null, Deadline::of($collection, $this->event->date()),
             ["$paid paid out, grossed up to $base (÷ " . ((100 - $rate->percent) / 100) . ').', ...$notes],
         );
     }

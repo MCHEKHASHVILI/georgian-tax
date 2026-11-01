@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise\Rate;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /** Motorcycles and mopeds (HS 8711), per cm³, by age (188.1 table, row 4). */
 #[Article('188.1', 'Motorcycles')]

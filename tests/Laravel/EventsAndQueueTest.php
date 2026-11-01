@@ -6,10 +6,10 @@ use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Events\TaxableEventAssessed;
+use Mchekhashvili\TaxLegislation\Events\TaxableEventAssessed;
 use GeorgianTax\Events\VatRegistrationRequired;
 use GeorgianTax\Facades\GeorgianTax;
-use GeorgianTax\Jobs\AssessTaxableEvent;
+use Mchekhashvili\TaxLegislation\Jobs\AssessTaxableEvent;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use Mchekhashvili\Money\Money;
@@ -60,7 +60,7 @@ it('queues an assessment', function () {
 });
 
 it('puts the job on the configured connection and queue', function () {
-    config()->set('georgian-tax.queue', ['connection' => 'redis', 'queue' => 'tax']);
+    config()->set('tax-legislation.queue', ['connection' => 'redis', 'queue' => 'tax']);
 
     $job = new AssessTaxableEvent(($this->sale)(100));
 

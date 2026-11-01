@@ -6,9 +6,9 @@ namespace GeorgianTax\Vat\Rule;
 
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Vat\Supply;
 
 /**

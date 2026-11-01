@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ImportTax\Rule;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Wine, vermouth, fermented drinks, ethyl alcohol, spirits and vinegar (197.3), in euro:

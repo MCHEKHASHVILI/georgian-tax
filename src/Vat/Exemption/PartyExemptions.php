@@ -7,8 +7,8 @@ namespace GeorgianTax\Vat\Exemption;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Vat\Supply;
 
 /**

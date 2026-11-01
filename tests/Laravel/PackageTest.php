@@ -6,14 +6,14 @@ use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\TaxEngine;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
 use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\Facades\GeorgianTax;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\MunicipalRates;
-use GeorgianTax\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 use GeorgianTax\Vat\Supply;
 use Mchekhashvili\Money\Money;
 
@@ -65,14 +65,14 @@ it('quotes without recording', function () {
 
 it('lets the app replace a tax\'s stages from config', function () {
     config()->set('georgian-tax.pipelines.vat', [ZeroVatForTests::class]);
-    app()->forgetInstance(TaxEngine::class);
+    $this->refreshEngine();
 
     expect(GeorgianTax::process(serviceFromGermany())->for('vat')->basis()->ref)->toBe('test');
 });
 
 it('lets the app add or reorder taxes from config', function () {
     config()->set('georgian-tax.taxes', [\GeorgianTax\IncomeTax\IncomeTax::class]);
-    app()->forgetInstance(TaxEngine::class);
+    $this->refreshEngine();
 
     expect(GeorgianTax::taxes()->keys()->all())->toBe(['income']);
 });

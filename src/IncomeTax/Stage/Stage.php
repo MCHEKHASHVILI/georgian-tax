@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Stage;
 
 use Closure;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 
 /** One step of the income tax pipeline. Answer, or pass to $next. */

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ProfitTax;
 
-use GeorgianTax\Domain\Event\TaxableEvent;
+use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent;
 use GeorgianTax\Engine\Tax;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\YearToDate;
 use GeorgianTax\ProfitTax\Exemption as E;
 use GeorgianTax\ProfitTax\Rule as R;
-use GeorgianTax\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
  * Profit tax as one stage of the engine, and a pipeline of its own:

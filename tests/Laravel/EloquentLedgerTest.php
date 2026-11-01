@@ -14,8 +14,8 @@ use GeorgianTax\Facades\GeorgianTax;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\Eloquent\EloquentBooks;
 use GeorgianTax\Ledger\Eloquent\EloquentLedger;
-use GeorgianTax\Ledger\Eloquent\Models\AssessedOutcome;
-use GeorgianTax\Ledger\Eloquent\Models\Assessment;
+use Mchekhashvili\TaxLegislation\Assessments\Models\AssessedOutcome;
+use Mchekhashvili\TaxLegislation\Assessments\Models\Assessment;
 use GeorgianTax\Ledger\Eloquent\Models\IncomeEntry;
 use GeorgianTax\Ledger\YearToDate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,12 +25,12 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     config()->set('georgian-tax.ledger', 'eloquent');
-    config()->set('georgian-tax.store_reports', true);
+    config()->set('tax-legislation.store_reports', true);
     app()->forgetInstance(YearToDate::class);
-    app()->forgetInstance(\GeorgianTax\Engine\TaxEngine::class);
+    $this->refreshEngine();
     app()->forgetInstance(CompanyBooks::class);
     // The listener is registered at boot from config; register it for these tests.
-    app('events')->listen(\GeorgianTax\Events\TaxableEventAssessed::class, \GeorgianTax\Listeners\StoreAssessment::class);
+    app('events')->listen(\Mchekhashvili\TaxLegislation\Events\TaxableEventAssessed::class, \Mchekhashvili\TaxLegislation\Listeners\StoreAssessment::class);
 
     $this->today = new DateTimeImmutable('2026-10-30');
 });
@@ -42,7 +42,7 @@ it('uses the Eloquent ledger and books', function () {
 
 it('creates prefixed tables', function () {
     expect(Schema::hasTable('georgian_tax_income_entries'))->toBeTrue()
-        ->and(Schema::hasTable('georgian_tax_outcomes'))->toBeTrue();
+        ->and(Schema::hasTable('tax_assessment_outcomes'))->toBeTrue();
 });
 
 it('records income and reads year-to-date totals from the database', function () {

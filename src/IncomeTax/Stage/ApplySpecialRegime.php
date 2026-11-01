@@ -9,10 +9,10 @@ use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Regime;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Art. 83–95⁶. A special regime replaces the general rules for business income only;

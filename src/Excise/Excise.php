@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise;
 
-use GeorgianTax\Domain\Event\TaxableEvent;
+use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent;
 use GeorgianTax\Engine\Tax;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use GeorgianTax\Excise\Rate as R;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Source;
 
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Provider and recipient are in different countries and the recipient is a Georgian resident:

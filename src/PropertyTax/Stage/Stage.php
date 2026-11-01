@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\PropertyTax\Stage;
 
 use Closure;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\PropertyTax\Holding;
 
 interface Stage

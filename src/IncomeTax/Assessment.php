@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace GeorgianTax\IncomeTax;
 
+use GeorgianTax\Engine\Deadline;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Exempt;
-use GeorgianTax\Engine\Outcome\NotTaxable;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\Outcome\Unresolved;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Ledger\YearToDate;
-use GeorgianTax\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
  * The subject that flows through the income tax stages: the event plus what the stages
@@ -143,7 +144,7 @@ final readonly class Assessment
 
         return new Taxable(
             self::TAX, $basis, $this->taxpayer(), $base, $rate, $base->percent($rate->percent),
-            $collection, $agent, $collection->deadline($this->event->date()), $notes,
+            $collection, $agent, Deadline::of($collection, $this->event->date()), $notes,
         );
     }
 }

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise\Rate;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /** Everything else in the Art. 188.1 table — fuels, gases, tobacco by weight — from config/excise.php. */
 #[Article('188.1', 'Excise rate table')]

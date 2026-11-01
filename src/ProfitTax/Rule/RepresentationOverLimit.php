@@ -6,8 +6,8 @@ namespace GeorgianTax\ProfitTax\Rule;
 
 use GeorgianTax\Domain\Event\ExpenseNature;
 use Mchekhashvili\Money\Money;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\ProfitTax\Outflow;
 use GeorgianTax\ProfitTax\OutflowKind;
 

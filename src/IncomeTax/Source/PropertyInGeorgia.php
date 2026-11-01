@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Source;
 
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Selling or renting out property located or used in Georgia (104.1.კ–ნ), and services directly

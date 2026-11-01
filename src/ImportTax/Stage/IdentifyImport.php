@@ -6,10 +6,10 @@ namespace GeorgianTax\ImportTax\Stage;
 
 use Closure;
 use GeorgianTax\Domain\Event\Import;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Import tax is paid by whoever moves goods across Georgia's customs border, other than for export

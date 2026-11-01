@@ -10,7 +10,8 @@ use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent as Event;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 
 final class InMemoryLedger implements YearToDate
 {
@@ -76,7 +77,7 @@ final class InMemoryLedger implements YearToDate
         return $this->spending["{$company->id}|$year|$category"] ?? Money::GEL(0);
     }
 
-    public function record(TaxableEvent $event, TaxReport $report): void
+    public function record(Event $event, TaxReport $report): void
     {
         $entries = LedgerEntries::for($event, $report);
 

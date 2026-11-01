@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GeorgianTax\ProfitTax\Exemption;
 
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\ProfitTax\Outflow;
 
 /**

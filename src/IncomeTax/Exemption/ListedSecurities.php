@@ -7,9 +7,9 @@ namespace GeorgianTax\IncomeTax\Exemption;
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Event\Sell;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Securities the state wants traded:

@@ -6,9 +6,9 @@ namespace GeorgianTax\IncomeTax\Exemption;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
-use GeorgianTax\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  *   82.1.ღ   a lottery win of 1,000 GEL or less;

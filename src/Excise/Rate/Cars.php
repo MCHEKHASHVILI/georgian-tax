@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise\Rate;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Passenger cars (HS 8703), per cm³ of engine, by age — the event year minus the year made (188.18):

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Vat\Place;
 
 use GeorgianTax\Vat\Supply;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Goods are supplied where they are at the moment of supply, or where transport to the customer

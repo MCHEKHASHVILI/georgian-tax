@@ -11,9 +11,9 @@ use GeorgianTax\Vat\Vat;
 return [
 
     /*
-    | The taxes the engine runs, in order. Each sees what the earlier ones decided: import tax and
-    | excise must come before VAT, which adds them to its import base (Art. 164¹.2.ა). Add your own
-    | tax by extending GeorgianTax\Engine\Tax and listing it here.
+    | Georgia's taxes, in the order the engine runs them. Each sees what the earlier ones decided:
+    | import tax and excise must come before VAT, which adds them to its import base (Art. 164¹.2.ა).
+    | Add your own by extending GeorgianTax\Engine\Tax and listing it here.
     */
     'taxes' => [
         ImportTax::class,
@@ -40,9 +40,6 @@ return [
     /* Company revenue, net profit and founding year for the profit tax limits. Bind your own class. */
     'books' => EloquentBooks::class,
 
-    /* Keep every report in the assessments and outcomes tables. */
-    'store_reports' => env('GEORGIAN_TAX_STORE_REPORTS', true),
-
     'database' => [
         'connection' => env('GEORGIAN_TAX_DB_CONNECTION'),
         'table_prefix' => 'georgian_tax_',
@@ -50,10 +47,6 @@ return [
         'run_migrations' => true,
     ],
 
-    'queue' => [
-        'connection' => env('GEORGIAN_TAX_QUEUE_CONNECTION'),
-        'queue' => env('GEORGIAN_TAX_QUEUE'),
-    ],
 
     /*
     | Property tax is local (Art. 202, 204). Each municipal council sets its rate within the Code's
@@ -76,6 +69,9 @@ return [
     | own file to follow an amendment before the package catches up.
     */
     'law' => [
+        // 'file': rates from resources/law/rates.php. 'database': from the tax_rates table of
+        // mchekhashvili/tax-legislation, with their history — seed it with GeorgiaLegislationSeeder.
+        'source' => env('GEORGIAN_TAX_LAW_SOURCE', 'file'),
         'rates' => null,
         'excise' => null,
         'import' => null,

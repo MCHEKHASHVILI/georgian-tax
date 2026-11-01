@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Vat\Place;
 
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Vat\Supply;
 
 /** General rule for business customers: where the customer is established, or its fixed establishment served. */

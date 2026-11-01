@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ImportTax\Rule;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
 
 /** One way import tax is measured. Null when the goods aren't this rule's. */

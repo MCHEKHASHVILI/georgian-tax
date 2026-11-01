@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Domain\Party;
 
+use Mchekhashvili\TaxLegislation\Contracts\Taxpayer;
 use DateTimeImmutable;
 
 /**
  * Anyone who pays or receives: a person, an entrepreneur, a company, an organization or the state.
  * Residency is per tax year (Art. 34.8) — resolve it with ResidencyResolver before building the Party.
  */
-final readonly class Party
+final readonly class Party implements Taxpayer
 {
     /**
      * @param list<Status> $statuses

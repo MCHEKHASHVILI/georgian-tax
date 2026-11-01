@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise\Rate;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Terminating an international call on a Georgian network, per minute (188.3): 15 tetri on

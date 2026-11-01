@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Vat\Stage;
 
-use GeorgianTax\Engine\Stage\FirstMatch;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Stage\FirstMatch;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Vat\Exemption\Exemption;
 use GeorgianTax\Vat\Supply;
 

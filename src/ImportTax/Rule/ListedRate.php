@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ImportTax\Rule;
 
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * 12% (197.1) or 5% (197.2) of customs value for listed goods — meat, dairy, vegetables, flour,

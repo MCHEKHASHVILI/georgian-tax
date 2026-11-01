@@ -7,10 +7,10 @@ namespace GeorgianTax\IncomeTax\Stage;
 use Closure;
 use GeorgianTax\Domain\Event\Sell;
 use GeorgianTax\Domain\Party\PartyKind;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  * Income tax is paid by individuals (Art. 79). Companies pay profit tax (Art. 96),

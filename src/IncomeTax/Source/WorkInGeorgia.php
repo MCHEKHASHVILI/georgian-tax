@@ -6,7 +6,7 @@ namespace GeorgianTax\IncomeTax\Source;
 
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 #[Article('104.1.ა', 'Salary for work in Georgia')]
 final class WorkInGeorgia implements SourceRule

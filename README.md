@@ -2,9 +2,11 @@
 
 The Tax Code of Georgia as a Laravel package. All six taxes of Art. 6 — income tax, profit tax, VAT, excise, import tax and the local property tax — run as one pipeline of taxes, each tax a pipeline of its own stages and rules.
 
+It is Georgia's law on top of [`mchekhashvili/tax-legislation`](https://github.com/MCHEKHASHVILI/tax-legislation), which provides the country-neutral engine and keeps the law's history: legal acts, tax types, rates, thresholds, exemptions and tables, per country, with the dates they were in force.
+
 Every rule, exemption and source rule carries an `#[Article('134.1.ე')]` attribute, so each answer names the line of the law behind it. `docs/CATALOGUE.md` lists every event the Code defines for each tax.
 
-Requires PHP 8.4 and Laravel 12 or 13. Money is [`mchekhashvili/money`](https://github.com/MCHEKHASHVILI/money): integer tetri, exact arithmetic.
+Requires PHP 8.4 and Laravel 12 or 13. Money is [`mchekhashvili/money`](https://github.com/MCHEKHASHVILI/money): integer tetri, exact arithmetic. Countries are [`mchekhashvili/countries`](https://github.com/MCHEKHASHVILI/countries).
 
 ## Install
 
@@ -13,17 +15,20 @@ Until both packages are on Packagist, add their repositories to your app's `comp
 ```json
 "repositories": [
     { "type": "vcs", "url": "https://github.com/MCHEKHASHVILI/georgian-tax" },
+    { "type": "vcs", "url": "https://github.com/MCHEKHASHVILI/tax-legislation" },
+    { "type": "vcs", "url": "https://github.com/MCHEKHASHVILI/countries" },
     { "type": "vcs", "url": "https://github.com/MCHEKHASHVILI/money" }
 ]
 ```
 
 ```
-composer require mchekhashvili/money:^1.0@dev mchekhashvili/georgian-tax:dev-main
+composer require mchekhashvili/money:^1.0@dev mchekhashvili/countries:^1.0@dev mchekhashvili/tax-legislation:^1.0@dev mchekhashvili/georgian-tax:dev-main
 php artisan migrate
+php artisan db:seed --class="GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder"   # Georgia's law into the history tables
 php artisan vendor:publish --tag=georgian-tax-config     # optional
 ```
 
-The service provider and the `GeorgianTax` facade register themselves. (The `@dev` and `dev-main` go away once both repositories have a `v1.0.0` release.)
+The service provider and the `GeorgianTax` facade register themselves. (The `@dev` and `dev-main` go away once the repositories have `v1.0.0` releases.)
 
 ## Usage
 
@@ -87,7 +92,7 @@ GeorgianTax::process(new OwnProperty(Party::company('acme'), new PropertyItem(Pr
 
 ## In your Laravel app
 
-**Database.** The migration creates six tables, prefixed `georgian_tax_`:
+**Database.** georgian-tax's migration creates the ledger tables, prefixed `georgian_tax_`; reports and the law's history live in tax-legislation's tables:
 
 | Table | Holds |
 |---|---|
@@ -95,22 +100,22 @@ GeorgianTax::process(new OwnProperty(Party::company('acme'), new PropertyItem(Pr
 | `turnover_entries` | Turnover per party and tax — VAT's rolling 12 months |
 | `spending_entries` | Company spending by category — charity and representation limits |
 | `company_years` | Revenue, net profit and founding year — fill it from your accounting with `EloquentBooks::close()`, or bind your own `CompanyBooks` |
-| `assessments`, `outcomes` | Every report: each tax's outcome, article, base, rate, amount, who pays and when |
+| (tax-legislation) `tax_assessments`, `tax_assessment_outcomes` | Every report: each tax's outcome, article, base, rate, amount, who pays and when |
 
-Models live in `GeorgianTax\Ledger\Eloquent\Models` — `Assessment::with('outcomes')`, `AssessedOutcome::where('due_on', '<=', now())` — and money columns cast to `Money`. `Assessment::event()` gives back the original event, to re-assess after a rate change.
+Ledger models live in `GeorgianTax\Ledger\Eloquent\Models`, reports in `Mchekhashvili\TaxLegislation\Assessments\Models` — `Assessment::with('outcomes')`, `AssessedOutcome::where('due_on', '<=', now())` — and money columns cast to `Money`. `Assessment::event()` gives back the original event, to re-assess after a rate change.
 
-**Events.**
+**Events.** From tax-legislation, plus Georgia's own:
 
 | Event | When |
 |---|---|
-| `TaxableEventAssessed` | After every `process()` — carries the `TaxReport` |
+| `TaxableEventAssessed` (tax-legislation) | After every `process()` — carries the `TaxReport` |
 | `VatRegistrationRequired` | An unregistered supplier's 12-month turnover passed 100,000 GEL (165.1); `deadline()` is 2 working days on |
 
 ```php
 Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($accountants, new RegisterForVat($e->supplier, $e->deadline())));
 ```
 
-**Queue.** `GeorgianTax::queue($event)` dispatches `AssessTaxableEvent` on `config('georgian-tax.queue')`. Each event reads the totals earlier ones left, so keep one party's events in order — one worker, or a chain.
+**Queue.** `GeorgianTax::queue($event)` dispatches tax-legislation's `AssessTaxableEvent` on `config('tax-legislation.queue')`. Each event reads the totals earlier ones left, so keep one party's events in order — one worker, or a chain.
 
 **Config** (`config/georgian-tax.php`):
 
@@ -120,34 +125,35 @@ Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($acc
 | `pipelines.<tax>` | — | Replace a tax's stages and rules without forking: same shape as `Tax::stages()` |
 | `ledger` | `eloquent` | `memory` for per-request quotes and tests |
 | `books` | `EloquentBooks` | Your `CompanyBooks` implementation |
-| `store_reports` | `true` | Keep reports in `assessments` / `outcomes` |
+| `law.source` | `file` | `database` reads rates, with their history, from tax-legislation's tables |
 | `database.*` | default connection, `georgian_tax_` | Connection, table prefix, whether to run the migrations |
 | `property.*` | the Code's caps | Your municipal councils' property and land rates, checked against the caps |
 | `law.*` | package tables | Point at your own copy of a law table to follow an amendment early (`vendor:publish --tag=georgian-tax-law`) |
 
-**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `RateTable`, `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace.
+**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `RateTable`, `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
 
 ## Legislation history
 
-Tax law changes, so the package records it. The first piece is the list of taxes itself: `GeorgianTax\Legislation\Models\TaxType`, one row per tax per period it was in force.
+Georgia's law lives in `mchekhashvili/tax-legislation`'s tables, per country, with the dates it was in force and the acts behind it. `GeorgiaLegislationSeeder` loads what the Code says today:
 
-```php
-TaxType::query()->current()->get();                 // the taxes in force today
-TaxType::query()->inForceOn('2007-06-01')->get();   // the taxes on a past day
-TaxType::query()->historyOf('vat')->get();          // every period of one tax
-$vat->replaces;                                     // the tax it took over from
-$tax->abolish('2008-01-01', by: 'Law №…');
-```
+| | |
+|---|---|
+| Legal acts | The Tax Code №3591-IIს of 17 September 2010, in force from 1 January 2011 (Art. 310.1); the 2004 Tax Code it repealed; Law №6942 of 15 July 2020, the latest amendment of Art. 6 |
+| Tax types | The six taxes of Art. 6.5–6.6, with their engine classes |
+| Rates | Every rate in `resources/law/rates.php`, plus the 204.2 and 204.3 land rates |
+| Tables | The excise table (188.1), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
+| Thresholds | VAT registration 100,000 GEL (165.1), small business 500,000 GEL (90.2), gifts 1,000 GEL (82.1.თ), distant heirs 150,000 GEL (82.1.ი), family income 100,000 GEL (206.1.ა) |
 
-`php artisan db:seed --class="GeorgianTax\Database\Seeders\TaxTypeSeeder"` loads the six taxes Art. 6 lists today.
+Start dates are left open, meaning in force since before the recorded history. Exemptions aren't seeded yet, because the engine still applies them in code. Past taxes (the social tax and others) and earlier rates are added with `amend()`, `abolish()` and new `TaxType` rows.
+
+With `GEORGIAN_TAX_LAW_SOURCE=database`, the engine reads rates from that history instead of the file. A rate change recorded with `TaxRate::amend($vat, '166', ['percent' => 20], from: '2027-01-01', by: $law)` then applies to events from that day on, with no code change.
 
 ## Structure
 
 ```
 src/
-  GeorgianTaxServiceProvider.php   config, bindings, migrations, listener, publishing
+  GeorgianTaxServiceProvider.php   registers Georgia's taxes, ledger, tables, report macros
   Facades/GeorgianTax.php
-  Law/            #[Article] attribute and Citation — the link from code to the Code
   Domain/
     Party/        Party, PartyKind, Residency, Regime, Status, Relief, ResidencyResolver (Art. 34)
     Asset/        Asset, AssetType — what an individual sells
@@ -157,12 +163,8 @@ src/
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, SelfSupply, Refund, Expense,
                   NonMarketDeal, OwnProperty
   Engine/
-    Tax.php       one tax: a pipe of the engine, and a pipeline of its own stages
-    Stage/        FirstMatch — the shared "first handler that answers" stage
-    Outcome/      Taxable (a percentage), Levied (per unit), Exempt, ExemptWithCredit,
-                  NotTaxable, Unresolved, Collection
-    TaxEngine.php runs an event through every tax, records it, fires events
-    TaxReport.php what every tax said about the event
+    Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
+    Deadline.php  when each way of collecting is due under Georgian law
   IncomeTax/      Assessment → IdentifyTaxpayer → ResolveSource → ApplyExemptions
                   → ApplySpecialRegime → ApplyAnnualAllowance → ApplyRules
   Vat/            Supply → IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
@@ -170,13 +172,13 @@ src/
   Excise/         Duty → IdentifyOperation → ApplyExemptions → ApplyRate
   ImportTax/      Clearance → IdentifyImport → ApplyExemptions → ApplyRules
   PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
-  Legislation/    TaxType, TaxLevel — the taxes the law has had, over time
   Database/       the base model: table prefix and connection from config
-  Rates/          rates keyed by article and effective date
-  Ledger/         YearToDate, CompanyBooks; InMemoryLedger; Eloquent/ ledger, books and models
-  Events/ Jobs/ Listeners/
+  Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger;
+                  Eloquent/ ledger, books and models
+  Events/         VatRegistrationRequired
+  Listeners/      FlagVatRegistration
 config/georgian-tax.php
-database/migrations/ database/seeders/
+database/migrations/ database/seeders/ — GeorgiaLegislationSeeder
 resources/law/    rates.php, excise.php, import.php, property.php — the Code's tables
 ```
 
@@ -288,4 +290,4 @@ composer install
 composer test
 ```
 
-Pest on Orchestra Testbench. `tests/Taxes` has one file per tax with one test per catalogued case, plus checks that every rule cites an article; `tests/Laravel` covers the provider, config, facade, Eloquent ledger, stored reports, events and queue. CI runs both on Laravel 12 and 13.
+Pest on Orchestra Testbench. `tests/Taxes` has one file per tax with one test per catalogued case, plus checks that every rule cites an article; `tests/Laravel` covers the provider, config, facade, Eloquent ledger, stored reports, events, queue, and the Georgia legislation seeder with the engine on database rates. CI runs both on Laravel 12 and 13.

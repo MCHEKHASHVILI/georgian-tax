@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Source;
 
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * Catch-all: other income from activity in Georgia. Where nothing above decided, income paid by a

@@ -8,9 +8,9 @@ use GeorgianTax\Domain\Income\IncomeKind;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Regime;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
 use GeorgianTax\IncomeTax\Assessment;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
  *   82.1.ა  a non-resident's salary at a foreign diplomatic mission in Georgia;

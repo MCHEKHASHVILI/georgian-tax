@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Events;
 
-use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Engine\Outcome\Taxable;
-use GeorgianTax\Engine\TaxReport;
+use Mchekhashvili\TaxLegislation\Contracts\Taxpayer;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 
 /**
  * An unregistered supplier's taxable turnover over 12 months just passed 100,000 GEL (165.1). VAT
@@ -15,7 +15,7 @@ use GeorgianTax\Engine\TaxReport;
 final readonly class VatRegistrationRequired
 {
     public function __construct(
-        public Party $supplier,
+        public Taxpayer $supplier,
         public Taxable $vat,
         public TaxReport $report,
     ) {}

@@ -1,6 +1,6 @@
 {
     "name": "mchekhashvili/georgian-tax",
-    "description": "The Tax Code of Georgia as a Laravel package: income tax, profit tax, VAT, excise, import tax and property tax, each a pipeline of rules citing their articles.",
+    "description": "Georgia's tax law for Laravel on mchekhashvili/tax-legislation: income tax, profit tax, VAT, excise, import tax and property tax as pipelines of rules citing the Tax Code.",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -21,7 +21,9 @@
         "illuminate/pipeline": "^12.0 || ^13.0",
         "illuminate/queue": "^12.0 || ^13.0",
         "illuminate/support": "^12.0 || ^13.0",
-        "mchekhashvili/money": "^1.0@dev"
+        "mchekhashvili/countries": "^1.0@dev",
+        "mchekhashvili/money": "^1.0@dev",
+        "mchekhashvili/tax-legislation": "^1.0@dev"
     },
     "require-dev": {
         "orchestra/testbench": "^10.0 || ^11.0",

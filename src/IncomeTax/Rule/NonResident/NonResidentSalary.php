@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Rule\NonResident;
 
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\IncomeTax\Rule\Rule;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 
 /**
  * A non-resident's salary for work in Georgia, at the Art. 81 rate. A foreign employer without a

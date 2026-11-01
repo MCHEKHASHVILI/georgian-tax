@@ -11,13 +11,13 @@ use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Income\SupplyCategory;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Collection;
-use GeorgianTax\Engine\Outcome\ExemptWithCredit;
-use GeorgianTax\Engine\Outcome\Levied;
-use GeorgianTax\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\ExemptWithCredit;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use GeorgianTax\Excise\Excise;
 use GeorgianTax\Excise\Rate\Calls;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Tests\Support\ExciseCase;
 use Mchekhashvili\Money\Money;
 

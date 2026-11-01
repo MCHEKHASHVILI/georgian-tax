@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GeorgianTax\Vat\Exemption;
 
 use GeorgianTax\Domain\Income\SupplyCategory as C;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Citation;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Vat\Supply;
 
 /** Art. 173 — imports exempt from VAT. Most rows are HS-code lists; the category names the list. */

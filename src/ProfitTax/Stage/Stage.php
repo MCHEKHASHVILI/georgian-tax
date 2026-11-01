@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\ProfitTax\Stage;
 
 use Closure;
-use GeorgianTax\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ProfitTax\Outflow;
 
 interface Stage

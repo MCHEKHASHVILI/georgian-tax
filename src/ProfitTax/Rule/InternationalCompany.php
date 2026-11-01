@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GeorgianTax\ProfitTax\Rule;
 
 use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Law\Article;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\ProfitTax\Outflow;
 use GeorgianTax\ProfitTax\OutflowKind;
 
