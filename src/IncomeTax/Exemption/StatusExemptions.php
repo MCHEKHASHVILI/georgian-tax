@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\IncomeTax\Exemption;
 
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Engine\Outcome\Exempt;
 use GeorgianTax\IncomeTax\Assessment;
@@ -41,7 +41,7 @@ final class StatusExemptions implements Exemption
         }
 
         if ($recipient->is(Status::AgriculturalProducer) && $a->is(IncomeKind::GoodsSupply) && $a->before('2028-01-01')
-            && $a->ledger->received($recipient, $a->year(), IncomeKind::GoodsSupply)->plus($a->income())->atMost(Money::gel(200_000))) {
+            && $a->ledger->received($recipient, $a->year(), IncomeKind::GoodsSupply)->plus($a->income())->lessThanOrEqual(Money::GEL(200_000))) {
             return $a->exempt(new Citation('82.1.ლ'), 'Primary supply of own agricultural produce is exempt up to 200,000 GEL a year until 2028.');
         }
 

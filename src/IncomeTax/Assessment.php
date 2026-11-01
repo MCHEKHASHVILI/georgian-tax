@@ -7,7 +7,7 @@ namespace GeorgianTax\IncomeTax;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Engine\Outcome\Collection;
@@ -142,7 +142,7 @@ final readonly class Assessment
         }
 
         return new Taxable(
-            self::TAX, $basis, $this->taxpayer(), $base, $rate, $base->times($rate),
+            self::TAX, $basis, $this->taxpayer(), $base, $rate, $base->percent($rate->percent),
             $collection, $agent, $collection->deadline($this->event->date()), $notes,
         );
     }

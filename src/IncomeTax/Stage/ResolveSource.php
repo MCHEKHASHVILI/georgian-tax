@@ -18,10 +18,10 @@ use GeorgianTax\Law\Citation;
 #[Article('104', 'Income from a Georgian source')]
 final readonly class ResolveSource implements Stage
 {
-    /** @param list<SourceRule> $rules */
-    public function __construct(private array $rules) {}
+    /** @param list<SourceRule> $handlers */
+    public function __construct(private array $handlers) {}
 
-    public function __invoke(Assessment $a, Closure $next): Outcome
+    public function handle(Assessment $a, Closure $next): Outcome
     {
         $georgian = $this->decide($a);
 
@@ -36,7 +36,7 @@ final readonly class ResolveSource implements Stage
 
     private function decide(Assessment $a): bool
     {
-        foreach ($this->rules as $rule) {
+        foreach ($this->handlers as $rule) {
             $decision = $rule->decide($a);
 
             if ($decision !== null) {

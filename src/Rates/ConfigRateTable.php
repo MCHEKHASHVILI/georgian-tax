@@ -18,9 +18,9 @@ final readonly class ConfigRateTable implements RateTable
         return new self(require $path);
     }
 
-    public static function standard(): self
+    public static function standard(?string $path = null): self
     {
-        return self::fromFile(__DIR__ . '/../../config/rates.php');
+        return self::fromFile($path ?? __DIR__ . '/../../resources/law/rates.php');
     }
 
     public function rate(string $article, DateTimeImmutable $on): Rate

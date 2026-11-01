@@ -7,7 +7,7 @@ namespace GeorgianTax\Domain\Event;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 /**
@@ -31,13 +31,13 @@ final readonly class Refund implements TaxableEvent
             return 1.0;
         }
 
-        return min(1.0, $this->portion->tetri / $original->tetri);
+        return min(1.0, $this->portion->minor / $original->minor);
     }
 
     public function recipient(): Party { return $this->original->recipient(); }
     public function payer(): ?Party { return $this->original->payer(); }
     public function kind(): IncomeKind { return $this->original->kind(); }
-    public function income(): Money { return $this->original->income()->scale($this->share())->negate(); }
+    public function income(): Money { return $this->original->income()->multipliedBy($this->share())->negated(); }
     public function date(): DateTimeImmutable { return $this->on; }
     public function place(): Place { return $this->original->place(); }
 }

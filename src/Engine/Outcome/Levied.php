@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Engine\Outcome;
 
 use DateTimeImmutable;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Law\Citation;
 
@@ -38,7 +38,7 @@ final readonly class Levied implements Outcome
     {
         return new self(
             $this->taxName, $this->citation, $this->taxpayer, -$this->quantity * $share, $this->unit,
-            $this->ratePerUnit, $this->amount->scale($share)->negate(), $this->collection, $this->due,
+            $this->ratePerUnit, $this->amount->multipliedBy($share)->negated(), $this->collection, $this->due,
             [...$this->notes, 'Reversal of an earlier operation.'],
         );
     }

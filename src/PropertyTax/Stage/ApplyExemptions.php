@@ -6,7 +6,7 @@ namespace GeorgianTax\PropertyTax\Stage;
 
 use Closure;
 use DateTimeImmutable;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Domain\Property\PropertyKind as K;
@@ -32,7 +32,7 @@ final class ApplyExemptions implements Stage
 {
     private const FAMILY_INCOME_LIMIT = 100_000;
 
-    public function __invoke(Holding $h, Closure $next): Outcome
+    public function handle(Holding $h, Closure $next): Outcome
     {
         $owner = $h->holding->owner;
         $item = $h->item();
@@ -81,7 +81,7 @@ final class ApplyExemptions implements Stage
                 return $h->unresolved(new Citation('206.1.ა'), 'An individual\'s property tax turns on last year\'s family income — give it.');
             }
 
-            if ($income->atMost(Money::gel(self::FAMILY_INCOME_LIMIT))) {
+            if ($income->lessThanOrEqual(Money::GEL(self::FAMILY_INCOME_LIMIT))) {
                 return $h->exempt(new Citation('206.1.ა'), 'Family income of 100,000 GEL or less last year.');
             }
         }

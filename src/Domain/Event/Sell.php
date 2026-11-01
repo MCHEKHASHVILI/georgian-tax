@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use GeorgianTax\Domain\Asset\Asset;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 /**
@@ -30,7 +30,7 @@ final readonly class Sell implements TaxableEvent
 
     public function gain(): Money
     {
-        return $this->price->minus($this->asset->cost)->atLeastZero();
+        return $this->price->minus($this->asset->cost)->clampedToZero();
     }
 
     public function recipient(): Party { return $this->seller; }

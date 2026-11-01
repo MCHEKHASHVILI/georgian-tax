@@ -7,7 +7,7 @@ namespace GeorgianTax\Domain\Event;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Property\PropertyItem;
 
@@ -30,7 +30,7 @@ final readonly class OwnProperty implements TaxableEvent
     public function recipient(): Party { return $this->owner; }
     public function payer(): ?Party { return null; }
     public function kind(): IncomeKind { return IncomeKind::Other; }
-    public function income(): Money { return Money::zero(); }
+    public function income(): Money { return Money::GEL(0); }
     public function date(): DateTimeImmutable { return new DateTimeImmutable("{$this->year}-12-31"); }
     public function place(): Place { return Place::georgia(); }
 }

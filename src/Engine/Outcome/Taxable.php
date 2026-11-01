@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Engine\Outcome;
 
 use DateTimeImmutable;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Rate;
 use GeorgianTax\Law\Citation;
@@ -33,18 +33,18 @@ final readonly class Taxable implements Outcome, CountsAsTurnover
     public function tax(): string { return $this->taxName; }
     public function basis(): Citation { return $this->citation; }
     public function turnoverOf(): ?Party { return $this->taxpayer; }
-    public function turnover(): Money { return $this->countsAsTurnover ? $this->base : Money::zero(); }
+    public function turnover(): Money { return $this->countsAsTurnover ? $this->base : Money::GEL(0); }
 
     public function withBase(Money $base, string $note): self
     {
-        return $this->copy(base: $base, amount: $base->times($this->rate), notes: [...$this->notes, $note]);
+        return $this->copy(base: $base, amount: $base->percent($this->rate->percent), notes: [...$this->notes, $note]);
     }
 
     public function reversed(float $share): self
     {
         return $this->copy(
-            base: $this->base->scale($share)->negate(),
-            amount: $this->amount->scale($share)->negate(),
+            base: $this->base->multipliedBy($share)->negated(),
+            amount: $this->amount->multipliedBy($share)->negated(),
             notes: [...$this->notes, 'Reversal of an earlier operation.'],
         );
     }

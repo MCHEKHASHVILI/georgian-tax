@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Domain\Asset;
 
 use DateTimeImmutable;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 
 /**
  * Something an individual owns and may sell.

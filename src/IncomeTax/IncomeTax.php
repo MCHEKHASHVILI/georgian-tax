@@ -4,20 +4,18 @@ declare(strict_types=1);
 
 namespace GeorgianTax\IncomeTax;
 
-use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Pipeline\Pipeline;
 use GeorgianTax\Engine\Tax;
+use GeorgianTax\Engine\TaxReport;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use GeorgianTax\IncomeTax\Exemption as E;
 use GeorgianTax\IncomeTax\Rule\Declared as D;
 use GeorgianTax\IncomeTax\Rule\NonResident as N;
 use GeorgianTax\IncomeTax\Rule\Withholding as W;
 use GeorgianTax\IncomeTax\Source as S;
-use GeorgianTax\IncomeTax\Stage;
 use GeorgianTax\Ledger\YearToDate;
 use GeorgianTax\Rates\RateTable;
-use LogicException;
 
 /**
  * Income tax as one stage of the engine, and a pipeline of its own:
@@ -32,70 +30,12 @@ use LogicException;
 final class IncomeTax extends Tax
 {
     public function __construct(
-        private readonly Pipeline $pipeline,
+        Container $container,
+        Config $config,
         private readonly YearToDate $ledger,
         private readonly RateTable $rates,
-    ) {}
-
-    public static function standard(YearToDate $ledger, RateTable $rates): self
-    {
-        $stages = [
-            new Stage\IdentifyTaxpayer(),
-            new Stage\ResolveSource([
-                new S\WorkInGeorgia(),
-                new S\PaidByResident(),
-                new S\InternationalCarriage(),
-                new S\PropertyInGeorgia(),
-                new S\CrossBorderServiceToResident(),
-                new S\PerformedInGeorgia(),
-                new S\OtherActivityInGeorgia(),
-            ]),
-            new Stage\ApplyExemptions([
-                new E\ExemptByNature(),
-                new E\StatusExemptions(),
-                new E\SalaryExemptions(),
-                new E\PassiveIncomeExemptions(),
-                new E\HeldAssetGain(),
-                new E\ListedSecurities(),
-                new E\GiftsAndInheritance(),
-                new E\WinningsAndPensions(),
-            ]),
-            new Stage\ApplySpecialRegime(),
-            new Stage\ApplyAnnualAllowance(),
-            new Stage\ApplyRules([
-                // Non-residents without a Georgian PE — Art. 134
-                new N\NonResidentRoyalty(),
-                new N\NonResidentTransportTelecom(),
-                new N\NonResidentOilGas(),
-                new N\NonResidentRent(),
-                new N\NonResidentSalary(),
-                new N\NonResidentPropertyGain(),
-                new W\Dividend(),
-                new W\Interest(),
-                new N\NonResidentOtherIncome(),
-
-                // Withheld at source — Art. 154.1
-                new W\InternationalCompanySalary(),
-                new W\Salary(),
-                new W\PensionsAndScholarships(),
-                new W\RoyaltyToResident(),
-                new W\Winnings(),
-                new W\TouristEnterprisePayout(),
-                new W\ListedGoodsWithoutWaybill(),
-                new W\BrokerSecuritiesGain(),
-                new W\GiftFromTaxAgent(),
-                new W\ServiceFromIndividual(),
-
-                // Declared by the taxpayer — Art. 153
-                new D\AssetGain(),
-                new D\GiftOrInheritance(),
-                new D\GeneralIncome(),
-            ]),
-        ];
-
-        $unreachable = static fn () => throw new LogicException('ApplyRules always answers.');
-
-        return new self(new Pipeline($stages, $unreachable), $ledger, $rates);
+    ) {
+        parent::__construct($container, $config);
     }
 
     public function name(): string
@@ -103,12 +43,65 @@ final class IncomeTax extends Tax
         return Assessment::TAX;
     }
 
-    public function assess(TaxableEvent $event): Outcome
+    protected function stages(): array
     {
-        if ($event instanceof Refund) {
-            return $this->assess($event->original)->reversed($event->share());
-        }
+        return [
+            Stage\IdentifyTaxpayer::class,
+            Stage\ResolveSource::class => [
+                S\WorkInGeorgia::class,
+                S\PaidByResident::class,
+                S\InternationalCarriage::class,
+                S\PropertyInGeorgia::class,
+                S\CrossBorderServiceToResident::class,
+                S\PerformedInGeorgia::class,
+                S\OtherActivityInGeorgia::class,
+            ],
+            Stage\ApplyExemptions::class => [
+                E\ExemptByNature::class,
+                E\StatusExemptions::class,
+                E\SalaryExemptions::class,
+                E\PassiveIncomeExemptions::class,
+                E\HeldAssetGain::class,
+                E\ListedSecurities::class,
+                E\GiftsAndInheritance::class,
+                E\WinningsAndPensions::class,
+            ],
+            Stage\ApplySpecialRegime::class,
+            Stage\ApplyAnnualAllowance::class,
+            Stage\ApplyRules::class => [
+                // Non-residents without a Georgian PE — Art. 134
+                N\NonResidentRoyalty::class,
+                N\NonResidentTransportTelecom::class,
+                N\NonResidentOilGas::class,
+                N\NonResidentRent::class,
+                N\NonResidentSalary::class,
+                N\NonResidentPropertyGain::class,
+                W\Dividend::class,
+                W\Interest::class,
+                N\NonResidentOtherIncome::class,
 
-        return $this->pipeline->process(new Assessment($event, $this->ledger, $this->rates));
+                // Withheld at source — Art. 154.1
+                W\InternationalCompanySalary::class,
+                W\Salary::class,
+                W\PensionsAndScholarships::class,
+                W\RoyaltyToResident::class,
+                W\Winnings::class,
+                W\TouristEnterprisePayout::class,
+                W\ListedGoodsWithoutWaybill::class,
+                W\BrokerSecuritiesGain::class,
+                W\GiftFromTaxAgent::class,
+                W\ServiceFromIndividual::class,
+
+                // Declared by the taxpayer — Art. 153
+                D\AssetGain::class,
+                D\GiftOrInheritance::class,
+                D\GeneralIncome::class,
+            ],
+        ];
+    }
+
+    protected function subject(TaxableEvent $event, ?TaxReport $report): object
+    {
+        return new Assessment($event, $this->ledger, $this->rates);
     }
 }

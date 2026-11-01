@@ -7,7 +7,7 @@ namespace GeorgianTax\ImportTax;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Goods\Commodity;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Rate;
 use GeorgianTax\Engine\Outcome\Collection;
 use GeorgianTax\Engine\Outcome\Exempt;
@@ -49,7 +49,7 @@ final readonly class Clearance
         $base = $this->import->customsValue;
 
         return new Taxable(
-            self::TAX, self::cite($basis), $this->import->importer, $base, $rate, $base->times($rate),
+            self::TAX, self::cite($basis), $this->import->importer, $base, $rate, $base->percent($rate->percent),
             Collection::AtCustoms, null, Collection::AtCustoms->deadline($this->event->date()),
             countsAsTurnover: false,
         );
@@ -64,8 +64,8 @@ final readonly class Clearance
     public function levied(object $basis, float $quantity, string $unit, float $ratePerUnit, ?Money $extra = null, array $notes = []): Levied
     {
         return new Levied(
-            self::TAX, self::cite($basis), $this->import->importer, $quantity, $unit, Money::gel($ratePerUnit),
-            Money::gel($quantity * $ratePerUnit)->plus($extra ?? Money::zero()),
+            self::TAX, self::cite($basis), $this->import->importer, $quantity, $unit, Money::GEL($ratePerUnit),
+            Money::GEL($quantity * $ratePerUnit)->plus($extra ?? Money::GEL(0)),
             Collection::AtCustoms, Collection::AtCustoms->deadline($this->event->date()), $notes,
         );
     }

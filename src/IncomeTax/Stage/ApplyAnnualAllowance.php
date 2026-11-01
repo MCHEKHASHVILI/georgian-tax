@@ -6,7 +6,7 @@ namespace GeorgianTax\IncomeTax\Stage;
 
 use Closure;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Relief;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Engine\Outcome\Outcome;
@@ -22,7 +22,7 @@ use GeorgianTax\Law\Article;
 #[Article('82.2', 'Annual personal allowance')]
 final class ApplyAnnualAllowance implements Stage
 {
-    public function __invoke(Assessment $a, Closure $next): Outcome
+    public function handle(Assessment $a, Closure $next): Outcome
     {
         $outcome = $next($a);
 
@@ -36,7 +36,7 @@ final class ApplyAnnualAllowance implements Stage
             return $outcome;
         }
 
-        $remaining = $relief->annualAllowance()->minus($a->ledger->taxableIncome($a->taxpayer(), $a->year()))->atLeastZero();
+        $remaining = $relief->annualAllowance()->minus($a->ledger->taxableIncome($a->taxpayer(), $a->year()))->clampedToZero();
 
         if ($remaining->isZero()) {
             return $outcome;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ImportTax\Rule;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
 use GeorgianTax\Law\Article;
@@ -30,7 +30,7 @@ final class PassengerCar implements Rule
 
         $base = $car->engineCc * 0.05;
         $years = $car->ageIn($c->year());
-        $surcharge = Money::gel($base * 0.05 * $years);
+        $surcharge = Money::GEL($base * 0.05 * $years);
 
         return $c->levied($this, $car->engineCc, 'cm³', 0.05, $surcharge, [
             "Plus 5% for each of $years years in use: $surcharge.",

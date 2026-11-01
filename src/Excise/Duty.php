@@ -7,7 +7,7 @@ namespace GeorgianTax\Excise;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Goods\Commodity;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Engine\Outcome\Collection;
 use GeorgianTax\Engine\Outcome\Exempt;
@@ -48,10 +48,10 @@ final readonly class Duty
     public function levied(object $basis, float $quantity, string $unit, float $ratePerUnit, ?Money $extra = null, array $notes = []): Levied
     {
         $collection = $this->event instanceof Import ? Collection::AtCustoms : Collection::MonthlyDeclaration;
-        $amount = Money::gel($quantity * $ratePerUnit)->plus($extra ?? Money::zero());
+        $amount = Money::GEL($quantity * $ratePerUnit)->plus($extra ?? Money::GEL(0));
 
         return new Levied(
-            self::TAX, self::cite($basis), $this->taxpayer, $quantity, $unit, Money::gel($ratePerUnit), $amount,
+            self::TAX, self::cite($basis), $this->taxpayer, $quantity, $unit, Money::GEL($ratePerUnit), $amount,
             $collection, $collection->deadline($this->event->date()), $notes,
         );
     }
@@ -63,7 +63,7 @@ final readonly class Duty
 
     public function exemptWithCredit(object $basis, string $reason): ExemptWithCredit
     {
-        return new ExemptWithCredit(self::TAX, self::cite($basis), $reason, $this->taxpayer, Money::zero());
+        return new ExemptWithCredit(self::TAX, self::cite($basis), $reason, $this->taxpayer, Money::GEL(0));
     }
 
     public function notTaxable(object $basis, string $reason): NotTaxable

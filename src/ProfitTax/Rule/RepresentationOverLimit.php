@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\ProfitTax\Rule;
 
 use GeorgianTax\Domain\Event\ExpenseNature;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\Law\Article;
 use GeorgianTax\ProfitTax\Outflow;
@@ -36,11 +36,11 @@ final class RepresentationOverLimit implements Rule
             return $o->unresolved($this, "The limit is 1% of last year's revenue, which the books don't give.");
         }
 
-        $limit = $revenue->scale(0.01);
+        $limit = $revenue->multipliedBy(0.01);
         $before = $o->ledger->spent($o->company, $o->year(), ExpenseNature::Representation->value);
         $after = $before->plus($o->amount);
 
-        if ($after->atMost($limit)) {
+        if ($after->lessThanOrEqual($limit)) {
             return $o->notTaxable($this, "Within this year's representation limit of $limit.");
         }
 

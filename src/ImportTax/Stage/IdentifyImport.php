@@ -19,7 +19,7 @@ use GeorgianTax\Law\Citation;
 #[Article('195–196', 'Import tax payer and object')]
 final class IdentifyImport implements Stage
 {
-    public function __invoke(Clearance $c, Closure $next): Outcome
+    public function handle(Clearance $c, Closure $next): Outcome
     {
         $event = $c->event;
 

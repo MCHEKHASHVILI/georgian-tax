@@ -8,7 +8,7 @@ use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Inherit;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Engine\Outcome\Exempt;
 use GeorgianTax\IncomeTax\Assessment;
 use GeorgianTax\Law\Citation;
@@ -35,7 +35,7 @@ final class GiftsAndInheritance implements Exemption
         if (in_array($event->relation, [HeirOrder::Third, HeirOrder::Fourth], true)) {
             $soFar = $a->ledger->receivedFromHeirs($a->taxpayer(), $a->year(), HeirOrder::Third, HeirOrder::Fourth);
 
-            return $soFar->plus($a->income())->atMost(Money::gel(150_000))
+            return $soFar->plus($a->income())->lessThanOrEqual(Money::GEL(150_000))
                 ? $a->exempt(new Citation('82.1.ი'), 'Up to 150,000 GEL a year from III- and IV-order heirs is exempt.')
                 : null;
         }
@@ -43,7 +43,7 @@ final class GiftsAndInheritance implements Exemption
         if ($event instanceof Gift && !$event->fromEmployer) {
             $soFar = $a->ledger->received($a->taxpayer(), $a->year(), IncomeKind::Gift);
 
-            return $soFar->plus($a->income())->atMost(Money::gel(1000))
+            return $soFar->plus($a->income())->lessThanOrEqual(Money::GEL(1000))
                 ? $a->exempt(new Citation('82.1.თ'), 'Gifts up to 1,000 GEL a year are exempt.')
                 : null;
         }

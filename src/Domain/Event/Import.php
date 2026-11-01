@@ -10,7 +10,7 @@ use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Income\SupplyCategory;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 /**
@@ -48,14 +48,14 @@ final readonly class Import implements TaxableEvent
     public function taxableAmount(): Money
     {
         return $this->customsValue
-            ->plus($this->dutiesAndFees ?? Money::zero())
-            ->plus($this->transportToDestination ?? Money::zero());
+            ->plus($this->dutiesAndFees ?? Money::GEL(0))
+            ->plus($this->transportToDestination ?? Money::GEL(0));
     }
 
     public function recipient(): Party { return $this->importer; }
     public function payer(): ?Party { return null; }
     public function kind(): IncomeKind { return IncomeKind::Other; }
-    public function income(): Money { return Money::zero(); }
+    public function income(): Money { return Money::GEL(0); }
     public function date(): DateTimeImmutable { return $this->on; }
     public function place(): Place { return Place::georgia(); }
 }

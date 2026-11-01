@@ -12,5 +12,5 @@ use GeorgianTax\IncomeTax\Assessment;
 interface Stage
 {
     /** @param Closure(Assessment): Outcome $next */
-    public function __invoke(Assessment $assessment, Closure $next): Outcome;
+    public function handle(Assessment $assessment, Closure $next): Outcome;
 }

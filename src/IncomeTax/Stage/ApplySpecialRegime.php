@@ -6,7 +6,7 @@ namespace GeorgianTax\IncomeTax\Stage;
 
 use Closure;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Regime;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Engine\Outcome\Collection;
@@ -20,7 +20,7 @@ use GeorgianTax\Law\Citation;
  */
 final class ApplySpecialRegime implements Stage
 {
-    public function __invoke(Assessment $a, Closure $next): Outcome
+    public function handle(Assessment $a, Closure $next): Outcome
     {
         if (!$a->kind()->isBusinessIncome()) {
             return $next($a);
@@ -41,7 +41,7 @@ final class ApplySpecialRegime implements Stage
     /** 1% of turnover; 3% from the month turnover crosses 500,000 GEL (700,000 for wine or agro-tourism). */
     private function smallBusiness(Assessment $a): Outcome
     {
-        $threshold = Money::gel($a->taxpayer()->is(Status::WineOrAgroTourism) ? 700_000 : 500_000);
+        $threshold = Money::GEL($a->taxpayer()->is(Status::WineOrAgroTourism) ? 700_000 : 500_000);
         $businessKinds = array_filter(IncomeKind::cases(), fn (IncomeKind $k) => $k->isBusinessIncome());
         $turnover = $a->ledger->received($a->taxpayer(), $a->year(), ...$businessKinds)->plus($a->income());
 

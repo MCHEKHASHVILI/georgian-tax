@@ -5,17 +5,11 @@ declare(strict_types=1);
 namespace GeorgianTax\Ledger;
 
 use DateTimeImmutable;
-use GeorgianTax\Domain\Event\Expense;
-use GeorgianTax\Domain\Event\Gift;
-use GeorgianTax\Domain\Event\Inherit;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
-use GeorgianTax\Domain\Party\Status;
-use GeorgianTax\Engine\Outcome\CountsAsTurnover;
-use GeorgianTax\Engine\Outcome\Taxable;
 use GeorgianTax\Engine\TaxReport;
 
 final class InMemoryLedger implements YearToDate
@@ -53,7 +47,7 @@ final class InMemoryLedger implements YearToDate
 
     public function taxableIncome(Party $taxpayer, int $year): Money
     {
-        $total = Money::zero();
+        $total = Money::GEL(0);
 
         foreach ($this->entries as $e) {
             if ($e['recipient'] === $taxpayer->id && $e['year'] === $year) {
@@ -66,7 +60,7 @@ final class InMemoryLedger implements YearToDate
 
     public function turnover(Party $party, string $tax, DateTimeImmutable $since): Money
     {
-        $total = Money::zero();
+        $total = Money::GEL(0);
 
         foreach ($this->turnover as $t) {
             if ($t['party'] === $party->id && $t['tax'] === $tax && $t['date'] >= $since) {
@@ -79,33 +73,25 @@ final class InMemoryLedger implements YearToDate
 
     public function spent(Party $company, int $year, string $category): Money
     {
-        return $this->spending["{$company->id}|$year|$category"] ?? Money::zero();
+        return $this->spending["{$company->id}|$year|$category"] ?? Money::GEL(0);
     }
 
     public function record(TaxableEvent $event, TaxReport $report): void
     {
-        $this->recordSpending($event);
+        $entries = LedgerEntries::for($event, $report);
 
-        foreach ($report->outcomes as $outcome) {
-            if ($outcome instanceof CountsAsTurnover && $outcome->turnoverOf() !== null && !$outcome->turnover()->isZero()) {
-                $this->turnover[] = [
-                    'party' => $outcome->turnoverOf()->id, 'tax' => $outcome->tax(),
-                    'date' => $event->date(), 'amount' => $outcome->turnover(),
-                ];
-            }
+        if ($entries->income !== null) {
+            $this->entries[] = $entries->income;
         }
 
-        $income = $report->for('income');
+        foreach ($entries->turnover as $line) {
+            $this->turnover[] = ['party' => $line['party'], 'tax' => $line['tax'], 'date' => $line['on'], 'amount' => $line['amount']];
+        }
 
-        $this->entries[] = [
-            'recipient' => $event->recipient()->id,
-            'payer' => $event->payer()?->id,
-            'kind' => $event->kind(),
-            'year' => (int) $event->date()->format('Y'),
-            'income' => $event->income(),
-            'heir' => $event instanceof Gift || $event instanceof Inherit ? $event->relation : null,
-            'taxableBase' => $income instanceof Taxable ? $event->income() : Money::zero(), // before allowances
-        ];
+        if (($spend = $entries->spending) !== null) {
+            $key = "{$spend['company']}|{$spend['year']}|{$spend['category']}";
+            $this->spending[$key] = ($this->spending[$key] ?? Money::GEL(0))->plus($spend['amount']);
+        }
     }
 
     /** Seed turnover a tax counted before the engine was introduced. */
@@ -119,22 +105,8 @@ final class InMemoryLedger implements YearToDate
     {
         $this->entries[] = [
             'recipient' => $recipient->id, 'payer' => $payer?->id, 'kind' => $kind,
-            'year' => $year, 'income' => $income, 'heir' => null, 'taxableBase' => Money::zero(),
+            'year' => $year, 'on' => new DateTimeImmutable("$year-01-01"), 'income' => $income, 'heir' => null, 'taxableBase' => Money::GEL(0),
         ];
-    }
-
-    private function recordSpending(TaxableEvent $event): void
-    {
-        [$company, $category, $amount] = match (true) {
-            $event instanceof Expense => [$event->company, $event->nature->value, $event->amount],
-            $event instanceof Gift && $event->recipient->is(Status::CharityOrganization) => [$event->donor, 'charity', $event->value],
-            default => [null, null, null],
-        };
-
-        if ($company !== null) {
-            $key = "{$company->id}|{$event->date()->format('Y')}|$category";
-            $this->spending[$key] = $this->spent($company, (int) $event->date()->format('Y'), $category)->plus($amount);
-        }
     }
 
     private function matches(array $entry, array $kinds): bool
@@ -144,7 +116,7 @@ final class InMemoryLedger implements YearToDate
 
     private function sum(callable $filter): Money
     {
-        $total = Money::zero();
+        $total = Money::GEL(0);
 
         foreach ($this->entries as $entry) {
             if ($filter($entry)) {

@@ -11,5 +11,5 @@ use GeorgianTax\PropertyTax\Holding;
 interface Stage
 {
     /** @param Closure(Holding): Outcome $next */
-    public function __invoke(Holding $holding, Closure $next): Outcome;
+    public function handle(Holding $holding, Closure $next): Outcome;
 }

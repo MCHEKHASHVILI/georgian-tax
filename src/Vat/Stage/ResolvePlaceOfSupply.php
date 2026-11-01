@@ -17,16 +17,16 @@ use GeorgianTax\Vat\Supply;
 #[Article('162, 162¹', 'Place of supply')]
 final readonly class ResolvePlaceOfSupply implements Stage
 {
-    /** @param list<PlaceRule> $rules */
-    public function __construct(private array $rules) {}
+    /** @param list<PlaceRule> $handlers */
+    public function __construct(private array $handlers) {}
 
-    public function __invoke(Supply $s, Closure $next): Outcome
+    public function handle(Supply $s, Closure $next): Outcome
     {
         if ($s->isImport()) {
             return $next($s);
         }
 
-        foreach ($this->rules as $rule) {
+        foreach ($this->handlers as $rule) {
             $inGeorgia = $rule->inGeorgia($s);
 
             if ($inGeorgia === true) {

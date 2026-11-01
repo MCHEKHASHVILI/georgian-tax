@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ImportTax;
 
-use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Pipeline\Pipeline;
 use GeorgianTax\Engine\Tax;
+use GeorgianTax\Engine\TaxReport;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use GeorgianTax\ImportTax\Rule as R;
-use GeorgianTax\ImportTax\Stage;
-use LogicException;
 
 /**
  * Import tax as one stage of the engine, and a pipeline of its own:
@@ -25,27 +23,12 @@ use LogicException;
  */
 final class ImportTax extends Tax
 {
-    public function __construct(private readonly Pipeline $pipeline, private readonly ImportTable $table) {}
-
-    public static function standard(?ImportTable $table = null): self
-    {
-        /** @var list<R\Rule> $rules */
-        $rules = [new R\PassengerCar(), new R\Alcohol(), new R\ListedRate()];
-
-        $assess = static function (Clearance $c) use ($rules): Outcome {
-            foreach ($rules as $rule) {
-                if (($outcome = $rule->assess($c)) !== null) {
-                    return $outcome;
-                }
-            }
-
-            throw new LogicException('ListedRate answers every import.');
-        };
-
-        return new self(
-            new Pipeline([new Stage\IdentifyImport(), new Stage\ApplyExemptions()], $assess),
-            $table ?? ImportTable::standard(),
-        );
+    public function __construct(
+        Container $container,
+        Config $config,
+        private readonly ImportTable $table,
+    ) {
+        parent::__construct($container, $config);
     }
 
     public function name(): string
@@ -53,12 +36,17 @@ final class ImportTax extends Tax
         return Clearance::TAX;
     }
 
-    public function assess(TaxableEvent $event): Outcome
+    protected function stages(): array
     {
-        if ($event instanceof Refund) {
-            return $this->assess($event->original)->reversed($event->share());
-        }
+        return [
+            Stage\IdentifyImport::class,
+            Stage\ApplyExemptions::class,
+            Stage\ApplyRules::class => [R\PassengerCar::class, R\Alcohol::class, R\ListedRate::class],
+        ];
+    }
 
-        return $this->pipeline->process(new Clearance($event, $this->table));
+    protected function subject(TaxableEvent $event, ?TaxReport $report): object
+    {
+        return new Clearance($event, $this->table);
     }
 }

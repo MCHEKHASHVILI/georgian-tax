@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace GeorgianTax\PropertyTax;
 
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Pipeline\Pipeline;
 use GeorgianTax\Engine\Tax;
+use GeorgianTax\Engine\TaxReport;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use GeorgianTax\PropertyTax\Rule as R;
-use GeorgianTax\PropertyTax\Stage;
-use LogicException;
 
 /**
  * Property tax — the local tax — as one stage of the engine, and a pipeline of its own:
@@ -24,33 +23,13 @@ use LogicException;
  */
 final class PropertyTax extends Tax
 {
-    /** @param array<string, mixed> $land */
     public function __construct(
-        private readonly Pipeline $pipeline,
-        private readonly array $land,
+        Container $container,
+        Config $config,
+        private readonly LandRates $land,
         private readonly MunicipalRates $rates,
-    ) {}
-
-    public static function standard(?MunicipalRates $rates = null): self
-    {
-        /** @var list<R\Rule> $rules */
-        $rules = [new R\AgriculturalLand(), new R\OtherLand(), new R\CompanyProperty(), new R\IndividualProperty()];
-
-        $assess = static function (Holding $h) use ($rules): Outcome {
-            foreach ($rules as $rule) {
-                if (($outcome = $rule->assess($h)) !== null) {
-                    return $outcome;
-                }
-            }
-
-            throw new LogicException('Every holding is land, a company\'s or an individual\'s.');
-        };
-
-        return new self(
-            new Pipeline([new Stage\IdentifyTaxpayer(), new Stage\ApplyExemptions()], $assess),
-            require __DIR__ . '/../../config/property.php',
-            $rates ?? new MunicipalRates(),
-        );
+    ) {
+        parent::__construct($container, $config);
     }
 
     public function name(): string
@@ -58,8 +37,17 @@ final class PropertyTax extends Tax
         return Holding::TAX;
     }
 
-    public function assess(TaxableEvent $event): Outcome
+    protected function stages(): array
     {
-        return $this->pipeline->process(new Holding($event, $this->land, $this->rates));
+        return [
+            Stage\IdentifyTaxpayer::class,
+            Stage\ApplyExemptions::class,
+            Stage\ApplyRules::class => [R\AgriculturalLand::class, R\OtherLand::class, R\CompanyProperty::class, R\IndividualProperty::class],
+        ];
+    }
+
+    protected function subject(TaxableEvent $event, ?TaxReport $report): object
+    {
+        return new Holding($event, $this->land->table, $this->rates);
     }
 }

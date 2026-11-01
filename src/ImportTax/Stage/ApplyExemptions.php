@@ -8,7 +8,7 @@ use Closure;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief as R;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
 use GeorgianTax\Law\Article;
@@ -25,7 +25,7 @@ use GeorgianTax\Law\Citation;
 #[Article('199', 'Import tax exemptions')]
 final class ApplyExemptions implements Stage
 {
-    public function __invoke(Clearance $c, Closure $next): Outcome
+    public function handle(Clearance $c, Closure $next): Outcome
     {
         $goods = $c->commodity;
         $import = $c->import;
@@ -48,7 +48,7 @@ final class ApplyExemptions implements Stage
         $limit = $relief->limitGel();
         $until = $relief->validUntil();
 
-        $applies = ($limit === null || $import->customsValue->atMost(Money::gel($limit)))
+        $applies = ($limit === null || $import->customsValue->lessThanOrEqual(Money::GEL($limit)))
             && ($until === null || $import->on < new DateTimeImmutable($until))
             && self::coversChapter($relief, $goods);
 

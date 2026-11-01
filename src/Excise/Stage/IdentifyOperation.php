@@ -24,7 +24,7 @@ use GeorgianTax\Law\Citation;
 #[Article('182–184', 'Excise taxpayer and taxable operations')]
 final class IdentifyOperation implements Stage
 {
-    public function __invoke(Duty $d, Closure $next): Outcome
+    public function handle(Duty $d, Closure $next): Outcome
     {
         $event = $d->event;
         $commodity = $event instanceof Import || $event instanceof Pay ? $event->commodity : null;

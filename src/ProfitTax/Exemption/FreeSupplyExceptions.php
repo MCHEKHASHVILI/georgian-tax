@@ -55,10 +55,10 @@ final class FreeSupplyExceptions implements Exemption
             return $o->unresolved(new Citation('98³.3.ა'), "Charity donations are tax-free up to 10% of last year's net profit, which the books don't give.");
         }
 
-        $limit = $netProfit->scale(0.10);
+        $limit = $netProfit->percent(10);
         $soFar = $o->ledger->spent($o->company, $o->year(), 'charity')->plus($o->amount);
 
-        return $soFar->atMost($limit)
+        return $soFar->lessThanOrEqual($limit)
             ? $o->notTaxable(new Citation('98³.3.ა'), "Within this year's charity allowance of $limit (10% of last year's net profit).")
             : null; // over the limit: taxed in full by the standard rule
     }

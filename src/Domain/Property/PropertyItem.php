@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Domain\Property;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 
 /**
  * One item of property or one land plot.

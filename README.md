@@ -1,32 +1,40 @@
 # georgian-tax
 
-Applies the Tax Code of Georgia to business events. All six taxes of Art. 6 are implemented — income tax, profit tax, VAT, excise, import tax and the local property tax — each as one stage of the same engine.
+The Tax Code of Georgia as a Laravel package. All six taxes of Art. 6 — income tax, profit tax, VAT, excise, import tax and the local property tax — run as one pipeline of taxes, each tax a pipeline of its own stages and rules.
 
-Every rule, exemption and source rule carries an `#[Article('134.1.ე')]` attribute, so each answer the engine gives names the line of the law behind it. `docs/CATALOGUE.md` lists every event the Code defines for each tax.
+Every rule, exemption and source rule carries an `#[Article('134.1.ე')]` attribute, so each answer names the line of the law behind it. `docs/CATALOGUE.md` lists every event the Code defines for each tax.
 
-Requires PHP 8.4.
+Requires PHP 8.4 and Laravel 12 or 13. Money is [`mchekhashvili/money`](https://github.com/MCHEKHASHVILI/money): integer tetri, exact arithmetic.
+
+## Install
+
+Until both packages are on Packagist, add their repositories to your app's `composer.json`:
+
+```json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/MCHEKHASHVILI/georgian-tax" },
+    { "type": "vcs", "url": "https://github.com/MCHEKHASHVILI/money" }
+]
+```
+
+```
+composer require mchekhashvili/money:^1.0@dev mchekhashvili/georgian-tax:dev-main
+php artisan migrate
+php artisan vendor:publish --tag=georgian-tax-config     # optional
+```
+
+The service provider and the `GeorgianTax` facade register themselves. (The `@dev` and `dev-main` go away once both repositories have a `v1.0.0` release.)
 
 ## Usage
 
 ```php
-$ledger = new InMemoryLedger();                       // back with your database in production
-$rates  = ConfigRateTable::standard();
-$books  = new StaticBooks();                          // last year's revenue and profit, for profit tax limits
-$engine = new TaxEngine(
-    $ledger,
-    ImportTax::standard(),        // first: import tax and excise join the VAT base on import
-    Excise::standard(),
-    Vat::standard($ledger, $rates),
-    IncomeTax::standard($ledger, $rates),
-    ProfitTax::standard($ledger, $rates, $books),
-    PropertyTax::standard(),      // or ::standard(new MunicipalRates(...)) with the council's rates
-);
+use GeorgianTax\Facades\GeorgianTax;
 
-$report = $engine->process(new Pay(
+$report = GeorgianTax::process(new Pay(
     payer:  Party::company('acme'),
     payee:  Party::foreignCompany('gmbh', 'DE'),
     for:    IncomeKind::ServiceFee,
-    amount: Money::gel(1000),
+    amount: Money::GEL(1000),
     on:     new DateTimeImmutable('2026-10-30'),
     place:  Place::abroad('DE'),
 ));
@@ -39,14 +47,25 @@ echo $report->for('vat');
 // Art. 161.1.ა — Reverse charge: 18% of 1000.00 GEL = 180.00 GEL, reverse-charged by acme, due 2026-11-15
 
 $report->netToRecipient();   // 900.00 GEL — VAT is on top, not withheld
+$report->outcomes;           // Collection keyed by tax: import, excise, vat, income, profit, property
 ```
+
+| Call | Does |
+|---|---|
+| `GeorgianTax::process($event)` | Assesses, records in the year-to-date ledger, stores the report, fires events |
+| `GeorgianTax::assess($event)` | A quote: assesses only — nothing recorded, nothing fired |
+| `GeorgianTax::queue($event)` | Processes on the queue (`AssessTaxableEvent`) |
+| `GeorgianTax::only('vat', 'income')` | The same engine with some taxes |
+| `GeorgianTax::ledger()` | Year-to-date totals: `received()`, `paid()`, `turnover()`, `spent()` |
+
+Or type-hint `GeorgianTax\Engine\TaxEngine` anywhere the container resolves.
 
 An imported car goes through three taxes at once:
 
 ```php
-$report = $engine->process(new Import(
+$report = GeorgianTax::process(new Import(
     importer:     Party::company('autos', Status::VatPayer),
-    customsValue: Money::gel(20_000),
+    customsValue: Money::GEL(20_000),
     on:           new DateTimeImmutable('2026-10-30'),
     commodity:    new Commodity('8703 23', engineCc: 2000, yearMade: 2019),
 ));
@@ -61,15 +80,59 @@ echo $report->for('vat');     // Art. 165².2.ა — VAT on import: 18% of 2913
 Property tax looks at holdings, one per item per year:
 
 ```php
-$engine->process(new OwnProperty(Party::company('acme'), new PropertyItem(PropertyKind::Building, Money::gel(100_000), acquiredYear: 1998), 2026));
+GeorgianTax::process(new OwnProperty(Party::company('acme'), new PropertyItem(PropertyKind::Building, Money::GEL(100_000), acquiredYear: 1998), 2026));
 // Art. 202.1 — Company property: 1% of 300000.00 GEL = 3000.00 GEL, due 2027-04-01
 // (bought before 2000, so the book value is revalued ×3)
 ```
+
+## In your Laravel app
+
+**Database.** The migration creates six tables, prefixed `georgian_tax_`:
+
+| Table | Holds |
+|---|---|
+| `income_entries` | Income per recipient and payer — the gift, heir, small-business and allowance thresholds read it |
+| `turnover_entries` | Turnover per party and tax — VAT's rolling 12 months |
+| `spending_entries` | Company spending by category — charity and representation limits |
+| `company_years` | Revenue, net profit and founding year — fill it from your accounting with `EloquentBooks::close()`, or bind your own `CompanyBooks` |
+| `assessments`, `outcomes` | Every report: each tax's outcome, article, base, rate, amount, who pays and when |
+
+Models live in `GeorgianTax\Ledger\Eloquent\Models` — `Assessment::with('outcomes')`, `AssessedOutcome::where('due_on', '<=', now())` — and money columns cast to `Money`. `Assessment::event()` gives back the original event, to re-assess after a rate change.
+
+**Events.**
+
+| Event | When |
+|---|---|
+| `TaxableEventAssessed` | After every `process()` — carries the `TaxReport` |
+| `VatRegistrationRequired` | An unregistered supplier's 12-month turnover passed 100,000 GEL (165.1); `deadline()` is 2 working days on |
+
+```php
+Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($accountants, new RegisterForVat($e->supplier, $e->deadline())));
+```
+
+**Queue.** `GeorgianTax::queue($event)` dispatches `AssessTaxableEvent` on `config('georgian-tax.queue')`. Each event reads the totals earlier ones left, so keep one party's events in order — one worker, or a chain.
+
+**Config** (`config/georgian-tax.php`):
+
+| Key | Default | |
+|---|---|---|
+| `taxes` | all six, import tax first | Order matters: VAT reads import tax and excise. Add your own `Tax` subclass here. |
+| `pipelines.<tax>` | — | Replace a tax's stages and rules without forking: same shape as `Tax::stages()` |
+| `ledger` | `eloquent` | `memory` for per-request quotes and tests |
+| `books` | `EloquentBooks` | Your `CompanyBooks` implementation |
+| `store_reports` | `true` | Keep reports in `assessments` / `outcomes` |
+| `database.*` | default connection, `georgian_tax_` | Connection, table prefix, whether to run the migrations |
+| `property.*` | the Code's caps | Your municipal councils' property and land rates, checked against the caps |
+| `law.*` | package tables | Point at your own copy of a law table to follow an amendment early (`vendor:publish --tag=georgian-tax-law`) |
+
+**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `RateTable`, `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace.
 
 ## Structure
 
 ```
 src/
+  GeorgianTaxServiceProvider.php   config, bindings, migrations, listener, publishing
+  Facades/GeorgianTax.php
   Law/            #[Article] attribute and Citation — the link from code to the Code
   Domain/
     Party/        Party, PartyKind, Residency, Regime, Status, Relief, ResidencyResolver (Art. 34)
@@ -80,41 +143,30 @@ src/
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, SelfSupply, Refund, Expense,
                   NonMarketDeal, OwnProperty
   Engine/
-    Pipeline/     generic middleware pipeline, used at both levels
+    Tax.php       one tax: a pipe of the engine, and a pipeline of its own stages
+    Stage/        FirstMatch — the shared "first handler that answers" stage
     Outcome/      Taxable (a percentage), Levied (per unit), Exempt, ExemptWithCredit,
                   NotTaxable, Unresolved, Collection
-    Tax.php       one tax = one stage of the engine pipeline
-    TaxEngine.php runs an event through every tax
+    TaxEngine.php runs an event through every tax, records it, fires events
     TaxReport.php what every tax said about the event
-  IncomeTax/
-    IncomeTax.php wires the income tax pipeline
-    Assessment.php the subject flowing through it, with the outcome builders
-    Stage/        IdentifyTaxpayer → ResolveSource → ApplyExemptions → ApplySpecialRegime
-                  → ApplyAnnualAllowance → ApplyRules
-    Source/       Art. 104, one class per paragraph
-    Exemption/    Art. 82 and the exemptions in 23, 94, 103, 130–132
-    Rule/         NonResident/ (134), Withholding/ (130–133³, 154), Declared/ (80, 81, 153)
-  Vat/
-    Vat.php       wires the VAT pipeline
-    Supply.php    the subject flowing through it — supplier, customer, base, outcome builders
-    Stage/        IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
-    Place/        Art. 162–162¹, one class per rule
-    Exemption/    Art. 170–173 — category tables plus export and party-based exemptions
-    Rule/         import, reverse charge, foreign supplier, registered, first-supply, threshold
-  ProfitTax/      Outflow → IdentifyOutflow → exemptions (98¹.2, 98³.3, 99) → rules (98⁴, 23, 98)
-  Excise/         Duty → IdentifyOperation → ApplyExemptions → Rate/ (cars, motorcycles,
-                  tobacco, alcohol, calls, the 188.1 table in config/excise.php)
-  ImportTax/      Clearance → IdentifyImport → ApplyExemptions → Rule/ (cars, alcohol in euro,
-                  the 12% and 5% lists in config/import.php)
-  PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → Rule/ (land, company,
-                  individual); MunicipalRates holds the council's decisions within the caps
-  Rates/          rates keyed by article and effective date — config/rates.php
-  Ledger/         year-to-date totals for the annual thresholds
+  IncomeTax/      Assessment → IdentifyTaxpayer → ResolveSource → ApplyExemptions
+                  → ApplySpecialRegime → ApplyAnnualAllowance → ApplyRules
+  Vat/            Supply → IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
+  ProfitTax/      Outflow → IdentifyOutflow → ApplyExemptions → ApplyRules
+  Excise/         Duty → IdentifyOperation → ApplyExemptions → ApplyRate
+  ImportTax/      Clearance → IdentifyImport → ApplyExemptions → ApplyRules
+  PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
+  Rates/          rates keyed by article and effective date
+  Ledger/         YearToDate, CompanyBooks; InMemoryLedger; Eloquent/ ledger, books and models
+  Events/ Jobs/ Listeners/
+config/georgian-tax.php
+database/migrations/
+resources/law/    rates.php, excise.php, import.php, property.php — the Code's tables
 ```
 
 ## The two pipelines
 
-**Outer — taxes.** `TaxEngine` passes a `TaxReport` through each `Tax`. Each tax adds its outcome and passes it on, so a later tax can read an earlier one: VAT adds import tax and excise to its import base. To add a tax, extend `Tax`, implement `assess()` (or `assessIn()` to see the report), and register it.
+**Outer — taxes.** `TaxEngine` passes a `TaxReport` through each `Tax`. Each tax adds its outcome and passes it on, so a later tax can read an earlier one: VAT adds import tax and excise to its import base. Both levels run on Laravel's `Illuminate\Pipeline\Pipeline`; every stage has a `handle($subject, $next)` method, like HTTP middleware.
 
 Each tax reads the same event in its own terms. A `Pay` of 1,000 GEL for a service is income to the payee for income tax, a supply by the payee for VAT, and an ordinary cost for profit tax. A `Pay` of a producer's spirits also carries excise.
 
@@ -157,6 +209,8 @@ Excise and import tax per unit come back as `Levied` (quantity × rate per unit,
 #[Article('154.1.x', 'What it covers')]
 final class MyRule implements Rule
 {
+    public function __construct(private SomeService $service) {}   // resolved by the container
+
     public function assess(Assessment $a): ?Outcome
     {
         if (!$a->is(IncomeKind::Something)) {
@@ -168,17 +222,17 @@ final class MyRule implements Rule
 }
 ```
 
-Register it in `IncomeTax::standard()` before any more general rule. `withheld()` switches to the recipient's declaration on its own when the payer isn't a tax agent (Art. 154.1), so rules never repeat that check.
+List it in `IncomeTax::stages()` under `ApplyRules`, before any more general rule — or, in an app, in `config('georgian-tax.pipelines.income')`. `withheld()` switches to the recipient's declaration on its own when the payer isn't a tax agent (Art. 154.1), so rules never repeat that check.
 
 ## Describing a VAT supply
 
 For VAT, `Pay::$amount` is the price without VAT; pass `pricesIncludeVat: true` if it includes it. When an exemption or place-of-supply rule turns on what is supplied, say so:
 
 ```php
-new Pay($patient, $clinic, IncomeKind::ServiceFee, Money::gel(200), $today, supply: SupplyCategory::MedicalCare);
-new Pay($foreignBuyer, $exporter, IncomeKind::GoodsSupply, Money::gel(50_000), $today, Place::exportTo('AM'));
-new Import($importer, customsValue: Money::gel(10_000), on: $today, dutiesAndFees: Money::gel(1000));
-new SelfSupply($company, Money::gel(10_000), $today, SelfSupplyReason::Deregistration);
+new Pay($patient, $clinic, IncomeKind::ServiceFee, Money::GEL(200), $today, supply: SupplyCategory::MedicalCare);
+new Pay($foreignBuyer, $exporter, IncomeKind::GoodsSupply, Money::GEL(50_000), $today, Place::exportTo('AM'));
+new Import($importer, customsValue: Money::GEL(10_000), on: $today, dutiesAndFees: Money::GEL(1000));
+new SelfSupply($company, Money::GEL(10_000), $today, SelfSupplyReason::Deregistration);
 ```
 
 Interest and insurance are treated as financial services, land and securities sales as exempt, and international transport as export transport, without any category given.
@@ -207,9 +261,9 @@ Where an amount needs something only the caller knows — a retail price for cig
 
 ## Rates
 
-`config/rates.php` maps each article to `[effective-from => percent]`. The percents match the 30/09/2026 consolidation. The dates are not historic, so check the rate history before assessing pre-2026 events.
+`resources/law/rates.php` maps each article to `[effective-from => percent]`. The percents match the 30/09/2026 consolidation. The dates are not historic, so check the rate history before assessing pre-2026 events.
 
-`config/excise.php` (188.1 table), `config/import.php` (197 lists and 199.პ) and `config/property.php` (204 land rates by municipality) hold the tables.
+`resources/law/excise.php` (188.1 table), `import.php` (197 lists and 199.პ) and `property.php` (204 land rates by municipality) hold the tables. Override any of them through `config('georgian-tax.law')`.
 
 ## Tests
 
@@ -218,4 +272,4 @@ composer install
 composer test
 ```
 
-One test file per tax — `IncomeTaxTest`, `VatTest`, `ProfitTaxTest`, `ExciseTest`, `ImportTaxTest`, `PropertyTaxTest` — with one test per catalogued case, plus checks that every rule cites an article.
+Pest on Orchestra Testbench. `tests/Taxes` has one file per tax with one test per catalogued case, plus checks that every rule cites an article; `tests/Laravel` covers the provider, config, facade, Eloquent ledger, stored reports, events and queue. CI runs both on Laravel 12 and 13.

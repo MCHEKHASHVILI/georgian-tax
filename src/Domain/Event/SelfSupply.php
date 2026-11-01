@@ -7,7 +7,7 @@ namespace GeorgianTax\Domain\Event;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 /**
@@ -29,7 +29,7 @@ final readonly class SelfSupply implements TaxableEvent
     public function recipient(): Party { return $this->taxpayer; }
     public function payer(): ?Party { return null; }
     public function kind(): IncomeKind { return IncomeKind::Other; }
-    public function income(): Money { return Money::zero(); }
+    public function income(): Money { return Money::GEL(0); }
     public function date(): DateTimeImmutable { return $this->on; }
     public function place(): Place { return Place::georgia(); }
 }

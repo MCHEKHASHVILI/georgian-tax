@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Domain\Party;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 
 /** Art. 82.2 — personal annual allowances. Only the highest one applies (82.3). */
 enum Relief
@@ -23,9 +23,9 @@ enum Relief
     {
         return match ($this) {
             self::Veteran, self::MotherOfGeorgia, self::SingleParent,
-            self::AdoptiveParent, self::FosterParent => Money::gel(3000),
+            self::AdoptiveParent, self::FosterParent => Money::GEL(3000),
             self::DisabledSinceChildhood, self::SevereDisability,
-            self::InjuredPeacekeeper, self::HighMountainResident => Money::gel(6000),
+            self::InjuredPeacekeeper, self::HighMountainResident => Money::GEL(6000),
         };
     }
 

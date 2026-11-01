@@ -1,13 +1,23 @@
 {
     "name": "mchekhashvili/georgian-tax",
-    "description": "Domain model and pipeline for applying the Tax Code of Georgia to transactions: income tax, profit tax, VAT, excise, import tax and property tax.",
+    "description": "The Tax Code of Georgia as a Laravel package: income tax, profit tax, VAT, excise, import tax and property tax, each a pipeline of rules citing their articles.",
     "type": "library",
     "license": "MIT",
+    "keywords": ["laravel", "tax", "georgia", "vat", "income-tax", "excise", "pipeline"],
     "require": {
-        "php": "^8.4"
+        "php": "^8.4",
+        "illuminate/bus": "^12.0 || ^13.0",
+        "illuminate/contracts": "^12.0 || ^13.0",
+        "illuminate/database": "^12.0 || ^13.0",
+        "illuminate/events": "^12.0 || ^13.0",
+        "illuminate/pipeline": "^12.0 || ^13.0",
+        "illuminate/queue": "^12.0 || ^13.0",
+        "illuminate/support": "^12.0 || ^13.0",
+        "mchekhashvili/money": "^1.0@dev"
     },
     "require-dev": {
-        "phpunit/phpunit": "^12.0"
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "pestphp/pest": "^4.0"
     },
     "autoload": {
         "psr-4": {
@@ -19,12 +29,25 @@
             "GeorgianTax\\Tests\\": "tests/"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "GeorgianTax\\GeorgianTaxServiceProvider"
+            ],
+            "aliases": {
+                "GeorgianTax": "GeorgianTax\\Facades\\GeorgianTax"
+            }
+        }
+    },
     "scripts": {
-        "test": "phpunit tests"
+        "test": "pest"
     },
     "config": {
-        "platform": {
-            "php": "8.4.27"
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
         }
-    }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

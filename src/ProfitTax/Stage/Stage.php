@@ -11,5 +11,5 @@ use GeorgianTax\ProfitTax\Outflow;
 interface Stage
 {
     /** @param Closure(Outflow): Outcome $next */
-    public function __invoke(Outflow $outflow, Closure $next): Outcome;
+    public function handle(Outflow $outflow, Closure $next): Outcome;
 }

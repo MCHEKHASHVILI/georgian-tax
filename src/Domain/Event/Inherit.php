@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 final readonly class Inherit implements TaxableEvent

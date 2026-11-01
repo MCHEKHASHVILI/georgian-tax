@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Engine\Outcome;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 /**

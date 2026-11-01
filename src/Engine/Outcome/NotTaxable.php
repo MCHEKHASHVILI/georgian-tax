@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Engine\Outcome;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Law\Citation;
 
@@ -27,7 +27,7 @@ final readonly class NotTaxable implements Outcome, CountsAsTurnover
     public function basis(): Citation { return $this->citation; }
     public function reversed(float $share): self { return $this; }
     public function turnoverOf(): ?Party { return $this->turnoverParty; }
-    public function turnover(): Money { return $this->turnoverAmount ?? Money::zero(); }
+    public function turnover(): Money { return $this->turnoverAmount ?? Money::GEL(0); }
 
     public function __toString(): string
     {

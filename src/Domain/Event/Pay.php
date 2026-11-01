@@ -11,7 +11,7 @@ use GeorgianTax\Domain\Income\ExemptProfit;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Income\SupplyCategory;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 /**

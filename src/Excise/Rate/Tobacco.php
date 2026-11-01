@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise\Rate;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
 use GeorgianTax\Law\Article;
@@ -42,7 +42,7 @@ final class Tobacco implements RateRule
         }
 
         $packs = $c->quantity / 20;
-        $adValorem = Money::gel($packs * $c->retailPricePer20 * $share);
+        $adValorem = Money::GEL($packs * $c->retailPricePer20 * $share);
 
         return $d->levied(new Citation($article, $label), $packs, 'packs of 20', $perTwenty, $adValorem, [
             "Plus {$share}× the retail price of {$c->retailPricePer20} GEL per 20: $adValorem.",

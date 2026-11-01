@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\ProfitTax;
 
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Engine\Outcome\Collection;
@@ -62,13 +62,13 @@ final readonly class Outflow
     {
         $rate = $this->rates->rate($rateArticle, $this->event->date());
         $paid = $amount ?? $this->amount;
-        $base = $paid->scale(1 / (1 - $rate->value));
+        $base = $paid->dividedBy((100 - $rate->percent) / 100);
         $collection = Collection::MonthlyDeclaration;
 
         return new Taxable(
-            self::TAX, self::cite($basis), $this->company, $base, $rate, $base->times($rate),
+            self::TAX, self::cite($basis), $this->company, $base, $rate, $base->percent($rate->percent),
             $collection, null, $collection->deadline($this->event->date()),
-            ["$paid paid out, grossed up to $base (÷ " . (1 - $rate->value) . ').', ...$notes],
+            ["$paid paid out, grossed up to $base (÷ " . ((100 - $rate->percent) / 100) . ').', ...$notes],
         );
     }
 

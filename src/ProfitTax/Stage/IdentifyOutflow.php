@@ -29,7 +29,7 @@ use GeorgianTax\ProfitTax\OutflowKind;
 #[Article('96–97', 'Profit taxpayer and object')]
 final class IdentifyOutflow implements Stage
 {
-    public function __invoke(Outflow $o, Closure $next): Outcome
+    public function handle(Outflow $o, Closure $next): Outcome
     {
         $event = $o->event;
         $company = $event instanceof Gift ? $event->donor : $event->payer() ?? $event->recipient();

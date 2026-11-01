@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Engine\Outcome;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Law\Citation;
 
@@ -28,7 +28,7 @@ final readonly class ExemptWithCredit implements Outcome, CountsAsTurnover
     public function basis(): Citation { return $this->citation; }
     public function reversed(float $share): self { return $this; }
     public function turnoverOf(): ?Party { return $this->supplier; }
-    public function turnover(): Money { return $this->countsTowardThreshold ? $this->base : Money::zero(); }
+    public function turnover(): Money { return $this->countsTowardThreshold ? $this->base : Money::GEL(0); }
 
     public function __toString(): string
     {

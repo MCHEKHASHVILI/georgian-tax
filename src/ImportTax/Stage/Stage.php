@@ -11,5 +11,5 @@ use GeorgianTax\ImportTax\Clearance;
 interface Stage
 {
     /** @param Closure(Clearance): Outcome $next */
-    public function __invoke(Clearance $clearance, Closure $next): Outcome;
+    public function handle(Clearance $clearance, Closure $next): Outcome;
 }

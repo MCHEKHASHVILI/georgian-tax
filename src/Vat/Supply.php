@@ -13,7 +13,7 @@ use GeorgianTax\Domain\Event\Sell;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\SupplyCategory;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
@@ -144,11 +144,11 @@ final readonly class Supply
             $this->event instanceof Import => $this->event->dutiesGiven() || $this->earlierDuties === null
                 ? $this->event->taxableAmount()
                 : $this->event->taxableAmount()->plus($this->earlierDuties),
-            $this->usesMarginScheme() => $this->event->price->minus($this->event->asset->cost)->atLeastZero()->scale(1 / self::VAT_FRACTION),
+            $this->usesMarginScheme() => $this->event->price->minus($this->event->asset->cost)->clampedToZero()->multipliedBy(1 / self::VAT_FRACTION),
             $this->event instanceof Sell => $this->event->price,
             $this->event instanceof Gift => $this->event->value,
             $this->event instanceof SelfSupply => $this->event->value,
-            $this->event instanceof Pay && $this->event->pricesIncludeVat => $this->event->amount->scale(1 / self::VAT_FRACTION),
+            $this->event instanceof Pay && $this->event->pricesIncludeVat => $this->event->amount->multipliedBy(1 / self::VAT_FRACTION),
             default => $this->event->income(),
         };
     }
@@ -168,7 +168,7 @@ final readonly class Supply
         $chargedBySupplier = $agent === null && !$this->isImport();
 
         return new Taxable(
-            self::TAX, self::cite($basis), $this->supplier(), $base, $rate, $base->times($rate),
+            self::TAX, self::cite($basis), $this->supplier(), $base, $rate, $base->percent($rate->percent),
             $collection, $agent, $collection->deadline($this->event->date()), $notes,
             creditableBy: $this->creditor($agent),
             countsAsTurnover: $chargedBySupplier,

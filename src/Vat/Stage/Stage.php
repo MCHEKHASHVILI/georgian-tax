@@ -12,5 +12,5 @@ use GeorgianTax\Vat\Supply;
 interface Stage
 {
     /** @param Closure(Supply): Outcome $next */
-    public function __invoke(Supply $supply, Closure $next): Outcome;
+    public function handle(Supply $supply, Closure $next): Outcome;
 }

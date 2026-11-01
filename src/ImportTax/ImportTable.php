@@ -24,9 +24,9 @@ final readonly class ImportTable
         private array $exemptExcept,
     ) {}
 
-    public static function standard(): self
+    public static function standard(?string $path = null): self
     {
-        $c = require __DIR__ . '/../../config/import.php';
+        $c = require $path ?? __DIR__ . '/../../resources/law/import.php';
 
         return new self($c['12'], $c['5'], $c['alcohol'], $c['exempt'], $c['exempt_except']);
     }

@@ -19,7 +19,7 @@ use GeorgianTax\Law\Citation;
 #[Article('79', 'Income taxpayer')]
 final class IdentifyTaxpayer implements Stage
 {
-    public function __invoke(Assessment $a, Closure $next): Outcome
+    public function handle(Assessment $a, Closure $next): Outcome
     {
         $taxpayer = $a->taxpayer();
 

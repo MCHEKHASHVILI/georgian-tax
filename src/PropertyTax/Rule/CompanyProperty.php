@@ -43,7 +43,7 @@ final class CompanyProperty implements Rule
         $factor = $item->kind->isRealEstate() && !$item->revaluedWithAudit ? self::revaluation($item->acquiredYear) : 1.0;
         $notes = $factor === 1.0 ? [] : ["Real estate revalued ×$factor for its acquisition year (202.1)."];
 
-        return $h->taxed(new Citation('202.1', 'Company property'), $item->value->scale($factor), $h->rates->companyPercent, $notes);
+        return $h->taxed(new Citation('202.1', 'Company property'), $item->value->multipliedBy($factor), $h->rates->companyPercent, $notes);
     }
 
     private static function revaluation(?int $acquired): float

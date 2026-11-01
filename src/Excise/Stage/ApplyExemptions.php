@@ -8,7 +8,7 @@ use Closure;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Income\SupplyCategory;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
 use GeorgianTax\Excise\Operation;
@@ -22,7 +22,7 @@ use GeorgianTax\Law\Citation;
  */
 final class ApplyExemptions implements Stage
 {
-    public function __invoke(Duty $d, Closure $next): Outcome
+    public function handle(Duty $d, Closure $next): Outcome
     {
         $c = $d->commodity;
         $event = $d->event;
@@ -51,7 +51,7 @@ final class ApplyExemptions implements Stage
         if ($event instanceof Import && ($relief = $event->relief) !== null && ($article = $relief->exciseArticle()) !== null) {
             $limit = $relief->limitGel();
 
-            if ($limit === null || $event->customsValue->atMost(Money::gel($limit))) {
+            if ($limit === null || $event->customsValue->lessThanOrEqual(Money::GEL($limit))) {
                 return $d->exempt(new Citation($article), "Import relief: {$relief->name}.");
             }
         }

@@ -11,7 +11,7 @@ use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\SelfSupply;
 use GeorgianTax\Domain\Event\Sell;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Engine\Outcome\Outcome;
@@ -26,7 +26,7 @@ use GeorgianTax\Vat\Supply;
 #[Article('159', 'Taxable operations')]
 final class IdentifyOperation implements Stage
 {
-    public function __invoke(Supply $s, Closure $next): Outcome
+    public function handle(Supply $s, Closure $next): Outcome
     {
         $event = $s->event;
 
@@ -78,7 +78,7 @@ final class IdentifyOperation implements Stage
             return $s->notTaxable(new Citation('160.3.ა'), 'A free supply by someone who credited no input VAT is not a supply for consideration.');
         }
 
-        if ($gift->recipient->isIndividual() && $gift->value->atMost(Money::gel(50))) {
+        if ($gift->recipient->isIndividual() && $gift->value->lessThanOrEqual(Money::GEL(50))) {
             return $s->notTaxable(new Citation('157.ი'), 'A gift worth 50 GEL or less a year to one person is not a supply.');
         }
 

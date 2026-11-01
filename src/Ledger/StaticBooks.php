@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Ledger;
 
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 
 final class StaticBooks implements CompanyBooks

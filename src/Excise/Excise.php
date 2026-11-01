@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Excise;
 
-use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Pipeline\Pipeline;
 use GeorgianTax\Engine\Tax;
-use GeorgianTax\Excise\Rate\RateRule;
+use GeorgianTax\Engine\TaxReport;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use GeorgianTax\Excise\Rate as R;
-use GeorgianTax\Excise\Stage;
-use LogicException;
 
 /**
  * Excise as one stage of the engine, and a pipeline of its own:
@@ -25,27 +22,12 @@ use LogicException;
  */
 final class Excise extends Tax
 {
-    public function __construct(private readonly Pipeline $pipeline, private readonly ExciseTable $table) {}
-
-    public static function standard(?ExciseTable $table = null): self
-    {
-        /** @var list<RateRule> $rates */
-        $rates = [new R\Cars(), new R\Motorcycles(), new R\Tobacco(), new R\Alcohol(), new R\Calls(), new R\TableRate()];
-
-        $levy = static function (Duty $d) use ($rates): Outcome {
-            foreach ($rates as $rate) {
-                if (($outcome = $rate->levy($d)) !== null) {
-                    return $outcome;
-                }
-            }
-
-            throw new LogicException("No excise rate for HS {$d->commodity->hsCode}.");
-        };
-
-        return new self(
-            new Pipeline([new Stage\IdentifyOperation(), new Stage\ApplyExemptions()], $levy),
-            $table ?? ExciseTable::standard(),
-        );
+    public function __construct(
+        Container $container,
+        Config $config,
+        private readonly ExciseTable $table,
+    ) {
+        parent::__construct($container, $config);
     }
 
     public function name(): string
@@ -53,12 +35,17 @@ final class Excise extends Tax
         return Duty::TAX;
     }
 
-    public function assess(TaxableEvent $event): Outcome
+    protected function stages(): array
     {
-        if ($event instanceof Refund) {
-            return $this->assess($event->original)->reversed($event->share());
-        }
+        return [
+            Stage\IdentifyOperation::class,
+            Stage\ApplyExemptions::class,
+            Stage\ApplyRate::class => [R\Cars::class, R\Motorcycles::class, R\Tobacco::class, R\Alcohol::class, R\Calls::class, R\TableRate::class],
+        ];
+    }
 
-        return $this->pipeline->process(new Duty($event, $this->table));
+    protected function subject(TaxableEvent $event, ?TaxReport $report): object
+    {
+        return new Duty($event, $this->table);
     }
 }

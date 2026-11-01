@@ -11,5 +11,5 @@ use GeorgianTax\Excise\Duty;
 interface Stage
 {
     /** @param Closure(Duty): Outcome $next */
-    public function __invoke(Duty $duty, Closure $next): Outcome;
+    public function handle(Duty $duty, Closure $next): Outcome;
 }

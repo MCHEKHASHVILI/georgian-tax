@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace GeorgianTax\ProfitTax;
 
-use Closure;
-use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Engine\Outcome\Outcome;
-use GeorgianTax\Engine\Pipeline\Pipeline;
 use GeorgianTax\Engine\Tax;
+use GeorgianTax\Engine\TaxReport;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\YearToDate;
 use GeorgianTax\ProfitTax\Exemption as E;
@@ -26,26 +25,13 @@ use GeorgianTax\Rates\RateTable;
 final class ProfitTax extends Tax
 {
     public function __construct(
-        private readonly Pipeline $pipeline,
+        Container $container,
+        Config $config,
         private readonly YearToDate $ledger,
         private readonly RateTable $rates,
         private readonly CompanyBooks $books,
-    ) {}
-
-    public static function standard(YearToDate $ledger, RateTable $rates, CompanyBooks $books): self
-    {
-        $exemptions = [new E\NotADistribution(), new E\ExemptCompanies(), new E\FreeSupplyExceptions()];
-        $rules = [new R\RepresentationOverLimit(), new R\InternationalCompany(), new R\StandardRate()];
-
-        $stages = [
-            new Stage\IdentifyOutflow(),
-            self::firstOf($exemptions, fn (E\Exemption $e, Outflow $o) => $e->exempts($o)),
-        ];
-
-        return new self(
-            new Pipeline($stages, self::firstOf($rules, fn (R\Rule $r, Outflow $o) => $r->assess($o), terminal: true)),
-            $ledger, $rates, $books,
-        );
+    ) {
+        parent::__construct($container, $config);
     }
 
     public function name(): string
@@ -53,33 +39,17 @@ final class ProfitTax extends Tax
         return Outflow::TAX;
     }
 
-    public function assess(TaxableEvent $event): Outcome
+    protected function stages(): array
     {
-        if ($event instanceof Refund) {
-            return $this->assess($event->original)->reversed($event->share());
-        }
-
-        return $this->pipeline->process(new Outflow($event, $this->ledger, $this->rates, $this->books));
+        return [
+            Stage\IdentifyOutflow::class,
+            Stage\ApplyExemptions::class => [E\NotADistribution::class, E\ExemptCompanies::class, E\FreeSupplyExceptions::class],
+            Stage\ApplyRules::class => [R\RepresentationOverLimit::class, R\InternationalCompany::class, R\StandardRate::class],
+        ];
     }
 
-    /**
-     * A stage that asks each handler in turn and returns the first answer, or passes on —
-     * the same first-match shape as the other taxes' stages.
-     *
-     * @template T of object
-     * @param list<T> $handlers
-     * @param Closure(T, Outflow): ?Outcome $ask
-     */
-    private static function firstOf(array $handlers, Closure $ask, bool $terminal = false): Closure
+    protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return static function (Outflow $o, ?Closure $next = null) use ($handlers, $ask, $terminal): Outcome {
-            foreach ($handlers as $handler) {
-                if (($outcome = $ask($handler, $o)) !== null) {
-                    return $outcome;
-                }
-            }
-
-            return $terminal ? throw new \LogicException('StandardRate always answers.') : $next($o);
-        };
+        return new Outflow($event, $this->ledger, $this->rates, $this->books);
     }
 }

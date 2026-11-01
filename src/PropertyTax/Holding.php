@@ -7,7 +7,7 @@ namespace GeorgianTax\PropertyTax;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\TaxableEvent;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Property\PropertyItem;
 use GeorgianTax\Domain\Rate;
 use GeorgianTax\Engine\Outcome\Collection;
@@ -71,7 +71,7 @@ final readonly class Holding
 
         return new Taxable(
             self::TAX, self::cite($basis), $this->holding->owner, $base, $rate,
-            $base->times($rate)->scale($this->share()), Collection::AnnualDeclaration, null, $this->due(), $notes,
+            $base->percent($rate->percent)->multipliedBy($this->share()), Collection::AnnualDeclaration, null, $this->due(), $notes,
             countsAsTurnover: false,
         );
     }
@@ -80,8 +80,8 @@ final readonly class Holding
     public function levied(object $basis, float $area, string $unit, float $ratePerUnit, array $notes = []): Levied
     {
         return new Levied(
-            self::TAX, self::cite($basis), $this->holding->owner, $area, $unit, Money::gel($ratePerUnit),
-            Money::gel($area * $ratePerUnit), Collection::AnnualDeclaration, $this->due(), $notes,
+            self::TAX, self::cite($basis), $this->holding->owner, $area, $unit, Money::GEL($ratePerUnit),
+            Money::GEL($area * $ratePerUnit), Collection::AnnualDeclaration, $this->due(), $notes,
         );
     }
 

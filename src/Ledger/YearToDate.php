@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use GeorgianTax\Domain\Event\TaxableEvent;
 use GeorgianTax\Domain\Income\HeirOrder;
 use GeorgianTax\Domain\Income\IncomeKind;
-use GeorgianTax\Domain\Money;
+use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Engine\TaxReport;
 

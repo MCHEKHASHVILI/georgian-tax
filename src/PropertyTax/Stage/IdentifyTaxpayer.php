@@ -24,7 +24,7 @@ use GeorgianTax\PropertyTax\Holding;
 #[Article('201, 203', 'Property tax payer and object')]
 final class IdentifyTaxpayer implements Stage
 {
-    public function __invoke(Holding $h, Closure $next): Outcome
+    public function handle(Holding $h, Closure $next): Outcome
     {
         $event = $h->event;
 
