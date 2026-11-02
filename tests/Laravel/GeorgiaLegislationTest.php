@@ -17,8 +17,8 @@ use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
 use Mchekhashvili\TaxLegislation\Legislation\Models\Threshold;
 use Mchekhashvili\TaxLegislation\Legislation\TaxLevel;
 use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
+use Mchekhashvili\TaxLegislation\Rates\CountryTables;
 use Mchekhashvili\TaxLegislation\Rates\EloquentRateTable;
-use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 uses(RefreshDatabase::class);
 
@@ -88,10 +88,10 @@ it('reseeds without duplicating', function () {
 
 it('runs the engine on rates from the database', function () {
     config()->set('georgian-tax.law.source', 'database');
-    app()->forgetInstance(RateTable::class);
+    app()->forgetScopedInstances();
     $this->refreshEngine();
 
-    expect(app(RateTable::class))->toBeInstanceOf(EloquentRateTable::class);
+    expect(app(CountryTables::class)->rates('GE'))->toBeInstanceOf(EloquentRateTable::class);
 
     $sale = new Pay(Party::company('buyer', Status::VatPayer), Party::company('seller', Status::VatPayer), IncomeKind::GoodsSupply, Mchekhashvili\Money\Money::GEL(1000), new DateTimeImmutable('2026-10-30'));
     expect((string) GeorgianTax::assess($sale)->vatCharged())->toBe('180.00 GEL');

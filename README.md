@@ -130,7 +130,7 @@ Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($acc
 | `property.*` | the Code's caps | Your municipal councils' property and land rates, checked against the caps |
 | `law.*` | package tables | Point at your own copy of a law table to follow an amendment early (`vendor:publish --tag=georgian-tax-law`) |
 
-**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `RateTable`, `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
+**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. Georgia's rates, thresholds and tables are registered for `GE` in tax-legislation's `CountryTables` (`app(CountryTables::class)->rates('GE')`); register your own for `GE` to replace them, and another country's package keeps its own. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
 
 ## Legislation history
 

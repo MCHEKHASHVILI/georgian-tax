@@ -10,8 +10,6 @@ use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use GeorgianTax\Ledger\YearToDate;
-use Mchekhashvili\TaxLegislation\Rates\RateTable;
-use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 use GeorgianTax\Vat\Exemption as E;
 use GeorgianTax\Vat\Place as P;
 use GeorgianTax\Vat\Rule as R;
@@ -32,8 +30,6 @@ final class Vat extends Tax
         Container $container,
         Config $config,
         private readonly YearToDate $ledger,
-        private readonly RateTable $rates,
-        private readonly ThresholdTable $thresholds,
     ) {
         parent::__construct($container, $config);
     }
@@ -74,6 +70,6 @@ final class Vat extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Supply($event, $this->ledger, $this->rates, $this->thresholds, $report?->amountOf('excise', 'import'));
+        return new Supply($event, $this->ledger, $this->rateTable(), $this->thresholdTable(), $report?->amountOf('excise', 'import'));
     }
 }

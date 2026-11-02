@@ -27,11 +27,11 @@ use Mchekhashvili\TaxLegislation\Engine\TaxRegistry;
 use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Mchekhashvili\TaxLegislation\Events\TaxableEventAssessed;
 use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
-use Mchekhashvili\TaxLegislation\Rates\EloquentRateTable;
-use Mchekhashvili\TaxLegislation\Rates\RateTable;
 use Mchekhashvili\TaxLegislation\Rates\ConfigThresholdTable;
+use Mchekhashvili\TaxLegislation\Rates\CountryTables;
+use Mchekhashvili\TaxLegislation\Rates\EloquentRateTable;
+use Mchekhashvili\TaxLegislation\Rates\EloquentTableSource;
 use Mchekhashvili\TaxLegislation\Rates\EloquentThresholdTable;
-use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * Georgia's law on top of mchekhashvili/tax-legislation: registers Georgia's six taxes with the
@@ -48,13 +48,18 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
         // Georgia's taxes, in order, into the shared engine.
         $this->callAfterResolving(TaxRegistry::class, fn (TaxRegistry $registry) => $registry->register(...(array) config('georgian-tax.taxes')));
 
-        // The law: rates from the database (with their history) or from the package's files.
-        $this->app->singleton(RateTable::class, fn () => config('georgian-tax.law.source') === 'database'
-            ? new EloquentRateTable(Tax::COUNTRY)
-            : ConfigRateTable::standard($this->law('rates') ?? __DIR__ . '/../resources/law/rates.php'));
-        $this->app->singleton(ThresholdTable::class, fn () => config('georgian-tax.law.source') === 'database'
-            ? new EloquentThresholdTable(Tax::COUNTRY)
-            : ConfigThresholdTable::fromFile($this->law('thresholds') ?? __DIR__ . '/../resources/law/thresholds.php', 'GEL'));
+        // Georgia's law: rates and thresholds from the database (with their history) or from the
+        // package's files; tables from the database (LawTables reads the files itself). Georgia's
+        // own, so another country's package in the same app keeps its own.
+        $this->callAfterResolving(CountryTables::class, fn (CountryTables $tables) => $tables->register(Tax::COUNTRY,
+            rates: fn () => $this->fromDatabase()
+                ? new EloquentRateTable(Tax::COUNTRY)
+                : ConfigRateTable::standard($this->law('rates') ?? __DIR__ . '/../resources/law/rates.php'),
+            thresholds: fn () => $this->fromDatabase()
+                ? new EloquentThresholdTable(Tax::COUNTRY)
+                : ConfigThresholdTable::fromFile($this->law('thresholds') ?? __DIR__ . '/../resources/law/thresholds.php', 'GEL'),
+            tables: fn () => new EloquentTableSource(Tax::COUNTRY),
+        ));
         $this->app->scoped(LawTables::class);
         $this->app->singleton(ExciseTable::class, fn () => ExciseTable::standard($this->law('excise')));
         $this->app->singleton(ImportTable::class, fn () => ImportTable::standard($this->law('import')));
@@ -115,6 +120,11 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
             $this->publishes([__DIR__ . '/../database/migrations' => database_path('migrations')], 'georgian-tax-migrations');
             $this->publishes([__DIR__ . '/../resources/law' => resource_path('law/georgian-tax')], 'georgian-tax-law');
         }
+    }
+
+    private function fromDatabase(): bool
+    {
+        return config('georgian-tax.law.source') === 'database';
     }
 
     private function law(string $table): ?string

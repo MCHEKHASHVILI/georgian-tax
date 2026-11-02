@@ -7,7 +7,6 @@ namespace GeorgianTax\PropertyTax;
 use Mchekhashvili\TaxLegislation\Contracts\TaxableEvent;
 use GeorgianTax\Engine\LawTables;
 use GeorgianTax\Engine\Tax;
-use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
@@ -30,7 +29,6 @@ final class PropertyTax extends Tax
         Config $config,
         private readonly LawTables $tables,
         private readonly MunicipalRates $rates,
-        private readonly ThresholdTable $thresholds,
     ) {
         parent::__construct($container, $config);
     }
@@ -51,6 +49,6 @@ final class PropertyTax extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Holding($event, $this->tables->land($event->date())->table, $this->rates, $this->thresholds);
+        return new Holding($event, $this->tables->land($event->date())->table, $this->rates, $this->thresholdTable());
     }
 }

@@ -15,8 +15,6 @@ use GeorgianTax\IncomeTax\Rule\NonResident as N;
 use GeorgianTax\IncomeTax\Rule\Withholding as W;
 use GeorgianTax\IncomeTax\Source as S;
 use GeorgianTax\Ledger\YearToDate;
-use Mchekhashvili\TaxLegislation\Rates\RateTable;
-use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * Income tax as one stage of the engine, and a pipeline of its own:
@@ -34,8 +32,6 @@ final class IncomeTax extends Tax
         Container $container,
         Config $config,
         private readonly YearToDate $ledger,
-        private readonly RateTable $rates,
-        private readonly ThresholdTable $thresholds,
     ) {
         parent::__construct($container, $config);
     }
@@ -104,6 +100,6 @@ final class IncomeTax extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Assessment($event, $this->ledger, $this->rates, $this->thresholds);
+        return new Assessment($event, $this->ledger, $this->rateTable(), $this->thresholdTable());
     }
 }

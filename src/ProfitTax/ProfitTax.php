@@ -13,7 +13,6 @@ use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\YearToDate;
 use GeorgianTax\ProfitTax\Exemption as E;
 use GeorgianTax\ProfitTax\Rule as R;
-use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
  * Profit tax as one stage of the engine, and a pipeline of its own:
@@ -28,7 +27,6 @@ final class ProfitTax extends Tax
         Container $container,
         Config $config,
         private readonly YearToDate $ledger,
-        private readonly RateTable $rates,
         private readonly CompanyBooks $books,
     ) {
         parent::__construct($container, $config);
@@ -50,6 +48,6 @@ final class ProfitTax extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Outflow($event, $this->ledger, $this->rates, $this->books);
+        return new Outflow($event, $this->ledger, $this->rateTable(), $this->books);
     }
 }

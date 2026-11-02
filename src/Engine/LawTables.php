@@ -11,7 +11,7 @@ use GeorgianTax\PropertyTax\LandRates;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
-use Mchekhashvili\TaxLegislation\Rates\EloquentTableSource;
+use Mchekhashvili\TaxLegislation\Rates\CountryTables;
 use OutOfBoundsException;
 
 /**
@@ -24,8 +24,6 @@ final class LawTables
 {
     /** @var array<string, object> */
     private array $memo = [];
-
-    private ?EloquentTableSource $source = null;
 
     public function __construct(private readonly Container $app, private readonly Config $config) {}
 
@@ -91,6 +89,6 @@ final class LawTables
     /** @return array<string, array<string, mixed>> */
     private function rows(string $tax, string $table, DateTimeImmutable $on): array
     {
-        return ($this->source ??= new EloquentTableSource(Tax::COUNTRY))->rows($tax, $table, $on);
+        return $this->app->make(CountryTables::class)->tables(Tax::COUNTRY)->rows($tax, $table, $on);
     }
 }

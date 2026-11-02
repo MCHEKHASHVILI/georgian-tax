@@ -6,6 +6,7 @@ use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Party\Party;
+use GeorgianTax\Domain\Party\Status;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
@@ -13,7 +14,9 @@ use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\Facades\GeorgianTax;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\MunicipalRates;
-use Mchekhashvili\TaxLegislation\Rates\RateTable;
+use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
+use Mchekhashvili\TaxLegislation\Rates\ConfigThresholdTable;
+use Mchekhashvili\TaxLegislation\Rates\CountryTables;
 use GeorgianTax\Vat\Supply;
 use Mchekhashvili\Money\Money;
 
@@ -77,8 +80,23 @@ it('lets the app add or reorder taxes from config', function () {
     expect(GeorgianTax::taxes()->keys()->all())->toBe(['income']);
 });
 
+it('keeps Georgia\'s law apart from another country\'s package in the same app', function () {
+    // An invented second country whose tables use the same article keys as Georgia's.
+    app(CountryTables::class)->register('AM',
+        rates: new ConfigRateTable(['166' => ['2000-01-01' => 20]]),
+        thresholds: new ConfigThresholdTable(['vat' => ['registration' => ['1', ['' => 1]]]], 'AMD'),
+    );
+    $this->refreshEngine();
+
+    $sale = new Pay(Party::company('buyer', Status::VatPayer), Party::company('seller', Status::VatPayer), IncomeKind::GoodsSupply, Money::GEL(1000), new DateTimeImmutable('2026-10-30'));
+
+    expect((string) GeorgianTax::assess($sale)->vatCharged())->toBe('180.00 GEL')   // Georgia's Art. 166, not the other country's
+        ->and(app(CountryTables::class)->rates('AM')->rate('166', new DateTimeImmutable('2026-10-30'))->percent)->toBe(20.0)
+        ->and((string) app(CountryTables::class)->thresholds('GE')->threshold('vat', 'registration', new DateTimeImmutable('2026-10-30')))->toBe('100000.00 GEL');
+});
+
 it('reads the law tables once, from the package or an overriding file', function () {
-    expect(app(RateTable::class))->toBe(app(RateTable::class))
+    expect(app(CountryTables::class)->rates('GE'))->toBe(app(CountryTables::class)->rates('GE'))
         ->and(app(ExciseTable::class)->find(new \GeorgianTax\Domain\Goods\Commodity('2710 12'))['rate'])->toBe(500.0);
 
     $file = tempnam(sys_get_temp_dir(), 'excise') . '.php';
