@@ -145,11 +145,11 @@ Georgia's law lives in `mchekhashvili/tax-legislation`'s tables, per country, wi
 | Tables | The excise table (188.1), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
 | Exemptions | Each of the 244 exemptions the engine applies (`resources/law/exemptions.php`, generated from the code); their conditions stay in code |
 
-Start dates are left open, meaning in force since before the recorded history. Past taxes and earlier values are added through tax-legislation's forms (`RecordTaxType`, `AmendLaw`, `RepealLaw`, `AbolishTaxType`). Every change logs a revision with its editor, reason and source.
+Start dates are left open, meaning in force since before the recorded history. Past taxes and earlier values are added through tax-legislation's forms (`RecordTaxType`, `AmendLaw`, `RepealLaw`, `AbolishTaxType`). Each is saved as a draft and takes effect once approved (`ApproveDraft`); every change logs a revision with its editor, reason and source.
 
 With `GEORGIAN_TAX_LAW_SOURCE=database`, the engine reads the law from that history instead of the files:
 
-- **Rates, thresholds and tables** come from the values in force on the event's day. A change entered with `AmendLaw` applies from its date, with no code change.
+- **Rates, thresholds and tables** come from the values in force on the event's day. A change entered with `AmendLaw` applies from its date once approved, with no code change.
 - **Exemptions** apply only while recorded in force. A repealed one stops applying from its repeal date.
 - **Taxes** run only within their recorded period. A past tax recorded without an engine (the social tax, say) shows in the report as `NotComputed` for events while it was in force.
 

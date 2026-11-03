@@ -13,6 +13,7 @@ use GeorgianTax\Facades\GeorgianTax;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mchekhashvili\Money\Money;
 use Mchekhashvili\TaxLegislation\Actions\AmendLaw;
+use Mchekhashvili\TaxLegislation\Actions\ApproveDraft;
 use Mchekhashvili\TaxLegislation\Actions\RecordLegalAct;
 use Mchekhashvili\TaxLegislation\Actions\RecordTaxType;
 use Mchekhashvili\TaxLegislation\Actions\RepealLaw;
@@ -48,6 +49,17 @@ it('applies a rate amendment from its date', function () {
 
     expect((string) GeorgianTax::assess(($this->pay)(1000, '2027-12-31'))->vatCharged())->toBe('180.00 GEL')
         ->and((string) GeorgianTax::assess(($this->pay)(1000, '2028-01-01'))->vatCharged())->toBe('200.00 GEL');
+});
+
+it('changes nothing on a draft amendment until it is approved', function () {
+    config(['tax-legislation.approval.required' => true, 'tax-legislation.approval.gate' => null]);
+    $vat = fn () => (string) GeorgianTax::assess(($this->pay)(1000, '2028-06-01'))->vatCharged();
+
+    $draft = app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('vat')->id, 'key' => '166', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 20]);
+    expect($vat())->toBe('180.00 GEL');
+
+    app(ApproveDraft::class)->handle($draft);
+    expect($vat())->toBe('200.00 GEL');
 });
 
 it('applies a threshold amendment from its date', function () {

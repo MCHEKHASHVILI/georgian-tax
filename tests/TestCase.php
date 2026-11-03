@@ -50,6 +50,7 @@ abstract class TestCase extends Testbench
     {
         $app['config']->set('georgian-tax.ledger', 'memory');
         $app['config']->set('tax-legislation.store_reports', false);
+        $app['config']->set('tax-legislation.approval.required', false);   // AmendingTheLawTest turns it on
     }
 
     /** The container's engine, optionally narrowed to some taxes. */
