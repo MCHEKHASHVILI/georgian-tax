@@ -18,6 +18,7 @@ use Mchekhashvili\TaxLegislation\Actions\RecordLegalAct;
 use Mchekhashvili\TaxLegislation\Actions\RecordTaxType;
 use Mchekhashvili\TaxLegislation\Actions\RepealLaw;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotComputed;
+use Mchekhashvili\TaxLegislation\Http\Routes;
 use Mchekhashvili\TaxLegislation\Legislation\Models\Exemption;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
 use Mchekhashvili\TaxLegislation\Legislation\ValueKind;
@@ -60,6 +61,26 @@ it('changes nothing on a draft amendment until it is approved', function () {
 
     app(ApproveDraft::class)->handle($draft);
     expect($vat())->toBe('200.00 GEL');
+});
+
+it("reads Georgia's law and amends it through the JSON API", function () {
+    config(['tax-legislation.approval.required' => true, 'tax-legislation.approval.gate' => null]);
+    Routes::register(['prefix' => 'api/law']);
+    $vat = ($this->tax)('vat');
+
+    $this->getJson('/api/law/countries/GE/tax-types?on=2027-01-01')->assertOk()->assertJsonCount(6, 'data');
+    $this->getJson("/api/law/tax-types/{$vat->id}/law?on=2027-01-01")->assertOk()
+        ->assertJsonPath('data.tax_type.legal_basis', 'Art. 6.5.გ')
+        ->assertJsonPath('data.rates.0.key', '166')
+        ->assertJsonPath('data.rates.0.percent', 18);
+
+    $draft = $this->postJson('/api/law/amendments', ['kind' => 'rate', 'tax_type_id' => $vat->id, 'key' => '166', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 20])
+        ->assertAccepted()->json('data.id');
+    expect((string) GeorgianTax::assess(($this->pay)(1000, '2028-06-01'))->vatCharged())->toBe('180.00 GEL');
+
+    $this->postJson("/api/law/drafts/$draft/approve")->assertOk()->assertJsonPath('data.status', 'approved');
+    expect((string) GeorgianTax::assess(($this->pay)(1000, '2028-06-01'))->vatCharged())->toBe('200.00 GEL');
+    $this->getJson("/api/law/tax-types/{$vat->id}/history/rate/166")->assertJsonPath('data.1.effective_from', '2028-01-01');
 });
 
 it('applies a threshold amendment from its date', function () {
