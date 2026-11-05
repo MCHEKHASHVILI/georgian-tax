@@ -14,6 +14,10 @@ return [
         'agricultural_salary'      => ['82.1.ც', ['' => 200_000]],    // employer's produce supplied in a year
         'lottery_win'              => ['82.1.ღ', ['' => 1_000]],      // one win
         'private_pension'          => ['82.1.ბ⁴.ა', ['' => 6_000]],   // contributions in a year
+        'allowance'                => ['82.2.ა', ['' => 3_000]],      // veterans, mothers of Georgia, single, adoptive and foster parents, a year
+        'allowance_disability'     => ['82.2.ბ', ['' => 6_000]],      // disabled since childhood, severe or significant disability, a year
+        'allowance_peacekeeper'    => ['82.2.ბ¹', ['' => 6_000]],     // seriously injured in a peace operation, a year
+        'allowance_high_mountain'  => ['82.2.გ', ['' => 6_000]],      // high-mountain residents, from work there, a year
         'small_business'           => ['90.2', ['' => 500_000]],      // turnover in a year
         'small_business_wine'      => ['88.3', ['' => 700_000]],      // wine-making and agro-tourism
         'small_business_salaries'  => ['94.4', ['' => 6_000]],        // salaries untaxed at source in a year

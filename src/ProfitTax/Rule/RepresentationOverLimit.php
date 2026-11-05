@@ -15,7 +15,7 @@ use GeorgianTax\ProfitTax\OutflowKind;
  * Representation costs (Art. 8.33) are free up to 1% of last year's revenue — or of last year's
  * costs, if those exceeded revenue (98⁴.2). Only the part of this expense above the yearly limit
  * is taxed. In the founding year the limit is 1% of the year's own costs (98⁴.3), known only at
- * year end.
+ * year end. The shares are rates (98⁴.2, 98⁴.3 in resources/law/rates.php or the database).
  */
 #[Article('98⁴', 'Representation costs over the limit')]
 final class RepresentationOverLimit implements Rule
@@ -27,16 +27,17 @@ final class RepresentationOverLimit implements Rule
         }
 
         if ($o->books->foundedIn($o->company) === $o->year()) {
-            return $o->unresolved($this, "In the founding year the limit is 1% of the year's costs (98⁴.3); assess at year end.");
+            return $o->unresolved($this, "In the founding year the limit is {$o->rate('98⁴.3')} of the year's costs (98⁴.3); assess at year end.");
         }
 
+        $share = $o->rate('98⁴.2');
         $revenue = $o->books->revenue($o->company, $o->year() - 1);
 
         if ($revenue === null) {
-            return $o->unresolved($this, "The limit is 1% of last year's revenue, which the books don't give.");
+            return $o->unresolved($this, "The limit is $share of last year's revenue, which the books don't give.");
         }
 
-        $limit = $revenue->multipliedBy(0.01);
+        $limit = $revenue->percent($share->percent);
         $before = $o->ledger->spent($o->company, $o->year(), ExpenseNature::Representation->value);
         $after = $before->plus($o->amount);
 

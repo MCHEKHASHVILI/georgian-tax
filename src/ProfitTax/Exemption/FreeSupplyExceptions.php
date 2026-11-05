@@ -46,20 +46,21 @@ final class FreeSupplyExceptions implements Exemption
         };
     }
 
-    /** Up to 10% of the donor's net profit of the previous year, counted across the year. */
+    /** Up to a share (98³.3.ა, a rate: 10% as consolidated) of the donor's net profit of the previous year, counted across the year. */
     private function charity(Outflow $o): ?Outcome
     {
+        $share = $o->rate('98³.3.ა');
         $netProfit = $o->books->netProfit($o->company, $o->year() - 1);
 
         if ($netProfit === null) {
-            return $o->unresolved(new Citation('98³.3.ა'), "Charity donations are tax-free up to 10% of last year's net profit, which the books don't give.");
+            return $o->unresolved(new Citation('98³.3.ა'), "Charity donations are tax-free up to $share of last year's net profit, which the books don't give.");
         }
 
-        $limit = $netProfit->percent(10);
+        $limit = $netProfit->percent($share->percent);
         $soFar = $o->ledger->spent($o->company, $o->year(), 'charity')->plus($o->amount);
 
         return $soFar->lessThanOrEqual($limit)
-            ? $o->notTaxable(new Citation('98³.3.ა'), "Within this year's charity allowance of $limit (10% of last year's net profit).")
+            ? $o->notTaxable(new Citation('98³.3.ა'), "Within this year's charity allowance of $limit ($share of last year's net profit).")
             : null; // over the limit: taxed in full by the standard rule
     }
 }

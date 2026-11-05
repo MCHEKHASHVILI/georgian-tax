@@ -141,7 +141,7 @@ Georgia's law lives in `mchekhashvili/tax-legislation`'s tables, per country, wi
 | Legal acts | The Tax Code №3591-IIს of 17 September 2010, in force from 1 January 2011 (Art. 310.1); the 2004 Tax Code it repealed; Law №6942 of 15 July 2020, the latest amendment of Art. 6 |
 | Tax types | The six taxes of Art. 6.5–6.6, with their engine classes |
 | Rates | Every rate in `resources/law/rates.php`, plus the 204.2 and 204.3 land rates |
-| Thresholds | Every amount the engine draws a line at (`resources/law/thresholds.php`): VAT registration, gift and heir limits, small business, agricultural, pension, lottery, family income |
+| Thresholds | Every amount the engine draws a line at (`resources/law/thresholds.php`): VAT registration, gift and heir limits, small business, agricultural, pension, lottery, the 82.2 personal allowances, family income |
 | Tables | The excise table (188.1), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
 | Exemptions | Each of the 244 exemptions the engine applies (`resources/law/exemptions.php`, generated from the code); their conditions stay in code |
 

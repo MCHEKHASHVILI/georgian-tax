@@ -3,13 +3,18 @@
 declare(strict_types=1);
 
 use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
+use GeorgianTax\Domain\Event\Expense;
+use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
+use GeorgianTax\Domain\Party\Relief;
 use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\Facades\GeorgianTax;
+use GeorgianTax\Ledger\CompanyBooks;
+use GeorgianTax\Ledger\StaticBooks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mchekhashvili\Money\Money;
 use Mchekhashvili\TaxLegislation\Actions\AmendLaw;
@@ -18,6 +23,8 @@ use Mchekhashvili\TaxLegislation\Actions\RecordLegalAct;
 use Mchekhashvili\TaxLegislation\Actions\RecordTaxType;
 use Mchekhashvili\TaxLegislation\Actions\RepealLaw;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotComputed;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Http\Routes;
 use Mchekhashvili\TaxLegislation\Legislation\Models\Exemption;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
@@ -89,6 +96,26 @@ it('applies a threshold amendment from its date', function () {
 
     expect($win('2027-06-01')->basis()->ref)->not->toBe('82.1.ღ')
         ->and($win('2028-06-01')->basis()->ref)->toBe('82.1.ღ');
+});
+
+it('applies an amended annual allowance from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Threshold, ['tax_type_id' => ($this->tax)('income')->id, 'key' => 'allowance', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'amount' => '4000', 'currency' => 'GEL']);
+    $salary = fn (string $on) => (string) GeorgianTax::assess(($this->pay)(5000, $on, IncomeKind::Salary, Party::person('mother', Relief::SingleParent)))->for('income')->base;
+
+    expect($salary('2027-06-01'))->toBe('2000.00 GEL')    // 82.2.ა: 3,000 sheltered
+        ->and($salary('2028-06-01'))->toBe('1000.00 GEL'); // 4,000 under the amendment
+});
+
+it('applies an amended profit tax limit from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('profit')->id, 'key' => '98⁴.2', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 2]);
+    $company = Party::company('acme');
+    $books = (new StaticBooks())->set($company, 2026, revenue: Money::GEL(100_000))->set($company, 2027, revenue: Money::GEL(100_000));
+    $this->app->instance(CompanyBooks::class, $books);
+    $this->refreshEngine();
+    $dinner = fn (string $on) => GeorgianTax::assess(new Expense($company, Money::GEL(1500), new DateTimeImmutable($on), ExpenseNature::Representation))->for('profit');
+
+    expect($dinner('2027-06-01'))->toBeInstanceOf(Taxable::class)   // 98⁴.2: 1% of 100,000 — 500 over
+        ->and($dinner('2028-06-01'))->toBeInstanceOf(NotTaxable::class); // 2% under the amendment
 });
 
 it('stops an exemption the law repealed', function () {

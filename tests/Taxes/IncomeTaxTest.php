@@ -290,6 +290,14 @@ test('single parent allowance shelters 3000 a year', function () {
     $this->assertSame(40000, $second->amount->minor);
 });
 
+test('only the highest allowance applies when a person has several', function () {
+    $person = Party::person('veteran', Relief::Veteran, Relief::SevereDisability);
+    $salary = $this->income($this->pay($this->company, $person, K::Salary, 7000));
+
+    $this->assertSame(100000, $salary->base->minor);   // 82.3: the 6,000 of 82.2.ბ, not the 3,000 of 82.2.ა
+    $this->assertStringContainsString('Art. 82.2.ბ', implode(' ', $salary->notes));
+});
+
 test('refund reverses in proportion', function () {
     $salary = $this->pay($this->company, $this->person, K::Salary, 3000);
     $refund = $this->income(new Refund($salary, $this->today, Money::GEL(1500)));

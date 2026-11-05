@@ -17,7 +17,9 @@ use Mchekhashvili\TaxLegislation\Law\Article;
 /**
  * Art. 82.2–82.3 — veterans, single parents, people with disabilities and others have an annual
  * tax-free amount. Only the highest allowance applies. Runs *after* the rules, reducing the base
- * of whatever they decided while the allowance lasts.
+ * of whatever they decided while the allowance lasts. The amounts are income tax thresholds
+ * (allowance, allowance_disability, allowance_peacekeeper, allowance_high_mountain), so an
+ * amending law changes them without a code change.
  */
 #[Article('82.2', 'Annual personal allowance')]
 final class ApplyAnnualAllowance implements Stage
@@ -30,13 +32,13 @@ final class ApplyAnnualAllowance implements Stage
             return $outcome;
         }
 
-        $relief = $this->highestRelief($a);
+        [$relief, $allowance] = $this->highestRelief($a) ?? [null, null];
 
         if ($relief === null) {
             return $outcome;
         }
 
-        $remaining = $relief->annualAllowance()->minus($a->ledger->taxableIncome($a->taxpayer(), $a->year()))->clampedToZero();
+        $remaining = $allowance->minus($a->ledger->taxableIncome($a->taxpayer(), $a->year()))->clampedToZero();
 
         if ($remaining->isZero()) {
             return $outcome;
@@ -46,11 +48,12 @@ final class ApplyAnnualAllowance implements Stage
 
         return $outcome->withBase(
             $outcome->base->minus($sheltered),
-            "Art. {$relief->article()}: $sheltered sheltered by the annual allowance of {$relief->annualAllowance()}.",
+            "Art. {$relief->article()}: $sheltered sheltered by the annual allowance of $allowance.",
         );
     }
 
-    private function highestRelief(Assessment $a): ?Relief
+    /** The relief with the highest allowance in force on the event's day, and that allowance. @return array{Relief, Money}|null */
+    private function highestRelief(Assessment $a): ?array
     {
         $best = null;
 
@@ -59,8 +62,10 @@ final class ApplyAnnualAllowance implements Stage
                 continue; // 82.2.გ excludes budget-organization and state clinic salaries
             }
 
-            if ($best === null || $relief->annualAllowance()->greaterThan($best->annualAllowance())) {
-                $best = $relief;
+            $allowance = $a->threshold($relief->thresholdKey());
+
+            if ($best === null || $allowance->greaterThan($best[1])) {
+                $best = [$relief, $allowance];
             }
         }
 

@@ -17,6 +17,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\YearToDate;
+use Mchekhashvili\TaxLegislation\Rate;
 use Mchekhashvili\TaxLegislation\Rates\RateTable;
 
 /**
@@ -46,6 +47,12 @@ final readonly class Outflow
     public function year(): int
     {
         return (int) $this->event->date()->format('Y');
+    }
+
+    /** A profit tax rate or share as it stood on the event's day (resources/law/rates.php or the database). */
+    public function rate(string $article): Rate
+    {
+        return $this->rates->rate($article, $this->event->date());
     }
 
     public function isOrganization(): bool
