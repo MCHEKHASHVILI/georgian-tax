@@ -91,12 +91,27 @@ test('fuel in the tank is exempt', function () {
     $this->assertExempt($this->excise($this->import(new Commodity('2710 19 43', 0.05), relief: ImportRelief::FuelInVehicleTank)), '194.5.გ');
 });
 
-test('postal relief stops above its limit', function () {
-    $small = $this->import(new Commodity('2208 30', 1, alcoholPercent: 40), customs: 200, relief: ImportRelief::PostalSmall);
-    $large = $this->import(new Commodity('2208 30', 1, alcoholPercent: 40), customs: 400, relief: ImportRelief::PostalSmall);
+test('postal relief has no value limit for excise', function () {
+    // 194.5.ბ¹ sets quantities only (4 litres of alcohol); the 300 GEL of 199.დ.ვ is import tax's
+    $bottle = $this->import(new Commodity('2208 30', 1, alcoholPercent: 40), customs: 400, relief: ImportRelief::PostalSmall);
 
-    $this->assertExempt($this->excise($small), '194.5.ბ¹');
-    $this->assertInstanceOf(Levied::class, $this->excise($large));
+    $this->assertExempt($this->excise($bottle), '194.5.ბ¹');
+});
+
+test('relocation relieves a passenger car only', function () {
+    $car = new Commodity('8703 23', 1, engineCc: 2000, yearMade: 2019);
+    $whisky = new Commodity('2208 30', 1, alcoholPercent: 40);
+
+    $this->assertExempt($this->excise($this->import($car, relief: ImportRelief::Relocation)), '194.5.თ');
+    $this->assertExempt($this->excise($this->import($car, 40_000, ImportRelief::ReturningDiplomat)), '194.5.თ');
+    $this->assertInstanceOf(Levied::class, $this->excise($this->import($whisky, relief: ImportRelief::Relocation)));
+});
+
+test('a returning resident car pays excise', function () {
+    // 199.დ.დ's 15,000 GEL excludes chapter 87; only a returning diplomat's car is under 194.5.თ
+    $car = new Commodity('8703 23', 1, engineCc: 2000, yearMade: 2019);
+
+    $this->assertLevied($this->excise($this->import($car, 10_000, ImportRelief::ReturningResident)), '188.13', 9000);
 });
 
 /* ── Cars (188.9–18) ── */

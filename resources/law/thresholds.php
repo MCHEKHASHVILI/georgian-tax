@@ -27,6 +27,13 @@ return [
         'registration'             => ['165.1', ['' => 100_000]],     // taxable turnover over 12 months
         'gift_to_person'           => ['157.ი', ['' => 50]],          // gifts to one person in a year
     ],
+    'import' => [
+        'traveller_food'           => ['199.დ.ა', ['' => 500]],       // food, once a day
+        'personal_goods'           => ['199.დ.ბ', ['' => 500]],       // chapters 28–97, once in 30 days
+        'returning_resident'       => ['199.დ.დ', ['' => 15_000]],    // after more than 6 months abroad
+        'postal_goods'             => ['199.დ.ვ', ['' => 300]],       // chapters 28–97 by post
+        'air_traveller_goods'      => ['199.დ.ზ', ['' => 3_000]],     // chapters 28–97 by air
+    ],
     'property' => [
         'family_income'            => ['206.1.ა', ['' => 100_000]],   // last year's family income
     ],

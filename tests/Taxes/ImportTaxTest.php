@@ -142,6 +142,16 @@ test('returning resident relief excludes vehicles', function () {
     $this->assertExempt($this->tax($this->import(new Commodity('3926 10 000 00'), 10_000, ImportRelief::ReturningResident)), '199.დ.დ');
 });
 
+test('a returning diplomat brings a vehicle in addition, uncapped', function () {
+    $car = new Commodity('8703 23', engineCc: 2000, yearMade: 2026);
+
+    $this->assertExempt($this->tax($this->import($car, 40_000, ImportRelief::ReturningDiplomat)), '199.დ.დ');
+});
+
+test('returning resident relief stops above 15,000', function () {
+    $this->assertTaxed($this->tax($this->import(new Commodity('3926 10 000 00'), 16_000, ImportRelief::ReturningResident)), '197.2', 800);
+});
+
 test('raw tobacco relief ends in 2028', function () {
     $leaf = new Commodity('2401 10', 1000);
     $later = new Import($this->importer, Money::GEL(1000), new DateTimeImmutable('2028-03-01'), commodity: $leaf, relief: ImportRelief::RawTobacco);

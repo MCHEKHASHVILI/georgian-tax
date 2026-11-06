@@ -8,6 +8,7 @@ use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Goods\Commodity;
+use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Relief;
@@ -104,6 +105,14 @@ it('applies an amended annual allowance from its date', function () {
 
     expect($salary('2027-06-01'))->toBe('2000.00 GEL')    // 82.2.ა: 3,000 sheltered
         ->and($salary('2028-06-01'))->toBe('1000.00 GEL'); // 4,000 under the amendment
+});
+
+it('applies an amended import relief limit from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Threshold, ['tax_type_id' => ($this->tax)('import')->id, 'key' => 'postal_goods', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'amount' => '500', 'currency' => 'GEL']);
+    $parcel = fn (string $on) => GeorgianTax::assess(new Import(Party::person('nino'), Money::GEL(400), new DateTimeImmutable($on), commodity: new Commodity('3926 10 000 00'), relief: ImportRelief::PostalSmall))->for('import');
+
+    expect($parcel('2027-06-01'))->toBeInstanceOf(Taxable::class)       // 199.დ.ვ: over 300
+        ->and($parcel('2028-06-01')->basis()->ref)->toBe('199.დ.ვ');    // within 500 under the amendment
 });
 
 it('applies an amended profit tax limit from its date', function () {

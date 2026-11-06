@@ -17,6 +17,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Citation;
+use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
  * The subject of the import tax pipeline: goods crossing the customs border into Georgia (Art. 195–196).
@@ -29,13 +30,20 @@ final readonly class Clearance
     public function __construct(
         public TaxableEvent $event,
         public ImportTable $table,
+        public ThresholdTable $thresholds,
         public ?Import $import = null,
         public ?Commodity $commodity = null,
     ) {}
 
     public function of(Import $import, Commodity $commodity): self
     {
-        return new self($this->event, $this->table, $import, $commodity);
+        return new self($this->event, $this->table, $this->thresholds, $import, $commodity);
+    }
+
+    /** An import tax threshold as it stood on the day of import. */
+    public function threshold(string $key): Money
+    {
+        return $this->thresholds->threshold(self::TAX, $key, $this->event->date());
     }
 
     public function year(): int

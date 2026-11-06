@@ -6,8 +6,10 @@ namespace GeorgianTax\Domain\Goods;
 
 /**
  * Why an import may be relieved of import tax (Art. 199) and excise (Art. 194.5). One import can
- * carry one relief; each tax looks up its own article. The value limits are per the Code; the
- * once-a-day / once-a-month frequency limits are for the caller to check.
+ * carry one relief; each tax looks up its own article. The import tax value limits are thresholds
+ * of the law (thresholdKey()); the once-a-day / once-a-month frequency limits, and the quantities
+ * of the tobacco and alcohol allowances, are for the caller to check. The excise reliefs have no
+ * value limit: 194.5.ბ–ბ² set quantities only.
  */
 enum ImportRelief
 {
@@ -17,8 +19,9 @@ enum ImportRelief
     case TravellerFood;           // ≤ 500 GEL and 30 kg of food, once a day
     case PersonalGoods;           // ≤ 500 GEL and 30 kg, once in 30 days
     case TravellerAllowance;      // tobacco and alcohol within the passenger allowance
-    case ReturningResident;       // ≤ 15,000 GEL after 6+ months abroad
-    case Relocation;              // moving to Georgia permanently
+    case ReturningResident;       // ≤ 15,000 GEL after 6+ months abroad, no vehicles (ch. 87)
+    case ReturningDiplomat;       // a diplomat back from rotation: per family one vehicle, fridge, computer, TV
+    case Relocation;              // moving to Georgia permanently, with one vehicle per family
     case PostalSmall;             // ≤ 300 GEL and 30 kg by post
     case AirTravellerGoods;       // ≤ 3,000 GEL and 30 kg by air
     case BabyOrDiabeticFood;
@@ -47,7 +50,7 @@ enum ImportRelief
             self::TravellerFood => '199.დ.ა',
             self::PersonalGoods => '199.დ.ბ',
             self::TravellerAllowance => '199.დ.გ–დ.გ¹',
-            self::ReturningResident => '199.დ.დ',
+            self::ReturningResident, self::ReturningDiplomat => '199.დ.დ',
             self::Relocation => '199.დ.ე',
             self::PostalSmall => '199.დ.ვ',
             self::AirTravellerGoods => '199.დ.ზ',
@@ -75,7 +78,7 @@ enum ImportRelief
             self::FuelInVehicleTank => '194.5.გ',
             self::AviationOrShipSupplies => '194.5.ე',
             self::OilGasOperations => '194.5.ვ',
-            self::ReturningResident, self::Relocation => '194.5.თ',
+            self::ReturningDiplomat, self::Relocation => '194.5.თ', // passenger cars only
             self::ReturnedGoods => '194.5.ი',
             self::DiplomaticMission => '194.5.კ',
             self::DisabledAdaptedCar => '194.5.ლ¹',
@@ -85,14 +88,20 @@ enum ImportRelief
         };
     }
 
-    /** Customs value above which the relief stops applying, in GEL. */
-    public function limitGel(): ?int
+    /**
+     * The import tax threshold (resources/law/thresholds.php, or the database) holding the customs
+     * value above which this relief stops applying, or null if it has none — as consolidated,
+     * 500 GEL under 199.დ.ა and დ.ბ, 15,000 under დ.დ, 300 under დ.ვ, 3,000 under დ.ზ. A returning
+     * diplomat's vehicle, fridge, computer and TV are relieved "in addition" (199.დ.დ), uncapped.
+     */
+    public function thresholdKey(): ?string
     {
         return match ($this) {
-            self::TravellerFood, self::PersonalGoods => 500,
-            self::PostalSmall => 300,
-            self::AirTravellerGoods => 3000,
-            self::ReturningResident => 15_000,
+            self::TravellerFood => 'traveller_food',
+            self::PersonalGoods => 'personal_goods',
+            self::ReturningResident => 'returning_resident',
+            self::PostalSmall => 'postal_goods',
+            self::AirTravellerGoods => 'air_traveller_goods',
             default => null,
         };
     }

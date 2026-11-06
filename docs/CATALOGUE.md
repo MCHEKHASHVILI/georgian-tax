@@ -492,11 +492,11 @@ Car age is the year of the operation (or customs declaration) minus the year mad
 | Property seized for the budget | Exempt with credit | 194.6.გ |
 | Under an international treaty | Exempt with credit | 194.7 |
 | Passenger allowance of tobacco and alcohol | Exempt | 194.5.ბ–ბ² |
-| Small postal parcels | Exempt | 194.5.ბ¹ |
+| Postal tobacco and up to 4 litres of alcohol, whatever the value | Exempt | 194.5.ბ¹ |
 | Fuel in a vehicle's standard tank | Exempt | 194.5.გ |
 | Aviation and ship supplies | Exempt | 194.5.ე |
 | Oil and gas operations | Exempt | 194.5.ვ |
-| Returning residents and relocation | Exempt | 194.5.თ |
+| Passenger car of a diplomat back from rotation (199.დ.დ) or on relocation (199.დ.ე) | Exempt | 194.5.თ |
 | Returned goods | Exempt | 194.5.ი |
 | Diplomatic missions | Exempt | 194.5.კ |
 | Electric left-hand-drive cars and electric motorcycles | Exempt | 194.5.ლ |
@@ -539,6 +539,7 @@ The lists live in `config/import.php`.
 | Personal goods (chapters 28–97) up to 500 GEL and 30 kg, once in 30 days | 199.დ.ბ |
 | Passenger allowance of tobacco and alcohol | 199.დ.გ–დ.გ¹ |
 | Returning resident after 6+ months abroad, chapters 28–97 except 87, up to 15,000 GEL | 199.დ.დ |
+| Diplomat back from rotation: per family one vehicle, fridge, computer and TV, in addition | 199.დ.დ |
 | Moving to Georgia permanently | 199.დ.ე |
 | Postal parcel, chapters 28–97, up to 300 GEL and 30 kg | 199.დ.ვ |
 | By air, chapters 28–97, up to 3,000 GEL and 30 kg | 199.დ.ზ |

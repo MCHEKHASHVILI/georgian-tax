@@ -8,7 +8,6 @@ use Closure;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief as R;
-use Mchekhashvili\Money\Money;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\ImportTax\Clearance;
 use Mchekhashvili\TaxLegislation\Law\Article;
@@ -19,8 +18,10 @@ use Mchekhashvili\TaxLegislation\Law\Citation;
  *   by goods — electric cars (ჟ), salt, minerals, abrasives and denatured alcohol (პ)
  *   by relief — humanitarian and grant imports, traveller and postal allowances, returning
  *               residents, raw tobacco until 2028, customs procedures, free-zone goods, CIS origin…
- * Value limits apply to customs value; the HS chapters each traveller relief covers are checked
- * here too. Quantity and frequency limits (200 cigarettes, once in 30 days) are for the caller.
+ * Value limits apply to customs value and are import tax thresholds (ImportRelief::thresholdKey()),
+ * so an amending law changes them without a code change; the HS chapters each traveller relief
+ * covers are checked here too. Quantity and frequency limits (200 cigarettes, once in 30 days),
+ * and that a returning diplomat's goods are the listed ones (199.დ.დ), are for the caller.
  */
 #[Article('199', 'Import tax exemptions')]
 final class ApplyExemptions implements Stage
@@ -45,10 +46,10 @@ final class ApplyExemptions implements Stage
             return $next($c);
         }
 
-        $limit = $relief->limitGel();
+        $key = $relief->thresholdKey();
         $until = $relief->validUntil();
 
-        $applies = ($limit === null || $import->customsValue->lessThanOrEqual(Money::GEL($limit)))
+        $applies = ($key === null || $import->customsValue->lessThanOrEqual($c->threshold($key)))
             && ($until === null || $import->on < new DateTimeImmutable($until))
             && self::coversChapter($relief, $goods);
 

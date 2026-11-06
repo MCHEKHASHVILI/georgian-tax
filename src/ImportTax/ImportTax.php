@@ -48,6 +48,6 @@ final class ImportTax extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Clearance($event, $this->tables->import($event->date()));
+        return new Clearance($event, $this->tables->import($event->date()), $this->thresholdTable());
     }
 }

@@ -8,7 +8,6 @@ use Closure;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Income\SupplyCategory;
-use Mchekhashvili\Money\Money;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
 use GeorgianTax\Excise\Operation;
@@ -17,8 +16,10 @@ use Mchekhashvili\TaxLegislation\Law\Citation;
 /**
  * Art. 194. Exempt with credit (194.6–7): exports, duty-free supplies, property seized for the
  * budget, treaty exemptions. Exempt without credit (194.5): the import reliefs — passenger and
- * postal allowances, fuel in the tank, returning residents, diplomats and others — and electric
- * left-hand-drive cars and electric motorcycles (194.5.ლ).
+ * postal allowances, fuel in the tank, diplomats and others — and electric left-hand-drive cars
+ * and electric motorcycles (194.5.ლ). The 194.5 reliefs have no value limit: the passenger and
+ * postal allowances (ბ–ბ²) are quantities, for the caller to check. 194.5.თ covers only a
+ * passenger car imported under 199.დ.დ (a returning diplomat's) or დ.ე (relocation).
  */
 final class ApplyExemptions implements Stage
 {
@@ -48,12 +49,9 @@ final class ApplyExemptions implements Stage
             return $d->exempt(new Citation('194.5.ლ'), 'Electric left-hand-drive cars and electric motorcycles are exempt.');
         }
 
-        if ($event instanceof Import && ($relief = $event->relief) !== null && ($article = $relief->exciseArticle()) !== null) {
-            $limit = $relief->limitGel();
-
-            if ($limit === null || $event->customsValue->lessThanOrEqual(Money::GEL($limit))) {
-                return $d->exempt(new Citation($article), "Import relief: {$relief->name}.");
-            }
+        if ($event instanceof Import && ($relief = $event->relief) !== null && ($article = $relief->exciseArticle()) !== null
+            && ($article !== '194.5.თ' || $c->isPassengerCar())) {
+            return $d->exempt(new Citation($article), "Import relief: {$relief->name}.");
         }
 
         return $next($d);
