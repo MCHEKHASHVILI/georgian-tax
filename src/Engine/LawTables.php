@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Engine;
 
 use DateTimeImmutable;
+use GeorgianTax\Excise\ExciseRules;
 use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\ImportTax\ImportTable;
 use GeorgianTax\PropertyTax\LandRates;
@@ -15,7 +16,8 @@ use Mchekhashvili\TaxLegislation\Rates\CountryTables;
 use OutOfBoundsException;
 
 /**
- * The tables of Georgian law as they stood on a day: the excise rates (188.1), the import tax lists
+ * The tables of Georgian law as they stood on a day: the excise rates (188.1) and the figures its
+ * rules apply (188.9–17, 188.1¹, 188¹.1, 188.3), the import tax lists
  * (197, 199.პ), the land rates (204). From the package's files, or — with
  * config('georgian-tax.law.source') = 'database' — from tax-legislation's history, so a table row
  * a law changed applies from its date.
@@ -36,6 +38,18 @@ final class LawTables
         return $this->memo['excise|' . $on->format('Y-m-d')] ??= new ExciseTable(array_map(
             fn (array $v) => [$v['unit'], (float) $v['rate'], $v['description'] ?? ''],
             $this->rows('excise', 'excise.188.1', $on),
+        ));
+    }
+
+    public function exciseRules(DateTimeImmutable $on): ExciseRules
+    {
+        if (!$this->fromDatabase()) {
+            return $this->app->make(ExciseRules::class);
+        }
+
+        return $this->memo['excise-rules|' . $on->format('Y-m-d')] ??= new ExciseRules(array_combine(
+            ExciseRules::TABLES,
+            array_map(fn (string $table) => $this->rows('excise', $table, $on), ExciseRules::TABLES),
         ));
     }
 

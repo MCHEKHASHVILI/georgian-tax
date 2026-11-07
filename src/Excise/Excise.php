@@ -47,6 +47,6 @@ final class Excise extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Duty($event, $this->tables->excise($event->date()));
+        return new Duty($event, $this->tables->excise($event->date()), $this->tables->exciseRules($event->date()));
     }
 }

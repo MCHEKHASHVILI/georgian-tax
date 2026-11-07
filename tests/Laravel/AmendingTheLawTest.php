@@ -13,6 +13,7 @@ use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Relief;
 use GeorgianTax\Domain\Party\Status;
+use GeorgianTax\Excise\Rate\Calls;
 use GeorgianTax\Facades\GeorgianTax;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\StaticBooks;
@@ -28,6 +29,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Http\Routes;
 use Mchekhashvili\TaxLegislation\Legislation\Models\Exemption;
+use Mchekhashvili\TaxLegislation\Legislation\Models\TableEntry;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
 use Mchekhashvili\TaxLegislation\Legislation\ValueKind;
 use Mchekhashvili\TaxLegislation\Revisions\Revision;
@@ -146,6 +148,65 @@ it('applies a table amendment from its date', function () {
         commodity: new Commodity('2710 12', 2)))->for('excise')->amount;
 
     expect($petrol('2027-06-01'))->toBe('1000.00 GEL')->and($petrol('2028-06-01'))->toBe('1300.00 GEL');
+});
+
+it('applies an amendment of the figures the excise rules use from its date', function () {
+    $excise = ($this->tax)('excise');
+    $amend = fn (string $table, string $key, array $values) => app(AmendLaw::class)->handle(ValueKind::TableEntry, [
+        'tax_type_id' => $excise->id, 'table' => $table, 'key' => $key, 'values' => $values, 'from' => '2028-01-01', 'legal_act_id' => $this->law->id]);
+
+    // All amended before anything is assessed: the law's tables are read once a day per request.
+    $amend('excise.188.cars', '188.12', ['unit' => 'cm³', 'rate' => 2.0, 'description' => 'Passenger car, 0 to 6 years']);
+    $amend('excise.188.1.motorcycles', '>14', ['unit' => 'cm³', 'rate' => 3.0, 'description' => 'Motorcycle, over 14 years (ჟ)']);
+    $amend('excise.188.1.tobacco', 'cigarettes', ['unit' => '20 sticks', 'rate' => 3.0, 'percent' => 25, 'description' => 'Cigarettes (2402 20)']);
+    $amend('excise.188.3', 'mobile', ['unit' => 'minute', 'rate' => 0.2, 'description' => 'International call ending on a mobile network']);
+
+    $amount = fn (Commodity $c, string $on) => (string) GeorgianTax::assess(new Import(Party::company('importer', Status::VatPayer), Money::GEL(10_000),
+        new DateTimeImmutable($on), commodity: $c))->for('excise')->amount;
+
+    // 188.12: a car up to 6 years, and the right-hand-drive triple that follows it (188.15).
+    $car = new Commodity('8703 23', engineCc: 2000, yearMade: 2025);
+    $rightHand = new Commodity('8703 23', engineCc: 2000, yearMade: 2025, rightHandDrive: true);
+    expect($amount($car, '2027-06-01'))->toBe('3000.00 GEL')->and($amount($car, '2028-06-01'))->toBe('4000.00 GEL')
+        ->and($amount($rightHand, '2027-06-01'))->toBe('9000.00 GEL')->and($amount($rightHand, '2028-06-01'))->toBe('12000.00 GEL');
+
+    // 188.1, row 4¹: a motorcycle over 14 years.
+    $bike = new Commodity('8711 20', engineCc: 250, yearMade: 2000);
+    expect($amount($bike, '2027-06-01'))->toBe('600.00 GEL')->and($amount($bike, '2028-06-01'))->toBe('750.00 GEL');
+
+    // 188.1 and 188.1¹.ა: cigarettes, both the rate per 20 and the share of the retail price.
+    $cigarettes = new Commodity('2402 20', 10_000, retailPricePer20: 8);
+    expect($amount($cigarettes, '2027-06-01'))->toBe('2175.00 GEL')    // 500 packs × (2.75 + 20% of 8)
+        ->and($amount($cigarettes, '2028-06-01'))->toBe('2500.00 GEL'); // 500 packs × (3.00 + 25% of 8)
+
+    // 188.3.ბ: call termination on a mobile network.
+    $calls = fn (string $on) => (string) GeorgianTax::assess(new Pay(Party::company('carrier'), Party::company('telco'), IncomeKind::GoodsSupply, Money::GEL(1000),
+        new DateTimeImmutable($on), commodity: new Commodity(Calls::MOBILE, 10_000)))->for('excise')->amount;
+    expect($calls('2027-06-01'))->toBe('1500.00 GEL')->and($calls('2028-06-01'))->toBe('2000.00 GEL');
+});
+
+it('asks how a 10 to 15 percent drink was made once rows 2 and 4 of 188¹.1 differ', function () {
+    app(AmendLaw::class)->handle(ValueKind::TableEntry, ['tax_type_id' => ($this->tax)('excise')->id, 'table' => 'excise.188¹.1', 'key' => '4',
+        'values' => ['unit' => 'litre', 'rate' => 6, 'description' => 'Intermediate drink'], 'from' => '2028-01-01', 'legal_act_id' => $this->law->id]);
+    $duty = fn (?bool $fullyFermented, string $on = '2028-06-01') => GeorgianTax::assess(new Import(Party::company('importer', Status::VatPayer), Money::GEL(10_000),
+        new DateTimeImmutable($on), commodity: new Commodity('2206 00 310', 100, alcoholPercent: 12, fullyFermented: $fullyFermented)))->for('excise');
+
+    expect((string) $duty(null, '2027-06-01')->amount)->toBe('500.00 GEL')
+        ->and($duty(null))->toBeInstanceOf(NotTaxable::class)
+        ->and($duty(null)->basis()->title)->toBe('note ბ.ბ')
+        ->and((string) $duty(true)->amount)->toBe('500.00 GEL')    // row 2, other fermented drink (note ბ.ბ)
+        ->and((string) $duty(false)->amount)->toBe('600.00 GEL');  // row 4, intermediate drink (note გ)
+});
+
+it('drops the right-hand-drive multiplier the law repealed, leaving the base rate', function () {
+    $triple = TableEntry::query()->whereBelongsTo(($this->tax)('excise'))->inTable('excise.188.cars')->where('key', '188.16')->sole();
+    app(RepealLaw::class)->handle($triple, ['on' => '2028-01-01', 'legal_act_id' => $this->law->id]);
+
+    $car = fn (string $on) => GeorgianTax::assess(new Import(Party::company('importer', Status::VatPayer), Money::GEL(10_000), new DateTimeImmutable($on),
+        commodity: new Commodity('8703 23', engineCc: 2000, yearMade: 2015, rightHandDrive: true)))->for('excise');
+
+    expect($car('2027-06-01')->basis()->ref)->toBe('188.16')->and((string) $car('2027-06-01')->amount)->toBe('27000.00 GEL')
+        ->and($car('2028-06-01')->basis()->ref)->toBe('188.13')->and((string) $car('2028-06-01')->amount)->toBe('9000.00 GEL');
 });
 
 it('reports a past tax as in force but not computed', function () {

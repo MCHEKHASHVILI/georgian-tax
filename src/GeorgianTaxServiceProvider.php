@@ -6,6 +6,7 @@ namespace GeorgianTax;
 
 use GeorgianTax\Engine\LawTables;
 use GeorgianTax\Engine\Tax;
+use GeorgianTax\Excise\ExciseRules;
 use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\ImportTax\ImportTable;
 use GeorgianTax\Ledger\CompanyBooks;
@@ -62,6 +63,7 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
         ));
         $this->app->scoped(LawTables::class);
         $this->app->singleton(ExciseTable::class, fn () => ExciseTable::standard($this->law('excise')));
+        $this->app->singleton(ExciseRules::class, fn () => ExciseRules::standard($this->law('excise_rules')));
         $this->app->singleton(ImportTable::class, fn () => ImportTable::standard($this->law('import')));
         $this->app->singleton(LandRates::class, fn () => LandRates::standard($this->law('land')));
 

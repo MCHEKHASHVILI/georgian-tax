@@ -6,6 +6,7 @@ namespace GeorgianTax\Excise\Rate;
 
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
+use GeorgianTax\Excise\ExciseRules;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 
@@ -17,6 +18,7 @@ use Mchekhashvili\TaxLegislation\Law\Citation;
  *   classic car     1.00 GEL/cm³ (188.10)
  *   sports car      100 GEL flat (188.9)
  *   electric, right-hand drive: 3,000 GEL flat (188.17); left-hand: exempt (194.5.ლ)
+ * The figures are rows of ExciseRules::CARS, keyed by the part that sets them.
  */
 #[Article('188.9–18', 'Passenger cars')]
 final class Cars implements RateRule
@@ -29,12 +31,14 @@ final class Cars implements RateRule
             return null;
         }
 
+        $rate = static fn (string $part): ?float => $d->rules->rate(ExciseRules::CARS, $part);
+
         if ($car->sportsCar) {
-            return $d->levied(new Citation('188.9', 'Sports car'), 1, 'car', 100);
+            return self::flat($d, '188.9', 'Sports car', $rate('188.9'));
         }
 
         if ($car->electric) {
-            return $d->levied(new Citation('188.17', 'Right-hand-drive electric car'), 1, 'car', 3000);
+            return self::flat($d, '188.17', 'Right-hand-drive electric car', $rate('188.17'));
         }
 
         if ($car->engineCc === null || ($car->yearMade === null && !$car->classicCar)) {
@@ -42,21 +46,44 @@ final class Cars implements RateRule
         }
 
         if ($car->classicCar) {
-            return $d->levied(new Citation('188.10', 'Classic car'), $car->engineCc, 'cm³', 1.0);
+            $classic = $rate('188.10');
+
+            return $classic === null
+                ? $d->noRate(new Citation('188.10'), 'a classic car')
+                : $d->levied(new Citation('188.10', 'Classic car'), $car->engineCc, 'cm³', $classic);
         }
 
         $age = $car->ageIn($d->year());
-        [$article, $rate] = $age <= 6 ? ['188.12', 1.5] : ['188.13', 4.5];
+        $article = $age <= 6 ? '188.12' : '188.13';
+        $base = $rate($article);
         $notes = ["Age $age years."];
 
-        if ($car->rightHandDrive) {
-            [$article, $rate] = [$age <= 6 ? '188.15' : '188.16', $rate * 3];
-            $notes[] = 'Right-hand drive: three times the rate.';
-        } elseif ($car->hybrid && $age <= 6) {
-            [$article, $rate] = ['188.14', $rate * 0.4];
-            $notes[] = 'Left-hand-drive hybrid up to 6 years: 60% less.';
+        if ($base === null) {
+            return $d->noRate(new Citation($article), 'a passenger car');
         }
 
-        return $d->levied(new Citation($article, 'Passenger car'), $car->engineCc, 'cm³', $rate, notes: $notes);
+        // The right-hand-drive multiplier and the hybrid reduction modify the base; with either part
+        // not in force on the day, the base rate stands.
+        $times = $car->rightHandDrive ? $rate($age <= 6 ? '188.15' : '188.16') : null;
+        $less = !$car->rightHandDrive && $car->hybrid && $age <= 6 ? $rate('188.14') : null;
+
+        if ($times !== null) {
+            $article = $age <= 6 ? '188.15' : '188.16';
+            $base *= $times;
+            $notes[] = "Right-hand drive: $times times the rate.";
+        } elseif ($less !== null) {
+            $article = '188.14';
+            $base *= (100 - $less) / 100;
+            $notes[] = "Left-hand-drive hybrid up to 6 years: $less% less.";
+        }
+
+        return $d->levied(new Citation($article, 'Passenger car'), $car->engineCc, 'cm³', $base, notes: $notes);
+    }
+
+    private static function flat(Duty $d, string $article, string $label, ?float $gel): Outcome
+    {
+        return $gel === null
+            ? $d->noRate(new Citation($article), strtolower($label))
+            : $d->levied(new Citation($article, $label), 1, 'car', $gel);
     }
 }

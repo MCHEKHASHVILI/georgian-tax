@@ -33,7 +33,8 @@ use Mchekhashvili\TaxLegislation\Revisions\Editor;
  *                the latest amendment of Art. 6
  *   tax types    the six taxes Art. 6.5–6.6 lists
  *   rates        resources/law/rates.php, by article
- *   tables       the excise (188.1), import tax (197, 199.პ) and land (204.1) tables
+ *   tables       the excise (188.1), import tax (197, 199.პ) and land (204.1) tables, and the
+ *                figures the excise rules apply (resources/law/excise_rules.php)
  *   thresholds   resources/law/thresholds.php — every amount the engine draws a line at
  *   exemptions   resources/law/exemptions.php — that each exemption exists; conditions stay in code
  *
@@ -181,6 +182,12 @@ final class GeorgiaLegislationSeeder extends Seeder
 
         foreach (require self::LAW . 'excise.php' as $prefix => [$unit, $rate, $description]) {
             $add($taxes['excise'], 'excise.188.1', '188.1', (string) $prefix, ['unit' => $unit, 'rate' => (float) $rate, 'description' => $description]);
+        }
+
+        foreach (require self::LAW . 'excise_rules.php' as $table => $entries) {
+            foreach ($entries as $key => $values) {
+                $add($taxes['excise'], $table, $values['article'], (string) $key, array_diff_key($values, ['article' => true]));
+            }
         }
 
         $import = require self::LAW . 'import.php';

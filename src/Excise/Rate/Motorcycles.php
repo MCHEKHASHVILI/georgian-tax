@@ -6,17 +6,18 @@ namespace GeorgianTax\Excise\Rate;
 
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use GeorgianTax\Excise\Duty;
+use GeorgianTax\Excise\ExciseRules;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 
-/** Motorcycles and mopeds (HS 8711), per cm³, by age (188.1 table, row 4). */
+/**
+ * Motorcycles and mopeds (HS 8711), per cm³, by age — the event year minus
+ * the year made (188.1 table, row 4¹: from 1.5 GEL under a year to 2.4 over 14). The rates are rows
+ * of ExciseRules::MOTORCYCLES, keyed by age; '>14' is "over 14 years".
+ */
 #[Article('188.1', 'Motorcycles')]
 final class Motorcycles implements RateRule
 {
-    /** Age in years => GEL per cm³; 15 means "over 14". */
-    private const RATES = [0 => 1.5, 1 => 1.3, 2 => 0.7, 3 => 0.7, 4 => 0.7, 5 => 0.7, 6 => 0.8, 7 => 0.8,
-        8 => 0.8, 9 => 0.8, 10 => 1.0, 11 => 1.3, 12 => 1.5, 13 => 1.8, 14 => 2.1, 15 => 2.4];
-
     public function levy(Duty $d): ?Outcome
     {
         $bike = $d->commodity;
@@ -30,7 +31,10 @@ final class Motorcycles implements RateRule
         }
 
         $age = $bike->ageIn($d->year());
+        $rate = $d->rules->rate(ExciseRules::MOTORCYCLES, $age > 14 ? '>14' : (string) $age);
 
-        return $d->levied(new Citation('188.1', 'Motorcycle'), $bike->engineCc, 'cm³', self::RATES[min($age, 15)], notes: ["Age $age years."]);
+        return $rate === null
+            ? $d->noRate(new Citation('188.1'), "a motorcycle of $age years")
+            : $d->levied(new Citation('188.1', 'Motorcycle'), $bike->engineCc, 'cm³', $rate, notes: ["Age $age years."]);
     }
 }

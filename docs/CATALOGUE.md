@@ -474,7 +474,7 @@ Due by the 15th of the month after the operation (190.2); on import, with the im
 | Right-hand drive | three times the rate | 188.15–16 |
 | Right-hand-drive electric car | 3,000 GEL | 188.17 |
 | Beer over 0.5% | 0.12 GEL per litre per % vol | 188¹.1 row 1 |
-| Other fermented drinks over 5% / up to 5% | 5.00 / 0.60 GEL/l | 188¹.1 rows 2–3 |
+| Other fermented drinks over 5% / up to 5% (up to 10%, or 15% if fully fermented) | 5.00 / 0.60 GEL/l | 188¹.1 rows 2–3 |
 | Intermediate drinks up to 22% | 5.00 GEL/l | 188¹.1 row 4 |
 | Spirits (2208), and 2205/2206 over 22% | 22.50 GEL per litre of pure alcohol | 188¹.1 row 5 |
 | Ethyl alcohol (2207) | 7.50 GEL per litre of pure alcohol | 188¹.1 row 6 |

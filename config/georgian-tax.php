@@ -64,9 +64,10 @@ return [
     ],
 
     /*
-    | The tables of the Code itself — rates by article and date, the excise and import tax lists, the
-    | land rates. Null uses the copies in the package (consolidated 30/09/2026). Point a key at your
-    | own file to follow an amendment before the package catches up.
+    | The tables of the Code itself — rates by article and date, the excise table and the figures its
+    | rules apply, the import tax lists, the land rates. Null uses the copies in the package
+    | (consolidated 30/09/2026). Point a key at your own file to follow an amendment before the
+    | package catches up.
     */
     'law' => [
         // 'file': rates, thresholds and tables from resources/law/. 'database': from
@@ -76,6 +77,7 @@ return [
         'rates' => null,
         'thresholds' => null,
         'excise' => null,
+        'excise_rules' => null,   // cars, motorcycles, tobacco, alcohol and calls (188.9–17, 188.1¹, 188¹.1, 188.3)
         'import' => null,
         'land' => null,
     ],

@@ -210,6 +210,13 @@ test('stronger fermented drink', function () {
     $this->assertLevied($this->excise($this->import(new Commodity('2206 00 310', 1000, alcoholPercent: 8))), '188¹.1', 5000);
 });
 
+test('a 10 to 15 percent drink is fermented or intermediate by how its alcohol was made', function () {
+    // 188¹.1 notes ბ.ბ and გ — rows 2 and 4 are both 5 GEL a litre, so the answer is the same either way.
+    $this->assertLevied($this->excise($this->import(new Commodity('2206 00 310', 100, alcoholPercent: 12))), '188¹.1', 500);
+    $this->assertLevied($this->excise($this->import(new Commodity('2206 00 310', 100, alcoholPercent: 12, fullyFermented: false))), '188¹.1', 500);
+    $this->assertSame('Row 4 — intermediate drink', $this->excise($this->import(new Commodity('2206 00 310', 100, alcoholPercent: 18)))->basis()->title);
+});
+
 test('ethyl alcohol per litre of pure alcohol', function () {
     // 1,000 litres at 96% = 960 litres of pure alcohol × 7.50
     $this->assertLevied($this->excise($this->import(new Commodity('2207 10', 1000, alcoholPercent: 96))), '188¹.1', 7200);

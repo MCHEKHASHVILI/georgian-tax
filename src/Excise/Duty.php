@@ -25,6 +25,7 @@ final readonly class Duty
     public function __construct(
         public TaxableEvent $event,
         public ExciseTable $table,
+        public ExciseRules $rules,
         public ?Commodity $commodity = null,
         public ?Party $taxpayer = null,
         public ?Operation $operation = null,
@@ -32,7 +33,13 @@ final readonly class Duty
 
     public function as(Commodity $commodity, Party $taxpayer, Operation $operation): self
     {
-        return new self($this->event, $this->table, $commodity, $taxpayer, $operation);
+        return new self($this->event, $this->table, $this->rules, $commodity, $taxpayer, $operation);
+    }
+
+    /** A rate rule found no figure in force on the event's day for the row it needs. */
+    public function noRate(Citation $basis, string $what): NotTaxable
+    {
+        return $this->notTaxable($basis, "No excise rate for $what in force on {$this->event->date()->format('Y-m-d')}.");
     }
 
     public function year(): int

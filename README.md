@@ -142,7 +142,7 @@ Georgia's law lives in `mchekhashvili/tax-legislation`'s tables, per country, wi
 | Tax types | The six taxes of Art. 6.5–6.6, with their engine classes |
 | Rates | Every rate in `resources/law/rates.php`, plus the 204.2 and 204.3 land rates |
 | Thresholds | Every amount the engine draws a line at (`resources/law/thresholds.php`): VAT registration, gift and heir limits, small business, agricultural, pension, lottery, the 82.2 personal allowances, the 199.დ import relief limits, family income |
-| Tables | The excise table (188.1), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
+| Tables | The excise table (188.1) and the figures its rules apply (`excise.188.cars`, `excise.188.1.motorcycles`, `excise.188.1.tobacco`, `excise.188¹.1`, `excise.188.3`), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
 | Exemptions | Each of the 244 exemptions the engine applies (`resources/law/exemptions.php`, generated from the code); their conditions stay in code |
 
 Start dates are left open, meaning in force since before the recorded history. Past taxes and earlier values are added through tax-legislation's forms (`RecordTaxType`, `AmendLaw`, `RepealLaw`, `AbolishTaxType`). Each is saved as a draft and takes effect once approved (`ApproveDraft`); every change logs a revision with its editor, reason and source.
@@ -187,7 +187,7 @@ src/
   Listeners/      FlagVatRegistration
 config/georgian-tax.php
 database/migrations/ database/seeders/ — GeorgiaLegislationSeeder
-resources/law/    rates.php, thresholds.php, exemptions.php, excise.php, import.php, property.php
+resources/law/    rates.php, thresholds.php, exemptions.php, excise.php, excise_rules.php, import.php, property.php
 ```
 
 ## The two pipelines
@@ -289,7 +289,7 @@ Where an amount needs something only the caller knows — a retail price for cig
 
 `resources/law/rates.php` maps each article to `[effective-from => percent]`. The percents match the 30/09/2026 consolidation. The dates are not historic, so check the rate history before assessing pre-2026 events.
 
-`resources/law/excise.php` (188.1 table), `import.php` (197 lists and 199.პ) and `property.php` (204 land rates by municipality) hold the tables. Override any of them through `config('georgian-tax.law')`.
+`resources/law/excise.php` (188.1 table), `excise_rules.php` (the figures the excise rules apply: cars 188.9–17, motorcycles and tobacco 188.1 and 188.1¹, alcohol 188¹.1, calls 188.3), `import.php` (197 lists and 199.პ) and `property.php` (204 land rates by municipality) hold the tables. Override any of them through `config('georgian-tax.law')`.
 
 ## Tests
 

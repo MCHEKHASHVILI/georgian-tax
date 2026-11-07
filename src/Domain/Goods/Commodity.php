@@ -31,6 +31,12 @@ final readonly class Commodity
         public ?float $retailPricePer20 = null,
         /** Excise 188.11 — locally made cigarettes within the 35-million-pack annual quota. */
         public bool $localQuotaCigarettes = false,
+        /**
+         * Excise 188¹.1, note ბ.ბ — a drink of 2205 or 2206 over 10% and up to 15% whose alcohol
+         * all comes from fermentation is an "other fermented drink" (row 2), otherwise an
+         * intermediate drink (row 4). Null when unknown.
+         */
+        public ?bool $fullyFermented = null,
     ) {}
 
     /** The code as bare digits, for prefix matching. */
