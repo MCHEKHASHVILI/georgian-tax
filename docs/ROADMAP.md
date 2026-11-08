@@ -6,10 +6,11 @@ The working list for the four packages: [money](https://github.com/MCHEKHASHVILI
 
 A question stays here until it is answered. Items that depend on it are blocked until then.
 
-- 2026-11-03 — **A new law and its amendments together?** A draft can only cite acts and tax types already recorded, so today an amending law is approved first, then the amendments citing it are drafted and approved one by one. Options: (a) keep it so; (b) a batch: one submission holding the act and its amendments, which may cite the act still pending, approved or rejected as a whole. **Recommendation: (a) for the MVP**, (b) later if entering laws one change at a time proves slow. Blocks nothing; the JSON API is built for (a) and can take batches later.
+None open.
 
 ### Answered
 
+- 2026-11-03 — **A new law and its amendments together:** keep it as it is for now (answered 2026-11-08). An amending law is approved first, then the amendments citing it one by one. A batch can come later if entering laws this way proves slow.
 - 2026-11-02 — **Drafts and approval:** an amendment needs approval before it takes effect.
 - 2026-11-02 — **Forms UI:** for now, a JSON API. A frontend comes later.
 - 2026-11-02 — **Who may edit what:** to be discussed later. Until then, authorization stays with the app's policies, and approval goes through a gate the app defines.
