@@ -20,7 +20,9 @@ use GeorgianTax\PropertyTax\Rule as R;
  *   rate rules        Art. 202, 204  land per hectare or m²; company and individual property by value
  *
  * Feed it an OwnProperty event per item per year. Rates are municipal: pass the council's
- * decisions as MunicipalRates, or take the Code's caps and base rates.
+ * decisions as MunicipalRates, or take the Code's caps and base rates. The law is read on the
+ * day the Code fixes the rate: 31 December of the tax year for property (202.8), 1 April for
+ * land (204.4) — the land rates and the caps (PropertyCaps) alike.
  */
 final class PropertyTax extends Tax
 {
@@ -49,6 +51,11 @@ final class PropertyTax extends Tax
 
     protected function subject(TaxableEvent $event, ?TaxReport $report): object
     {
-        return new Holding($event, $this->tables->land($event->date())->table, $this->rates, $this->thresholdTable());
+        $propertyDay = $event->date();                  // 202.8: 31 December of the tax year
+        $landDay = Holding::landDayOf($event->date());  // 204.4: 1 April
+        $land = $this->tables->land($landDay)->table;
+        $landCaps = $this->tables->propertyCaps($landDay)->with('204.3', ['unit' => ' GEL/ha', 'max' => $land['natural_resource_per_ha']]);
+
+        return new Holding($event, $land, $this->rates, $this->thresholdTable(), $this->tables->propertyCaps($propertyDay), $landCaps);
     }
 }

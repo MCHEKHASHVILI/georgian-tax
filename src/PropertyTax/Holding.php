@@ -38,12 +38,60 @@ final readonly class Holding
         public array $land,
         public MunicipalRates $rates,
         public ThresholdTable $thresholds,
+        public PropertyCaps $caps,
+        public PropertyCaps $landCaps,
         public ?OwnProperty $holding = null,
     ) {}
 
     public function of(OwnProperty $holding): self
     {
-        return new self($this->event, $this->land, $this->rates, $this->thresholds, $holding);
+        return new self($this->event, $this->land, $this->rates, $this->thresholds, $this->caps, $this->landCaps, $holding);
+    }
+
+    /** 202.8 — the property tax rate is the one in force on 31 December of the tax year (the event's day). */
+    public function propertyDay(): DateTimeImmutable
+    {
+        return $this->event->date();
+    }
+
+    /** 204.4 — the land tax is set by the rates in force on 1 April of the tax year. */
+    public function landDay(): DateTimeImmutable
+    {
+        return self::landDayOf($this->event->date());
+    }
+
+    /** 1 April of the year $day falls in. */
+    public static function landDayOf(DateTimeImmutable $day): DateTimeImmutable
+    {
+        return $day->setDate((int) $day->format('Y'), 4, 1);
+    }
+
+    /**
+     * The council's figure for $article, checked against the Code's limits on the day the rate is
+     * fixed (202.8, 204.4). Where the council set none: $default, or else the cap itself. Outside
+     * the limits, or with neither a figure nor a cap, the assessment is unresolved.
+     */
+    public function councilRate(string $article, ?float $council, ?float $default = null): float|Unresolved
+    {
+        $land = str_starts_with($article, '204');
+        $caps = $land ? $this->landCaps : $this->caps;
+        $day = ($land ? $this->landDay() : $this->propertyDay())->format('Y-m-d');
+        [$min, $max, $unit] = [$caps->min($article), $caps->max($article), $caps->unit($article)];
+        $value = $council ?? $default ?? $max;
+
+        if ($value === null) {
+            return $this->unresolved(new Citation($article), "No council rate given, and no $article cap in force on $day to apply.");
+        }
+
+        if ($max !== null && $value > $max) {
+            return $this->unresolved(new Citation($article), "The council's $value$unit exceeds the $article cap of $max$unit in force on $day.");
+        }
+
+        if ($min !== null && $value < $min) {
+            return $this->unresolved(new Citation($article), "The council's $value$unit is below the $article minimum of $min$unit in force on $day.");
+        }
+
+        return $value;
     }
 
     /** A property tax threshold as it stood in the tax year. */

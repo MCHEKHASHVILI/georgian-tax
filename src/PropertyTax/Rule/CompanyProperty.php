@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\PropertyTax\Rule;
 
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\Holding;
@@ -14,8 +15,9 @@ use GeorgianTax\PropertyTax\Holding;
  * Real estate on the books at historic cost is revalued (202.1.ა–დ):
  *   acquired before 2000 ×3 · 2000–2003 ×2 · 2004 ×1.5 · unknown ×3
  * unless the company revalues its real estate and has audited statements (202.2.ა).
- * Property leased out is taxed on its book value at leasing (202.3); a leasing company pays up to
- * 0.6% of the initial book value for the whole lease (202.3¹).
+ * Property leased out is taxed on its book value at leasing, up to 1% (202.3); a leasing company
+ * pays up to 0.6% of the initial book value for the whole lease (202.3¹). The council's rate is
+ * checked against the cap in force on 31 December of the tax year (202.8).
  */
 #[Article('202.1–3¹', 'Company property')]
 final class CompanyProperty implements Rule
@@ -33,17 +35,27 @@ final class CompanyProperty implements Rule
         }
 
         if ($item->byLeasingCompany) {
-            return $h->taxed(new Citation('202.3¹', 'Leasing company'), $item->value, $h->rates->leasingCompanyPercent);
+            $percent = $h->councilRate('202.3¹', $h->rates->leasingCompanyPercent);
+
+            return $percent instanceof Unresolved ? $percent : $h->taxed(new Citation('202.3¹', 'Leasing company'), $item->value, $percent);
         }
 
         if ($item->leasedOut) {
-            return $h->taxed(new Citation('202.3', 'Property leased out'), $item->value, $h->rates->companyPercent);
+            $percent = $h->councilRate('202.3', $h->rates->companyPercent);
+
+            return $percent instanceof Unresolved ? $percent : $h->taxed(new Citation('202.3', 'Property leased out'), $item->value, $percent);
+        }
+
+        $percent = $h->councilRate('202.1', $h->rates->companyPercent);
+
+        if ($percent instanceof Unresolved) {
+            return $percent;
         }
 
         $factor = $item->kind->isRealEstate() && !$item->revaluedWithAudit ? self::revaluation($item->acquiredYear) : 1.0;
         $notes = $factor === 1.0 ? [] : ["Real estate revalued ×$factor for its acquisition year (202.1)."];
 
-        return $h->taxed(new Citation('202.1', 'Company property'), $item->value->multipliedBy($factor), $h->rates->companyPercent, $notes);
+        return $h->taxed(new Citation('202.1', 'Company property'), $item->value->multipliedBy($factor), $percent, $notes);
     }
 
     private static function revaluation(?int $acquired): float

@@ -97,15 +97,32 @@ test('council may charge less', function () {
     $this->assertTaxed($tax, '202.1', 500);
 });
 
-test('council cannot exceed the caps', function () {
-    foreach ([['companyPercent' => 1.2], ['individualPercent' => 0.5], ['landMultipliers' => ['gori' => 2.0]]] as $decision) {
-        try {
-            new MunicipalRates(...$decision);
-            $this->fail('Accepted ' . json_encode($decision));
-        } catch (InvalidArgumentException $e) {
-            $this->assertInstanceOf(InvalidArgumentException::class, $e);
-        }
+test('council cannot go outside the caps in force on the day', function () {
+    $cases = [
+        [['companyPercent' => 1.2], $this->own($this->company, new PropertyItem(K::Equipment, Money::GEL(100_000))), "The council's 1.2% exceeds the 202.1 cap of 1% in force on 2026-12-31."],
+        [['leasingCompanyPercent' => 0.7], $this->own($this->company, new PropertyItem(K::Equipment, Money::GEL(100_000), leasedOut: true, byLeasingCompany: true)), "The council's 0.7% exceeds the 202.3¹ cap of 0.6% in force on 2026-12-31."],
+        [['individualPercent' => 0.5], $this->own($this->person, new PropertyItem(K::Building, Money::GEL(500_000)), income: 150_000), "The council's 0.5% is below the 202.5 minimum of 0.8% in force on 2026-12-31."],
+        [['landMultipliers' => ['gori' => 2.0]], $this->own($this->person, PropertyItem::land(K::Arable, 1, 'Gori')), "The council's 2× exceeds the 204.1.დ cap of 1.5× in force on 2026-04-01."],
+        [['territorialCoefficients' => ['tbilisi' => 1.6]], $this->own($this->company, PropertyItem::land(K::NonAgriculturalLand, 1000, 'Tbilisi')), "The council's 1.6× exceeds the 204.2.ბ cap of 1.5× in force on 2026-04-01."],
+        [['naturalResourcePerHa' => 4.0], $this->own($this->company, PropertyItem::land(K::NaturalResourceLand, 50)), "The council's 4 GEL/ha exceeds the 204.3 cap of 3 GEL/ha in force on 2026-04-01."],
+    ];
+
+    foreach ($cases as [$decision, $event, $reason]) {
+        $tax = $this->engineWith(new MunicipalRates(...$decision))->process($event)->for('property');
+
+        $this->assertInstanceOf(Unresolved::class, $tax, json_encode($decision) . ': ' . $tax);
+        $this->assertSame($reason, $tax->reason);
     }
+});
+
+test('a council decision no law could allow is refused at once', function () {
+    new MunicipalRates(companyPercent: -1);
+})->throws(InvalidArgumentException::class);
+
+test('council may charge less than the natural resource cap', function () {
+    $engine = $this->engineWith(new MunicipalRates(naturalResourcePerHa: 2.5));
+
+    $this->assertLevied($engine->process($this->own($this->company, PropertyItem::land(K::NaturalResourceLand, 50)))->for('property'), '204.3', 125);
 });
 
 /* ── Individual property (202.5, 206.1.ა) ── */

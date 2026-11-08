@@ -6,6 +6,7 @@ namespace GeorgianTax\PropertyTax\Rule;
 
 use GeorgianTax\Domain\Property\PropertyKind as K;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\Holding;
@@ -13,6 +14,7 @@ use GeorgianTax\PropertyTax\Holding;
 /**
  * Agricultural land, per hectare, by municipality (204.1): arable and homestead land from 56 to
  * 100 GEL; hayfields 16–20; pastures 5–16. The council may raise the base by up to 50% (204.1.დ).
+ * Rates and cap as in force on 1 April of the tax year (204.4).
  * Forest land used in agriculture is taxed as the category it is used as (204.1.გ).
  */
 #[Article('204.1', 'Agricultural land')]
@@ -39,7 +41,12 @@ final class AgriculturalLand implements Rule
             return $h->unresolved(new Citation($ref), "No 204.1 rate for '{$item->municipality}' — give the land's area and municipality.");
         }
 
-        $multiplier = $h->rates->landMultiplier($item->municipality);
+        $multiplier = $h->councilRate('204.1.დ', $h->rates->landMultiplier($item->municipality), default: 1.0);
+
+        if ($multiplier instanceof Unresolved) {
+            return $multiplier;
+        }
+
         $notes = $multiplier === 1.0 ? [] : ["Base $base GEL/ha × council multiplier $multiplier."];
 
         return $h->levied(new Citation($ref, $item->kind->name), $item->area, 'ha', $base * $multiplier, $notes);

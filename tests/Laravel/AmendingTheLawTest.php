@@ -6,6 +6,7 @@ use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
 use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
+use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
@@ -13,10 +14,14 @@ use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\Relief;
 use GeorgianTax\Domain\Party\Status;
+use GeorgianTax\Domain\Property\PropertyItem;
+use GeorgianTax\Domain\Property\PropertyKind;
 use GeorgianTax\Excise\Rate\Calls;
 use GeorgianTax\Facades\GeorgianTax;
 use GeorgianTax\Ledger\CompanyBooks;
 use GeorgianTax\Ledger\StaticBooks;
+use GeorgianTax\PropertyTax\MunicipalRates;
+use GeorgianTax\PropertyTax\PropertyCaps;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mchekhashvili\Money\Money;
 use Mchekhashvili\TaxLegislation\Actions\AmendLaw;
@@ -27,6 +32,7 @@ use Mchekhashvili\TaxLegislation\Actions\RepealLaw;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotComputed;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Http\Routes;
 use Mchekhashvili\TaxLegislation\Legislation\Models\Exemption;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TableEntry;
@@ -183,6 +189,32 @@ it('applies an amendment of the figures the excise rules use from its date', fun
     $calls = fn (string $on) => (string) GeorgianTax::assess(new Pay(Party::company('carrier'), Party::company('telco'), IncomeKind::GoodsSupply, Money::GEL(1000),
         new DateTimeImmutable($on), commodity: new Commodity(Calls::MOBILE, 10_000)))->for('excise')->amount;
     expect($calls('2027-06-01'))->toBe('1500.00 GEL')->and($calls('2028-06-01'))->toBe('2000.00 GEL');
+});
+
+it('checks the councils\' property rates against the caps in force when the rate is fixed', function () {
+    $amend = fn (string $key, array $values, string $from) => app(AmendLaw::class)->handle(ValueKind::TableEntry, [
+        'tax_type_id' => ($this->tax)('property')->id, 'table' => PropertyCaps::TABLE, 'key' => $key, 'values' => $values, 'from' => $from, 'legal_act_id' => $this->law->id]);
+
+    // 202.1 raised to 1.2% from 2028; 204.1.დ to 200% from 2 April 2028, a day after 2028's land tax is fixed (204.4).
+    $amend('202.1', ['unit' => '%', 'max' => 1.2, 'description' => 'Company or organization property, up to 1.2% of value'], '2028-01-01');
+    $amend('204.1.დ', ['unit' => '×', 'max' => 2.0, 'description' => 'Agricultural land, up to 200% of the base rate'], '2028-04-02');
+
+    $tax = fn (Party $owner, PropertyItem $item, int $year) => GeorgianTax::assess(new OwnProperty($owner, $item, $year, 12))->for('property');
+    $equipment = new PropertyItem(PropertyKind::Equipment, Money::GEL(100_000));
+    $arable = PropertyItem::land(PropertyKind::Arable, 1, 'Marneuli');
+
+    // No council decision: the cap in force on 31 December of the tax year (202.8).
+    expect((string) $tax(Party::company('acme'), $equipment, 2027)->amount)->toBe('1000.00 GEL')
+        ->and((string) $tax(Party::company('acme'), $equipment, 2028)->amount)->toBe('1200.00 GEL');
+
+    // A council charging companies 1.1% and doubling Marneuli's arable base.
+    $this->app->instance(MunicipalRates::class, new MunicipalRates(companyPercent: 1.1, landMultipliers: ['marneuli' => 2.0]));
+    $this->refreshEngine();
+
+    expect($tax(Party::company('acme'), $equipment, 2027))->toBeInstanceOf(Unresolved::class)
+        ->and((string) $tax(Party::company('acme'), $equipment, 2028)->amount)->toBe('1100.00 GEL')
+        ->and($tax(Party::person('nino'), $arable, 2028)->reason)->toBe("The council's 2× exceeds the 204.1.დ cap of 1.5× in force on 2028-04-01.")
+        ->and((string) $tax(Party::person('nino'), $arable, 2029)->amount)->toBe('200.00 GEL');
 });
 
 it('asks how a 10 to 15 percent drink was made once rows 2 and 4 of 188¹.1 differ', function () {

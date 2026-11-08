@@ -65,4 +65,19 @@ return [
     'pasture' => $flip($meadow, fn ($pair) => (float) explode('/', $pair)[1]),
     'non_agricultural_per_m2' => 0.24,   // 204.2.ა
     'natural_resource_per_ha' => 3.0,    // 204.3 — "not more than 3 GEL"
+
+    /*
+     * The limits within which a municipal council sets its rate, by the article that sets them:
+     * 'min' and 'max' in percent of value ('%') or as a multiplier of the base rate ('×').
+     * Read on the day the Code fixes the rate: 31 December of the tax year for property (202.8),
+     * 1 April for land (204.4). The 204.3 cap is the natural-resource rate above.
+     */
+    'caps' => [
+        '202.1'   => ['article' => '202.1', 'unit' => '%', 'max' => 1.0, 'description' => 'Company or organization property, up to 1% of value'],
+        '202.3'   => ['article' => '202.3', 'unit' => '%', 'max' => 1.0, 'description' => 'Property leased out, up to 1% of value'],
+        '202.3¹'  => ['article' => '202.3¹', 'unit' => '%', 'max' => 0.6, 'description' => "Leasing company's leased property, up to 0.6% of the initial book value"],
+        '202.5'   => ['article' => '202.5', 'unit' => '%', 'min' => 0.8, 'max' => 1.0, 'description' => "Individual's property, from 0.8% to 1% of market value"],
+        '204.1.დ' => ['article' => '204.1.დ', 'unit' => '×', 'max' => 1.5, 'description' => 'Agricultural land, up to 150% of the base rate'],
+        '204.2.ბ' => ['article' => '204.2.ბ', 'unit' => '×', 'max' => 1.5, 'description' => 'Non-agricultural land, territorial coefficient up to 1.5'],
+    ],
 ];

@@ -70,6 +70,12 @@ it('loads the excise, import and land tables', function () {
         ->and($import->tableOn('import.197.1', '2026-10-30'))->toHaveCount(176)
         ->and($import->tableOn('import.197.2', '2026-10-30'))->toHaveCount(37)
         ->and(TableEntry::query()->inTable('property.204.1.arable')->where('key', 'marneuli')->sole()->values['gel_per_ha'])->toBe(100);
+
+    $caps = TaxType::query()->where('code', 'property')->sole()->tableOn('property.caps', '2026-10-30')->keyBy('key');
+
+    expect($caps->keys()->sort()->values()->all())->toBe(['202.1', '202.3', '202.3¹', '202.5', '204.1.დ', '204.2.ბ'])
+        ->and($caps['202.5']->values)->toMatchArray(['min' => 0.8, 'max' => 1])
+        ->and($caps['202.5']->article)->toBe('202.5');
 });
 
 it('records the thresholds the engine draws lines at', function () {

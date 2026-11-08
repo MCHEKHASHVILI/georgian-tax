@@ -50,16 +50,18 @@ return [
 
     /*
     | Property tax is local (Art. 202, 204). Each municipal council sets its rate within the Code's
-    | limits; these are your councils' decisions. Defaults are the caps and the base land rates.
+    | limits; these are your councils' decisions. Null takes the cap in force (for land, the base
+    | rate). The caps are law (the 'caps' of resources/law/property.php, or the database): a
+    | decision outside the cap in force on the day leaves the assessment unresolved.
     */
     'property' => [
-        'company_percent' => 1.0,            // up to 1%
-        'leasing_company_percent' => 0.6,    // up to 0.6%
-        'individual_percent' => 1.0,         // 0.8% – 1%
-        'natural_resource_per_ha' => 3.0,    // up to 3 GEL
-        'land_multipliers' => [               // municipality => up to 1.5, e.g. 'marneuli' => 1.5
+        'company_percent' => null,           // up to 1% (202.1, 202.3)
+        'leasing_company_percent' => null,   // up to 0.6% (202.3¹)
+        'individual_percent' => null,        // 0.8% – 1% (202.5)
+        'natural_resource_per_ha' => null,   // up to 3 GEL (204.3)
+        'land_multipliers' => [               // municipality => up to 1.5 (204.1.დ), e.g. 'marneuli' => 1.5
         ],
-        'territorial_coefficients' => [       // municipality => up to 1.5, e.g. 'tbilisi' => 1.5
+        'territorial_coefficients' => [       // municipality => up to 1.5 (204.2.ბ), e.g. 'tbilisi' => 1.5
         ],
     ],
 

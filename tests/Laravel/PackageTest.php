@@ -14,6 +14,7 @@ use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\Facades\GeorgianTax;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\MunicipalRates;
+use GeorgianTax\PropertyTax\PropertyCaps;
 use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
 use Mchekhashvili\TaxLegislation\Rates\ConfigThresholdTable;
 use Mchekhashvili\TaxLegislation\Rates\CountryTables;
@@ -107,17 +108,34 @@ it('reads the law tables once, from the package or an overriding file', function
     expect(app(ExciseTable::class)->find(new \GeorgianTax\Domain\Goods\Commodity('2710 12'))['rate'])->toBe(650.0);
 });
 
-it('builds the councils\' property rates from config, within the caps', function () {
+it('builds the councils\' property rates from config, null taking the cap', function () {
+    expect(app(MunicipalRates::class)->companyPercent)->toBeNull();
+
     config()->set('georgian-tax.property.company_percent', 0.5);
     config()->set('georgian-tax.property.land_multipliers', ['Marneuli' => 1.5]);
+    app()->forgetInstance(MunicipalRates::class);
 
     $rates = app(MunicipalRates::class);
-    expect($rates->companyPercent)->toBe(0.5)->and($rates->landMultiplier('marneuli'))->toBe(1.5);
+    expect($rates->companyPercent)->toBe(0.5)->and($rates->landMultiplier('marneuli'))->toBe(1.5)->and($rates->landMultiplier('gori'))->toBeNull();
 
-    config()->set('georgian-tax.property.company_percent', 2);
+    config()->set('georgian-tax.property.company_percent', -1);
     app()->forgetInstance(MunicipalRates::class);
     app(MunicipalRates::class);
 })->throws(InvalidArgumentException::class);
+
+it('reads the caps on the councils\' rates from the law files', function () {
+    expect(app(PropertyCaps::class)->max('202.1'))->toBe(1.0)
+        ->and(app(PropertyCaps::class)->min('202.5'))->toBe(0.8)
+        ->and(app(PropertyCaps::class)->max('204.1.დ'))->toBe(1.5);
+
+    // A published property.php from before the caps keeps its land rates and takes the package's caps.
+    $file = tempnam(sys_get_temp_dir(), 'land') . '.php';
+    file_put_contents($file, '<?php return ' . var_export(array_diff_key(require __DIR__ . '/../../resources/law/property.php', ['caps' => true]), true) . ';');
+    config()->set('georgian-tax.law.land', $file);
+    app()->forgetInstance(PropertyCaps::class);
+
+    expect(app(PropertyCaps::class)->max('202.3¹'))->toBe(0.6);
+});
 
 it('publishes config, migrations and the law tables', function () {
     $paths = \GeorgianTax\GeorgianTaxServiceProvider::pathsToPublish(\GeorgianTax\GeorgianTaxServiceProvider::class);

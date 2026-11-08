@@ -127,10 +127,10 @@ Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($acc
 | `books` | `EloquentBooks` | Your `CompanyBooks` implementation |
 | `law.source` | `file` | `database` reads rates, thresholds, tables and exemptions, with their history, from tax-legislation's tables |
 | `database.*` | default connection, `georgian_tax_` | Connection, table prefix, whether to run the migrations |
-| `property.*` | the Code's caps | Your municipal councils' property and land rates, checked against the caps |
+| `property.*` | null: the Code's caps | Your municipal councils' property and land rates; each is checked against the cap in force when the rate is fixed (31 December for property, 202.8; 1 April for land, 204.4), and one outside it leaves the assessment unresolved |
 | `law.*` | package tables | Point at your own copy of a law table to follow an amendment early (`vendor:publish --tag=georgian-tax-law`) |
 
-**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `ExciseTable`, `ImportTable`, `LandRates`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. Georgia's rates, thresholds and tables are registered for `GE` in tax-legislation's `CountryTables` (`app(CountryTables::class)->rates('GE')`); register your own for `GE` to replace them, and another country's package keeps its own. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
+**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `ExciseTable`, `ImportTable`, `LandRates`, `PropertyCaps`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. Georgia's rates, thresholds and tables are registered for `GE` in tax-legislation's `CountryTables` (`app(CountryTables::class)->rates('GE')`); register your own for `GE` to replace them, and another country's package keeps its own. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
 
 ## Legislation history
 
@@ -142,7 +142,7 @@ Georgia's law lives in `mchekhashvili/tax-legislation`'s tables, per country, wi
 | Tax types | The six taxes of Art. 6.5–6.6, with their engine classes |
 | Rates | Every rate in `resources/law/rates.php`, plus the 204.2 and 204.3 land rates |
 | Thresholds | Every amount the engine draws a line at (`resources/law/thresholds.php`): VAT registration, gift and heir limits, small business, agricultural, pension, lottery, the 82.2 personal allowances, the 199.დ import relief limits, family income |
-| Tables | The excise table (188.1) and the figures its rules apply (`excise.188.cars`, `excise.188.1.motorcycles`, `excise.188.1.tobacco`, `excise.188¹.1`, `excise.188.3`), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1) |
+| Tables | The excise table (188.1) and the figures its rules apply (`excise.188.cars`, `excise.188.1.motorcycles`, `excise.188.1.tobacco`, `excise.188¹.1`, `excise.188.3`), import tax lists (197.1–197.3, 199.პ), land rates by municipality (204.1), the caps on the councils' rates (`property.caps`: 202.1, 202.3, 202.3¹, 202.5, 204.1.დ, 204.2.ბ) |
 | Exemptions | Each of the 244 exemptions the engine applies (`resources/law/exemptions.php`, generated from the code); their conditions stay in code |
 
 Start dates are left open, meaning in force since before the recorded history. Past taxes and earlier values are added through tax-legislation's forms (`RecordTaxType`, `AmendLaw`, `RepealLaw`, `AbolishTaxType`). Each is saved as a draft and takes effect once approved (`ApproveDraft`); every change logs a revision with its editor, reason and source.

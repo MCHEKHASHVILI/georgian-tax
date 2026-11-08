@@ -8,6 +8,7 @@ use GeorgianTax\Excise\Excise;
 use GeorgianTax\ImportTax\ImportTax;
 use GeorgianTax\IncomeTax\IncomeTax;
 use GeorgianTax\ProfitTax\ProfitTax;
+use GeorgianTax\PropertyTax\PropertyCaps;
 use GeorgianTax\PropertyTax\PropertyTax;
 use GeorgianTax\Vat\Vat;
 use Illuminate\Database\Seeder;
@@ -33,8 +34,9 @@ use Mchekhashvili\TaxLegislation\Revisions\Editor;
  *                the latest amendment of Art. 6
  *   tax types    the six taxes Art. 6.5–6.6 lists
  *   rates        resources/law/rates.php, by article
- *   tables       the excise (188.1), import tax (197, 199.პ) and land (204.1) tables, and the
- *                figures the excise rules apply (resources/law/excise_rules.php)
+ *   tables       the excise (188.1), import tax (197, 199.პ) and land (204.1) tables, the
+ *                figures the excise rules apply (resources/law/excise_rules.php), and the caps on
+ *                the councils' property tax rates (202, 204: `property.caps`)
  *   thresholds   resources/law/thresholds.php — every amount the engine draws a line at
  *   exemptions   resources/law/exemptions.php — that each exemption exists; conditions stay in code
  *
@@ -212,6 +214,10 @@ final class GeorgiaLegislationSeeder extends Seeder
             foreach ($land[$use] as $municipality => $gel) {
                 $add($taxes['property'], "property.204.1.$use", $article, $municipality, ['gel_per_ha' => (float) $gel]);
             }
+        }
+
+        foreach ($land['caps'] as $key => $values) {
+            $add($taxes['property'], PropertyCaps::TABLE, $values['article'], (string) $key, array_diff_key($values, ['article' => true]));
         }
 
         foreach (array_chunk($rows, 500) as $chunk) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\PropertyTax\Rule;
 
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 use GeorgianTax\PropertyTax\Holding;
@@ -29,6 +30,8 @@ final class IndividualProperty implements Rule
             return $h->unresolved($this, "An individual's property is taxed on its market value — give it.");
         }
 
-        return $h->taxed(new Citation('202.5', 'Individual property'), $value, $h->rates->individualPercent);
+        $percent = $h->councilRate('202.5', $h->rates->individualPercent);
+
+        return $percent instanceof Unresolved ? $percent : $h->taxed(new Citation('202.5', 'Individual property'), $value, $percent);
     }
 }

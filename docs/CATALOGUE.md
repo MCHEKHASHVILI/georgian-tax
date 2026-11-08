@@ -561,7 +561,7 @@ Not modelled: temporary admission at 3% a month (197.4–5), the refund for cars
 
 # Property tax
 
-Property tax is local: the Code sets caps and base rates, and each municipal council sets the rate it charges (`MunicipalRates`).
+Property tax is local: the Code sets caps and base rates, and each municipal council sets the rate it charges (`MunicipalRates`). The caps are law (`property.caps`), checked on the day the rate is fixed: the rate in force on 31 December of the tax year for property (202.8), on 1 April for land (204.4).
 
 ## Who pays, on what (Art. 201, 203)
 
@@ -587,6 +587,7 @@ Property tax is local: the Code sets caps and base rates, and each municipal cou
 | Agricultural land, council multiplier | Up to 150% of base | 204.1.დ |
 | Non-agricultural land | 0.24 GEL/m² × territorial coefficient up to 1.5 | 204.2 |
 | Natural-resource land | Up to 3 GEL/ha | 204.3 |
+| Rates for the year | Property: in force on 31 December; land: in force on 1 April | 202.8, 204.4 |
 
 Due: companies declare and pay by 1 April for the past year (205.2), land by 15 November (205.7); individuals by 15 November (205.14).
 

@@ -16,6 +16,7 @@ use GeorgianTax\Ledger\YearToDate;
 use GeorgianTax\Listeners\FlagVatRegistration;
 use GeorgianTax\PropertyTax\LandRates;
 use GeorgianTax\PropertyTax\MunicipalRates;
+use GeorgianTax\PropertyTax\PropertyCaps;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
@@ -66,18 +67,20 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
         $this->app->singleton(ExciseRules::class, fn () => ExciseRules::standard($this->law('excise_rules')));
         $this->app->singleton(ImportTable::class, fn () => ImportTable::standard($this->law('import')));
         $this->app->singleton(LandRates::class, fn () => LandRates::standard($this->law('land')));
+        $this->app->singleton(PropertyCaps::class, fn () => PropertyCaps::standard($this->law('land')));
 
-        // Your councils' property tax decisions, checked against the Code's caps.
+        // Your councils' property tax decisions; null takes the Code's cap. Checked against the caps on the day.
         $this->app->singleton(MunicipalRates::class, function () {
             $p = (array) config('georgian-tax.property');
+            $rate = fn (string $key) => isset($p[$key]) ? (float) $p[$key] : null;
 
             return new MunicipalRates(
-                companyPercent: (float) ($p['company_percent'] ?? 1.0),
-                leasingCompanyPercent: (float) ($p['leasing_company_percent'] ?? 0.6),
-                individualPercent: (float) ($p['individual_percent'] ?? 1.0),
+                companyPercent: $rate('company_percent'),
+                leasingCompanyPercent: $rate('leasing_company_percent'),
+                individualPercent: $rate('individual_percent'),
                 landMultipliers: array_change_key_case($p['land_multipliers'] ?? []),
                 territorialCoefficients: array_change_key_case($p['territorial_coefficients'] ?? []),
-                naturalResourcePerHa: (float) ($p['natural_resource_per_ha'] ?? 3.0),
+                naturalResourcePerHa: $rate('natural_resource_per_ha'),
             );
         });
 

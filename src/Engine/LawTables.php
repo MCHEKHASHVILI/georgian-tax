@@ -9,6 +9,7 @@ use GeorgianTax\Excise\ExciseRules;
 use GeorgianTax\Excise\ExciseTable;
 use GeorgianTax\ImportTax\ImportTable;
 use GeorgianTax\PropertyTax\LandRates;
+use GeorgianTax\PropertyTax\PropertyCaps;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Mchekhashvili\TaxLegislation\Legislation\Models\TaxType;
@@ -18,7 +19,7 @@ use OutOfBoundsException;
 /**
  * The tables of Georgian law as they stood on a day: the excise rates (188.1) and the figures its
  * rules apply (188.9–17, 188.1¹, 188¹.1, 188.3), the import tax lists
- * (197, 199.პ), the land rates (204). From the package's files, or — with
+ * (197, 199.პ), the land rates (204) and the caps on the councils' property tax rates (202, 204). From the package's files, or — with
  * config('georgian-tax.law.source') = 'database' — from tax-legislation's history, so a table row
  * a law changed applies from its date.
  */
@@ -93,6 +94,16 @@ final class LawTables
                 'natural_resource_per_ha' => $amount('204.3'),
             ]);
         })();
+    }
+
+    /** The limits on the councils' property tax rates (202, 204). */
+    public function propertyCaps(DateTimeImmutable $on): PropertyCaps
+    {
+        if (!$this->fromDatabase()) {
+            return $this->app->make(PropertyCaps::class);
+        }
+
+        return $this->memo['property-caps|' . $on->format('Y-m-d')] ??= new PropertyCaps($this->rows('property', PropertyCaps::TABLE, $on));
     }
 
     private function fromDatabase(): bool
