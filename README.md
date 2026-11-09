@@ -100,9 +100,9 @@ GeorgianTax::process(new OwnProperty(Party::company('acme'), new PropertyItem(Pr
 | `turnover_entries` | Turnover per party and tax — VAT's rolling 12 months |
 | `spending_entries` | Company spending by category — charity and representation limits |
 | `company_years` | Revenue, net profit and founding year — fill it from your accounting with `EloquentBooks::close()`, or bind your own `CompanyBooks` |
-| (tax-legislation) `tax_assessments`, `tax_assessment_outcomes` | Every report: each tax's outcome, article, base, rate, amount, who pays and when |
+| (tax-legislation) `tax_assessments`, `tax_assessment_outcomes` | Every report: the country whose law assessed it, each tax's outcome, article, base, rate, amount, who pays and when |
 
-Ledger models live in `GeorgianTax\Ledger\Eloquent\Models`, reports in `Mchekhashvili\TaxLegislation\Assessments\Models` — `Assessment::with('outcomes')`, `AssessedOutcome::where('due_on', '<=', now())` — and money columns cast to `Money`. `Assessment::event()` gives back the original event, to re-assess after a rate change.
+Ledger models live in `GeorgianTax\Ledger\Eloquent\Models`, reports in `Mchekhashvili\TaxLegislation\Assessments\Models` — `Assessment::ofCountry('GE')->with('outcomes')`, `AssessedOutcome::where('due_on', '<=', now())` — and money columns cast to `Money`. `Assessment::event()` gives back the original event, to re-assess after a rate change.
 
 **Events.** From tax-legislation, plus Georgia's own:
 

@@ -101,6 +101,9 @@ it('stores every report with its outcomes', function () {
     $byTax = $assessment->outcomes->keyBy('tax');
 
     expect($assessment->event_type)->toBe(Import::class)
+        ->and($assessment->country)->toBe('GE')
+        ->and($assessment->outcomes->pluck('country')->unique()->all())->toBe(['GE'])
+        ->and(Assessment::ofCountry('ge')->count())->toBe(1)
         ->and($assessment->event())->toEqual($import)
         ->and((string) $assessment->total_tax)->toBe('14379.30 GEL')
         ->and($assessment->outcomes)->toHaveCount(6)
