@@ -171,6 +171,8 @@ Only the highest one applies.
 | Peacekeepers with serious injury | 6,000 GEL | 82.2.ბ¹ |
 | High-mountain residents, on local activity (not budget-org or state clinic salary) | 6,000 GEL | 82.2.გ |
 
+Not yet modelled: 82.2.ა.ვ — a high-mountain resident with three or more children under 18 pays no income tax on salary from a budget organization there; with one or two, the tax on the first 3,000 GEL a year of it is halved.
+
 ## Outside the per-event engine
 
 These are set by acts outside the Code or are periodic, so the engine returns `Unresolved` with the citation:
@@ -398,6 +400,8 @@ Georgia taxes profit when it leaves the company, not when it is earned (the "Est
 | Loan to an individual or non-resident, cash collateral for a partner's loan, lender loan to a partner — unless the lender is licensed | 98².3.ზ–თ |
 | Representation costs over 1% of last year's revenue (or costs, if higher); in the founding year 1% of the year's own costs | 98⁴ |
 
+The engine takes 1% of last year's revenue only; the 98⁴.2 limit on costs, when they exceeded revenue, is not yet modelled.
+
 ## Not distributions, and untaxed free supplies (Art. 98¹.2, 98³.3)
 
 | Case | Article |
@@ -504,7 +508,7 @@ Car age is the year of the operation (or customs declaration) minus the year mad
 | Pharmaceutical alcohol | Exempt | 194.5.მ |
 | Confiscated state property | Exempt | 194.5.ო |
 
-Not modelled: excise credit for excise raw materials (189), the 100% refund for cars re-exported within 180 days (189.8).
+Not modelled: excise credit for excise raw materials (189), the 100% refund for cars re-exported within 180 days (189.8). The motorcycle row of 188.1 (4¹) excludes a ეტლი under heading 8711; the engine still taxes all of 8711.
 
 # Import tax
 
@@ -526,7 +530,7 @@ Whoever moves goods across Georgia's customs border, other than for export (195)
 | Passenger car | 0.05 GEL/cm³ + 5% of that for each year in use | 197.6 |
 | Anything else | 0% | 197 |
 
-The lists live in `config/import.php`.
+The lists live in `resources/law/import.php`.
 
 ## Exemptions (Art. 199)
 
@@ -557,7 +561,7 @@ The lists live in `config/import.php`.
 | Origin in a state party to the 1994 CIS free-trade agreement | 199.რ |
 | Released from customs duty under the Customs Code | 199.ს |
 
-Not modelled: temporary admission at 3% a month (197.4–5), the refund for cars re-exported within 180 days (198.3). Quantity and frequency limits on traveller and postal reliefs are the caller's to check.
+Not modelled: temporary admission at 3% a month (197.4–5), the refund for cars re-exported within 180 days (198.3). Quantity and frequency limits on traveller and postal reliefs are the caller's to check. Not yet modelled: 199.დ.ვ also relieves tobacco and up to 4 litres of alcohol by post, with no value limit; the engine relieves postal chapters 28–97 only.
 
 # Property tax
 
@@ -578,7 +582,7 @@ Property tax is local: the Code sets caps and base rates, and each municipal cou
 | Property | Rate | Article |
 |---|---|---|
 | Company property | Up to 1% of average annual net book value | 202.1 |
-| Company real estate on historic cost | Value ×3 (before 2000 or unknown), ×2 (2000–2003), ×1.5 (2004) — not with audited revaluation | 202.1.ა–დ, 202.2 |
+| Company real estate on historic cost | Value ×3 (before 2000 or unknown), ×2 (2000–2003), ×1.5 (2004) — not with audited revaluation, nor for state enterprises the Government names (202.2.ბ, not yet modelled) | 202.1.ა–დ, 202.2 |
 | Property leased out | Up to 1% of book value at leasing | 202.3 |
 | Leasing company | Up to 0.6% of initial book value, for the whole lease | 202.3¹ |
 | Individual property | 0.8%–1% of market value at the end of the previous year, by months owned | 202.5, 202.9 |

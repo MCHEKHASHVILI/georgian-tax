@@ -10,7 +10,7 @@ Requires PHP 8.4 and Laravel 12 or 13. Money is [`mchekhashvili/money`](https://
 
 ## Install
 
-Until both packages are on Packagist, add their repositories to your app's `composer.json`:
+Until the packages are on Packagist, add their repositories to your app's `composer.json`:
 
 ```json
 "repositories": [
@@ -22,13 +22,13 @@ Until both packages are on Packagist, add their repositories to your app's `comp
 ```
 
 ```
-composer require mchekhashvili/money:^1.0@dev mchekhashvili/countries:^1.0@dev mchekhashvili/tax-legislation:^1.0@dev mchekhashvili/georgian-tax:dev-main
+composer require mchekhashvili/money:^1.0@dev mchekhashvili/countries:^1.0@dev mchekhashvili/tax-legislation:^1.0@dev mchekhashvili/georgian-tax:^1.0@dev
 php artisan migrate
 php artisan db:seed --class="GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder"   # Georgia's law into the history tables
 php artisan vendor:publish --tag=georgian-tax-config     # optional
 ```
 
-The service provider and the `GeorgianTax` facade register themselves. (The `@dev` and `dev-main` go away once the repositories have `v1.0.0` releases.)
+The service provider and the `GeorgianTax` facade register themselves. (The `@dev` goes away once the repositories have `v1.0.0` releases.)
 
 ## Usage
 
@@ -63,7 +63,7 @@ $report->outcomes;           // Collection keyed by tax: import, excise, vat, in
 | `GeorgianTax::only('vat', 'income')` | The same engine with some taxes |
 | `GeorgianTax::ledger()` | Year-to-date totals: `received()`, `paid()`, `turnover()`, `spent()` |
 
-Or type-hint `GeorgianTax\Engine\TaxEngine` anywhere the container resolves.
+Elsewhere, `app(GeorgianTaxServiceProvider::ENGINE)` is the same engine, Georgia's taxes only. tax-legislation's `Taxes` facade (or a type-hinted `Mchekhashvili\TaxLegislation\Engine\TaxEngine`) runs every registered country's taxes; `Taxes::forCountry('GE')` narrows it to Georgia's.
 
 An imported car goes through three taxes at once:
 
@@ -86,7 +86,7 @@ Property tax looks at holdings, one per item per year:
 
 ```php
 GeorgianTax::process(new OwnProperty(Party::company('acme'), new PropertyItem(PropertyKind::Building, Money::GEL(100_000), acquiredYear: 1998), 2026));
-// Art. 202.1 — Company property: 1% of 300000.00 GEL = 3000.00 GEL, due 2027-04-01
+// Art. 202.1 — Company property: 1% of 300000.00 GEL = 3000.00 GEL, paid by acme, due 2027-04-01
 // (bought before 2000, so the book value is revalued ×3)
 ```
 
@@ -130,7 +130,7 @@ Event::listen(VatRegistrationRequired::class, fn ($e) => Notification::send($acc
 | `property.*` | null: the Code's caps | Your municipal councils' property and land rates; each is checked against the cap in force when the rate is fixed (31 December for property, 202.8; 1 April for land, 204.4), and one outside it leaves the assessment unresolved |
 | `law.*` | package tables | Point at your own copy of a law table to follow an amendment early (`vendor:publish --tag=georgian-tax-law`) |
 
-**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `ExciseTable`, `ImportTable`, `LandRates`, `PropertyCaps`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. Georgia's rates, thresholds and tables are registered for `GE` in tax-legislation's `CountryTables` (`app(CountryTables::class)->rates('GE')`); register your own for `GE` to replace them, and another country's package keeps its own. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
+**Container.** Stages, rules and taxes are built by the container, so a rule can type-hint any service. `ExciseTable`, `ExciseRules`, `ImportTable`, `LandRates`, `PropertyCaps`, `MunicipalRates`, `YearToDate` and `CompanyBooks` are bindings you can replace. Georgia's rates, thresholds and tables are registered for `GE` in tax-legislation's `CountryTables` (`app(CountryTables::class)->rates('GE')`); register your own for `GE` to replace them, and another country's package keeps its own. The engine, outcomes, `#[Article]` and `Citation` come from tax-legislation.
 
 ## Legislation history
 
@@ -172,7 +172,8 @@ src/
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
-    LawTables.php the excise, import and land tables as they stood on a day
+    LawTables.php the excise table and rules, import lists, land rates and property caps
+                  as they stood on a day
   IncomeTax/      Assessment → IdentifyTaxpayer → ResolveSource → ApplyExemptions
                   → ApplySpecialRegime → ApplyAnnualAllowance → ApplyRules
   Vat/            Supply → IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
@@ -181,8 +182,8 @@ src/
   ImportTax/      Clearance → IdentifyImport → ApplyExemptions → ApplyRules
   PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
   Database/       the base model: table prefix and connection from config
-  Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger;
-                  Eloquent/ ledger, books and models
+  Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger,
+                  StaticBooks; Eloquent/ ledger, books and models
   Events/         VatRegistrationRequired
   Listeners/      FlagVatRegistration
 config/georgian-tax.php
@@ -283,13 +284,21 @@ Outside the per-event model:
 - import tax on temporary admission at 3% a month (197.4);
 - the 15 June current payment of company property tax (205.3) — the same amount, paid early.
 
+Known gaps, each on the roadmap (`docs/ROADMAP.md`):
+
+- 82.2.ა.ვ: high-mountain residents with children, on salary from a budget organization there;
+- 98⁴.2: the representation limit on last year's costs, when they exceeded revenue (the engine uses revenue);
+- 199.დ.ვ: tobacco and alcohol by post, relieved from import tax without the 300 GEL cap (the engine relieves chapters 28–97 only);
+- 188.1 row 4¹: the ეტლი that heading 8711 leaves out (the engine taxes all of 8711);
+- 202.2.ბ: state enterprises the Government names keep historic cost (the engine revalues them).
+
 Where an amount needs something only the caller knows — a retail price for cigarettes, the euro rate for alcohol, last year's family income for property tax — the engine returns `Unresolved` or `NotTaxable` naming it.
 
 ## Rates
 
 `resources/law/rates.php` maps each article to `[effective-from => percent]`. The percents match the 30/09/2026 consolidation. The dates are not historic, so check the rate history before assessing pre-2026 events.
 
-`resources/law/excise.php` (188.1 table), `excise_rules.php` (the figures the excise rules apply: cars 188.9–17, motorcycles and tobacco 188.1 and 188.1¹, alcohol 188¹.1, calls 188.3), `import.php` (197 lists and 199.პ) and `property.php` (204 land rates by municipality) hold the tables. Override any of them through `config('georgian-tax.law')`.
+`resources/law/excise.php` (188.1 table), `excise_rules.php` (the figures the excise rules apply: cars 188.9–17, motorcycles and tobacco 188.1 and 188.1¹, alcohol 188¹.1, calls 188.3), `import.php` (197 lists and 199.პ) and `property.php` (204 land rates by municipality, and the caps on the councils' rates) hold the tables; `thresholds.php` the amounts the law draws lines at. Override any of them through `config('georgian-tax.law')`.
 
 ## Tests
 
@@ -305,3 +314,7 @@ GEORGIAN_TAX_LAW_SOURCE=database composer test    # the same suite, the law read
 ```
 
 CI runs both modes on Laravel 12 and 13.
+
+## License
+
+MIT
