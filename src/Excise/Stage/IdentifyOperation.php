@@ -7,6 +7,7 @@ namespace GeorgianTax\Excise\Stage;
 use Closure;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
+use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Party\Status;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
@@ -27,6 +28,11 @@ final class IdentifyOperation implements Stage
     public function handle(Duty $d, Closure $next): Outcome
     {
         $event = $d->event;
+
+        if ($event instanceof TemporaryAdmission) {
+            return $d->notTaxable(new Citation('183.ბ'), 'Excise is charged on import, release into free circulation (8.47); temporary admission is another customs procedure (8.48).');
+        }
+
         $commodity = $event instanceof Import || $event instanceof Pay ? $event->commodity : null;
 
         if ($commodity === null) {

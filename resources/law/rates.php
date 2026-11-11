@@ -49,4 +49,7 @@ return [
 
     // VAT — Art. 166
     '166'       => ['2011-01-01' => 18],
+
+    // Import tax — Art. 197
+    '197.4'     => ['2011-01-01' => 3],    // temporary admission: per calendar month, of the import tax on release
 ];

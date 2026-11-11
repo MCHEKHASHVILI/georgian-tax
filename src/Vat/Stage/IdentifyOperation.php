@@ -11,6 +11,7 @@ use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\SelfSupply;
 use GeorgianTax\Domain\Event\Sell;
+use GeorgianTax\Domain\Event\TemporaryAdmission;
 use Mchekhashvili\Money\Money;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
@@ -32,6 +33,7 @@ final class IdentifyOperation implements Stage
 
         return match (true) {
             $event instanceof Import => $next($s),
+            $event instanceof TemporaryAdmission => $s->notTaxable(new Citation('160²'), 'VAT is charged on import, release into free circulation (160²); temporary admission is another customs procedure (8.48).'),
             $event instanceof SelfSupply => $this->selfSupply($s, $event, $next),
             $event instanceof Gift => $this->gift($s, $event, $next),
             $event instanceof Sell => $this->sale($s, $event, $next),

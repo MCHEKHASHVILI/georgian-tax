@@ -5,11 +5,15 @@ declare(strict_types=1);
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\Refund;
+use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Party\Party;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Article;
@@ -160,6 +164,80 @@ test('raw tobacco relief ends in 2028', function () {
     $this->assertTaxed($this->tax($later), '197.1', 120);
 });
 
+/* ── Temporary admission (197.4–5) ── */
+
+test('temporary admission pays 3 percent a calendar month of the import tax on release', function () {
+    // Meat at 12% of 10,000 would pay 1,200 on release; 30 October to 10 December touches 3 calendar months
+    $admission = new TemporaryAdmission($this->import(new Commodity('0201 30'), 10_000), new DateTimeImmutable('2026-12-10'));
+    $tax = $this->tax($admission);
+
+    $this->assertLevied($tax, '197.4', 108);
+    $this->assertSame(3.0, $tax->quantity);
+    $this->assertSame(3600, $tax->ratePerUnit->minor);
+    $this->assertSame('2026-11-15', $tax->due->format('Y-m-d'));  // October's share, by the 15th of November
+    $this->assertSame('importer', $tax->taxpayer->id);
+});
+
+test('a partial calendar month counts in full', function () {
+    $meat = $this->import(new Commodity('0201 30'), 10_000);
+
+    // 30 October to 2 November: October and November
+    $this->assertLevied($this->tax(new TemporaryAdmission($meat, new DateTimeImmutable('2026-11-02'))), '197.4', 72);
+    // One day
+    $this->assertLevied($this->tax(new TemporaryAdmission($meat, new DateTimeImmutable('2026-10-30'))), '197.4', 36);
+});
+
+test('a procedure ending before the 15th of next month is paid on its last day', function () {
+    $meat = $this->import(new Commodity('0201 30'), 10_000);
+
+    $ended = $this->tax(new TemporaryAdmission($meat, new DateTimeImmutable('2026-10-31')));
+    $running = $this->tax(new TemporaryAdmission($meat, new DateTimeImmutable('2026-10-31'), ended: false));
+
+    $this->assertSame('2026-10-31', $ended->due->format('Y-m-d'));
+    $this->assertSame('2026-11-15', $running->due->format('Y-m-d'));
+});
+
+test('the total is capped at the import tax on release', function () {
+    $meat = $this->import(new Commodity('0201 30'), 10_000);
+
+    // October 2026 to June 2029: 33 months, 99%
+    $this->assertLevied($this->tax(new TemporaryAdmission($meat, new DateTimeImmutable('2029-06-30'))), '197.4', 1188);
+    // … to July 2029: 34 months would be 102%
+    $capped = $this->tax(new TemporaryAdmission($meat, new DateTimeImmutable('2029-07-01')));
+    $this->assertLevied($capped, '197.5', 1200);
+    $this->assertSame(34.0, $capped->quantity);
+});
+
+test('a car admitted temporarily pays 3 percent of its per cc duty', function () {
+    // 2,000 cm³ × 0.05 = 100, plus 5% × 7 years = 135 on release; 3% of it for one month
+    $car = $this->import(new Commodity('8703 23', engineCc: 2000, yearMade: 2019));
+
+    $this->assertLevied($this->tax(new TemporaryAdmission($car, new DateTimeImmutable('2026-10-31'))), '197.4', 4.05);
+});
+
+test('temporary admission relieved under 199.კ–კ² pays nothing', function () {
+    $relieved = $this->import(new Commodity('0201 30'), 10_000, ImportRelief::TemporaryAdmission);
+
+    $this->assertExempt($this->tax(new TemporaryAdmission($relieved, new DateTimeImmutable('2027-03-01'))), '199.კ–კ²');
+});
+
+test('goods at zero percent pay nothing when admitted temporarily', function () {
+    $this->assertNotTaxable($this->tax(new TemporaryAdmission($this->import(new Commodity('8471 30')), new DateTimeImmutable('2027-03-01'))), '197');
+});
+
+test('temporary admission is not an import for vat or excise', function () {
+    $car = $this->import(new Commodity('8703 23', engineCc: 2000, yearMade: 2019), 20_000);
+    $report = $this->engine->process(new TemporaryAdmission($car, new DateTimeImmutable('2026-11-30')));
+
+    $this->assertInstanceOf(Levied::class, $report->for('import'));
+    $this->assertNotTaxable($report->for('vat'), '160²');
+    $this->assertNotTaxable($report->for('excise'), '183.ბ');
+});
+
+test('temporary admission cannot end before it was registered', function () {
+    new TemporaryAdmission($this->import(new Commodity('0201 30')), new DateTimeImmutable('2026-10-29'));
+})->throws(InvalidArgumentException::class);
+
 /* ── Refund and the law ── */
 
 test('refund reverses the tax', function () {
@@ -171,10 +249,10 @@ test('refund reverses the tax', function () {
 test('every rule and stage cites an article', function () {
     $checked = 0;
 
-    foreach (['Rule\PassengerCar', 'Rule\Alcohol', 'Rule\ListedRate', 'Stage\IdentifyImport', 'Stage\ApplyExemptions'] as $class) {
+    foreach (['Rule\PassengerCar', 'Rule\Alcohol', 'Rule\ListedRate', 'Stage\IdentifyImport', 'Stage\ChargeTemporaryAdmission', 'Stage\ApplyExemptions'] as $class) {
         $this->assertNotEmpty((new ReflectionClass("GeorgianTax\\ImportTax\\$class"))->getAttributes(Article::class), $class);
         $checked++;
     }
 
-    $this->assertSame(5, $checked);
+    $this->assertSame(6, $checked);
 });

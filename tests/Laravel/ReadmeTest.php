@@ -5,6 +5,7 @@ declare(strict_types=1);
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
+use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
@@ -49,6 +50,18 @@ it('imports a car through three taxes as the README says', function () {
     expect((string) $report->for('import'))->toStartWith('Art. 197.6 — Passenger car import tax: 2000 cm³ × 0.05 GEL = 135.00 GEL')
         ->and((string) $report->for('excise'))->toStartWith('Art. 188.13 — Passenger car: 2000 cm³ × 4.50 GEL = 9000.00 GEL')
         ->and((string) $report->for('vat'))->toStartWith('Art. 165².2.ა — VAT on import: 18% of 29135.00 GEL = 5244.30 GEL');
+});
+
+it('admits the car temporarily as the README says', function () {
+    $report = GeorgianTax::process(new TemporaryAdmission(
+        goods: new Import(Party::company('autos', Status::VatPayer), Money::GEL(20_000), new DateTimeImmutable('2026-10-30'),
+            commodity: new Commodity('8703 23', engineCc: 2000, yearMade: 2019)),
+        until: new DateTimeImmutable('2026-12-15'),
+    ));
+
+    expect((string) $report->for('import'))->toBe('Art. 197.4 — Import tax on temporary admission: 3 month × 4.05 GEL = 12.15 GEL, paid by autos, due 2026-11-15')
+        ->and($report->for('vat')->basis()->ref)->toBe('160²')
+        ->and($report->for('excise')->basis()->ref)->toBe('183.ბ');
 });
 
 it('taxes company property as the README says', function () {

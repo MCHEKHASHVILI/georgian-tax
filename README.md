@@ -82,6 +82,19 @@ echo $report->for('vat');     // Art. 165².2.ა — VAT on import: 18% of 2913
                               //   (customs value plus import tax and excise)
 ```
 
+The same car admitted temporarily — a different customs procedure (8.48) — pays 3% of that import tax for each full or partial calendar month it stays, at most all of it (197.4–5); VAT and excise are charged on import only:
+
+```php
+$report = GeorgianTax::process(new TemporaryAdmission(
+    goods: new Import(Party::company('autos', Status::VatPayer), Money::GEL(20_000), new DateTimeImmutable('2026-10-30'),
+        commodity: new Commodity('8703 23', engineCc: 2000, yearMade: 2019)),
+    until: new DateTimeImmutable('2026-12-15'),   // the day the procedure ended
+));
+
+echo $report->for('import');  // Art. 197.4 — Import tax on temporary admission: 3 month × 4.05 GEL = 12.15 GEL, paid by autos, due 2026-11-15
+                              //   (October, November and December; each month due by the 15th of the next)
+```
+
 Property tax looks at holdings, one per item per year:
 
 ```php
@@ -167,8 +180,8 @@ src/
     Income/       IncomeKind, SupplyCategory (VAT), HeirOrder, Place
     Goods/        Commodity (HS code and measurements), ImportRelief
     Property/     PropertyItem, PropertyKind, PropertyExemption
-    Event/        the verbs: Pay, Sell, Gift, Inherit, Import, SelfSupply, Refund, Expense,
-                  NonMarketDeal, OwnProperty
+    Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
+                  Refund, Expense, NonMarketDeal, OwnProperty
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
@@ -179,7 +192,7 @@ src/
   Vat/            Supply → IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
   ProfitTax/      Outflow → IdentifyOutflow → ApplyExemptions → ApplyRules
   Excise/         Duty → IdentifyOperation → ApplyExemptions → ApplyRate
-  ImportTax/      Clearance → IdentifyImport → ApplyExemptions → ApplyRules
+  ImportTax/      Clearance → IdentifyImport → ChargeTemporaryAdmission → ApplyExemptions → ApplyRules
   PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
   Database/       the base model: table prefix and connection from config
   Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger,
@@ -225,7 +238,7 @@ An unregistered supplier's supplies below the threshold come back `NotTaxable` b
 |---|---|---|---|
 | Profit | 96–97: a resident company paying out — dividend, non-market deal, non-business cost, free supply | 98¹.2, 98³.3, 99, 23¹ | 98⁴ representation over 1%, 23.10 international 5%, 98.1 15% grossed up |
 | Excise | 182–187: producer's supply, import, export, gas for vehicles, call termination | 194.5–7 | 188.9–18 cars, 188.1 motorcycles and table, 188.1¹ tobacco, 188¹ alcohol, 188.3 calls |
-| Import | 195–196: an import with an HS code | 199 by code and by relief | 197.6 cars, 197.3 alcohol in euro, 197.1–2 lists, else 0% |
+| Import | 195–196: an import with an HS code; a temporary admission pays 3% a month of it (197.4–5) | 199 by code and by relief | 197.6 cars, 197.3 alcohol in euro, 197.1–2 lists, else 0% |
 | Property | 201, 203: an `OwnProperty` holding | 206, with the 206.2 leasing carve-out | 204 land, 202.1–3¹ company, 202.5 individual |
 
 Excise and import tax per unit come back as `Levied` (quantity × rate per unit, plus any ad-valorem part).
@@ -281,7 +294,6 @@ Outside the per-event model:
 - tax-free refunds to foreign shoppers (181.5);
 - banks' profit tax on annual net profit (98.4);
 - excise credit for excise raw materials (189) and refunds on re-exported cars (189.8, 198.3);
-- import tax on temporary admission at 3% a month (197.4);
 - the 15 June current payment of company property tax (205.3) — the same amount, paid early.
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):

@@ -17,6 +17,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Citation;
+use Mchekhashvili\TaxLegislation\Rates\RateTable;
 use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
 
 /**
@@ -31,19 +32,26 @@ final readonly class Clearance
         public TaxableEvent $event,
         public ImportTable $table,
         public ThresholdTable $thresholds,
+        public RateTable $rates,
         public ?Import $import = null,
         public ?Commodity $commodity = null,
     ) {}
 
     public function of(Import $import, Commodity $commodity): self
     {
-        return new self($this->event, $this->table, $this->thresholds, $import, $commodity);
+        return new self($this->event, $this->table, $this->thresholds, $this->rates, $import, $commodity);
     }
 
     /** An import tax threshold as it stood on the day of import. */
     public function threshold(string $key): Money
     {
         return $this->thresholds->threshold(self::TAX, $key, $this->event->date());
+    }
+
+    /** An import tax rate set by an article, as it stood on the day of import. */
+    public function rate(string $article): Rate
+    {
+        return $this->rates->rate($article, $this->event->date());
     }
 
     public function year(): int

@@ -529,8 +529,10 @@ Whoever moves goods across Georgia's customs border, other than for export (195)
 | Vinegar | €0.40/l | 197.3 |
 | Passenger car | 0.05 GEL/cm³ + 5% of that for each year in use | 197.6 |
 | Anything else | 0% | 197 |
+| Temporary admission (`TemporaryAdmission`) | 3% of the import tax the goods would pay on release on the day the declaration was registered, for each full or partial calendar month in Georgia; each month due by the 15th of the next, the last on the day the procedure ends | 197.4 |
+| … at most | the import tax on release | 197.5 |
 
-The lists live in `resources/law/import.php`.
+The lists live in `resources/law/import.php`; the 3% is the rate `197.4` in `resources/law/rates.php`. Temporary admission is not an import (8.47–48): VAT (160²) and excise (183.ბ) do not charge it.
 
 ## Exemptions (Art. 199)
 
@@ -561,7 +563,7 @@ The lists live in `resources/law/import.php`.
 | Origin in a state party to the 1994 CIS free-trade agreement | 199.რ |
 | Released from customs duty under the Customs Code | 199.ს |
 
-Not modelled: temporary admission at 3% a month (197.4–5), the refund for cars re-exported within 180 days (198.3). Quantity and frequency limits on traveller and postal reliefs are the caller's to check. Not yet modelled: 199.დ.ვ also relieves tobacco and up to 4 litres of alcohol by post, with no value limit; the engine relieves postal chapters 28–97 only.
+Not modelled: the refund for cars re-exported within 180 days (198.3). Quantity and frequency limits on traveller and postal reliefs are the caller's to check. Not yet modelled: 199.დ.ვ also relieves tobacco and up to 4 litres of alcohol by post, with no value limit; the engine relieves postal chapters 28–97 only.
 
 # Property tax
 

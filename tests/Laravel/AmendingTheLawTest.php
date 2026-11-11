@@ -8,6 +8,7 @@ use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
+use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind;
@@ -133,6 +134,19 @@ it('applies an amended profit tax limit from its date', function () {
 
     expect($dinner('2027-06-01'))->toBeInstanceOf(Taxable::class)   // 98⁴.2: 1% of 100,000 — 500 over
         ->and($dinner('2028-06-01'))->toBeInstanceOf(NotTaxable::class); // 2% under the amendment
+});
+
+it('applies an amended temporary admission rate from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('import')->id, 'key' => '197.4', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 4]);
+    $this->refreshEngine();
+    // Meat at 12% of 10,000: 1,200 on release; two calendar months
+    $admitted = fn (string $on, string $until) => (string) GeorgianTax::assess(new TemporaryAdmission(
+        new Import(Party::company('importer', Status::VatPayer), Money::GEL(10_000), new DateTimeImmutable($on), commodity: new Commodity('0201 30')),
+        new DateTimeImmutable($until),
+    ))->for('import')->amount;
+
+    expect($admitted('2027-06-01', '2027-07-31'))->toBe('72.00 GEL')   // 197.4: 3%
+        ->and($admitted('2028-06-01', '2028-07-31'))->toBe('96.00 GEL'); // 4% under the amendment, read on the registration day
 });
 
 it('stops an exemption the law repealed', function () {
