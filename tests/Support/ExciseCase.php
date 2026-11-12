@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Goods\Commodity;
+use GeorgianTax\Domain\Goods\ExciseInput;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Party\Party;
@@ -48,6 +49,13 @@ abstract class ExciseCase extends TestCase
     protected function sell(Party $seller, Commodity $c): Pay
     {
         return new Pay($this->shop === $seller ? Party::person('customer') : $this->shop, $seller, K::GoodsSupply, Money::GEL(1000), $this->today, commodity: $c);
+    }
+
+    /** 10 l of whisky at 40% supplied by its producer: 4 l of pure alcohol × 22.50 = 90 GEL (188¹.1 row 5). */
+    protected function whiskyFrom(ExciseInput ...$inputs): Pay
+    {
+        return new Pay($this->shop, $this->producer, K::GoodsSupply, Money::GEL(1000), $this->today,
+            commodity: new Commodity('2208 30', 10, alcoholPercent: 40), exciseInputs: $inputs);
     }
 
     protected function car(?int $engineCc = null, ?int $yearMade = null, bool $hybrid = false, bool $electric = false,

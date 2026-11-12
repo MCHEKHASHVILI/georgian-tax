@@ -5,6 +5,8 @@ declare(strict_types=1);
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Goods\Commodity;
+use GeorgianTax\Domain\Goods\ExciseEvidence;
+use GeorgianTax\Domain\Goods\ExciseInput;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Income\Place;
@@ -252,6 +254,84 @@ test('gas sold for vehicles is taxed on supply', function () {
 test('mobile call termination', function () {
     $this->assertLevied($this->excise($this->sell(Party::company('telco'), new Commodity(Calls::MOBILE, 10_000))), '188.3', 1500);
     $this->assertLevied($this->excise($this->sell(Party::company('telco'), new Commodity(Calls::FIXED, 10_000))), '188.3', 800);
+});
+
+/* ── Credit for excise raw materials (189) ── */
+
+test('producer credits the excise on raw materials bought from their producer', function () {
+    $duty = $this->excise($this->whiskyFrom(new ExciseInput(Money::GEL(60), ExciseEvidence::TaxInvoice, description: 'ethyl alcohol')));
+
+    $this->assertLevied($duty, '189.1', 30);
+    $this->assertSame(4.0, $duty->quantity);
+    $this->assertSame('2026-11-15', $duty->due->format('Y-m-d'));
+    expect($duty->notes)->toContain('Excise on the goods supplied: 90.00 GEL (188¹.1).')
+        ->toContain('Excise of 60.00 GEL on ethyl alcohol, by tax invoice (189.3): credit 60.00 GEL.')
+        ->toContain('Less the credit for excise raw materials: 60.00 GEL (189.1).');
+});
+
+test('raw materials the producer imported are credited too', function () {
+    $duty = $this->excise($this->whiskyFrom(
+        new ExciseInput(Money::GEL(20), ExciseEvidence::CustomsDeclaration),
+        new ExciseInput(Money::GEL(25), ExciseEvidence::TaxInvoice),
+    ));
+
+    $this->assertLevied($duty, '189.1', 45);
+});
+
+test('the credit is at most the excise on the goods supplied', function () {
+    $duty = $this->excise($this->whiskyFrom(
+        new ExciseInput(Money::GEL(50), ExciseEvidence::CustomsDeclaration),
+        new ExciseInput(Money::GEL(60), ExciseEvidence::TaxInvoice),
+    ));
+
+    $this->assertLevied($duty, '189.1', 0);
+    expect($duty->notes)->toContain('Credit 110.00 GEL capped at the excise on the goods supplied, 90.00 GEL (189.1); the rest is not credited on this supply.');
+});
+
+test('without a document proving the excise was paid there is no credit', function () {
+    $duty = $this->excise($this->whiskyFrom(
+        new ExciseInput(Money::GEL(60), null, description: 'spirit'),
+        new ExciseInput(Money::GEL(10), ExciseEvidence::TaxInvoice),
+    ));
+    $this->assertLevied($duty, '189.1', 80);
+    expect($duty->notes)->toContain('No credit for the excise of 60.00 GEL on spirit: no tax invoice or customs declaration proves it was paid (189.3).');
+
+    $none = $this->excise($this->whiskyFrom(new ExciseInput(Money::GEL(60), null)));
+    $this->assertLevied($none, '188¹.1', 90);
+    expect($none->notes)->toHaveCount(1);
+});
+
+test('excise charged on a 190¹ sale is credited by the excise declaration', function () {
+    $this->assertLevied($this->excise($this->whiskyFrom(new ExciseInput(Money::GEL(30), ExciseEvidence::ExciseDeclaration))), '189.1', 60);
+});
+
+test('raw materials that also made non-excise goods are credited in proportion', function () {
+    $duty = $this->excise($this->whiskyFrom(new ExciseInput(Money::GEL(80), ExciseEvidence::TaxInvoice, exciseShare: 0.25)));
+
+    $this->assertLevied($duty, '189.1', 70);
+    expect($duty->notes)->toContain('Excise of 80.00 GEL on raw materials, by tax invoice (189.3), 25% of it for the excise goods made from them (189.4): credit 20.00 GEL.');
+});
+
+test('the share of excise goods is between 0 and 1', function () {
+    new ExciseInput(Money::GEL(80), ExciseEvidence::TaxInvoice, exciseShare: 1.5);
+})->throws(InvalidArgumentException::class);
+
+test('raw materials change nothing for an exempt supply or a reseller', function () {
+    $input = new ExciseInput(Money::GEL(60), ExciseEvidence::TaxInvoice);
+    $export = new Pay(Party::foreignCompany('buyer', 'DE'), $this->producer, K::GoodsSupply, Money::GEL(5000), $this->today,
+        Place::exportTo('DE'), commodity: new Commodity('2208 20', 100, alcoholPercent: 40), exciseInputs: [$input]);
+    $resale = new Pay(Party::person('customer'), $this->shop, K::GoodsSupply, Money::GEL(1000), $this->today,
+        commodity: new Commodity('2208 30', 10, alcoholPercent: 40), exciseInputs: [$input]);
+
+    $this->assertInstanceOf(ExemptWithCredit::class, $this->excise($export));
+    $this->assertSame('194.6.ა', $this->excise($export)->basis()->ref);
+    $this->assertNotTaxable($this->excise($resale), '182–184');
+});
+
+test('a refund reverses the excise left after the credit', function () {
+    $sale = $this->whiskyFrom(new ExciseInput(Money::GEL(60), ExciseEvidence::TaxInvoice));
+
+    $this->assertSame(-3000, $this->excise(new Refund($sale, $this->today))->amount->minor);
 });
 
 /* ── Refund and the law ── */

@@ -7,6 +7,7 @@ namespace GeorgianTax\Domain\Event;
 use DateTimeImmutable;
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Goods\Commodity;
+use GeorgianTax\Domain\Goods\ExciseInput;
 use GeorgianTax\Domain\Income\ExemptProfit;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
@@ -55,6 +56,8 @@ final readonly class Pay implements TaxableEvent
         public ?Commodity $commodity = null,
         /** Profit tax 99.3 — the dividend is paid out of profit the Code exempts. */
         public ?ExemptProfit $fromExemptProfit = null,
+        /** Excise 189 — excise raw materials the producer used for $commodity, and the excise paid on them. @var list<ExciseInput> */
+        public array $exciseInputs = [],
     ) {
         $this->place = $place ?? Place::georgia();
     }

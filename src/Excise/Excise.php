@@ -17,6 +17,7 @@ use GeorgianTax\Excise\Rate as R;
  *
  *   IdentifyOperation  Art. 182–187  production, import, export, gas for vehicles, call termination
  *   ApplyExemptions    Art. 194      with credit (export, duty-free) and without (import reliefs)
+ *   CreditRawMaterials Art. 189      a producer credits the excise on its excise raw materials
  *   rate rules         Art. 188, 188¹  cars, motorcycles, tobacco, alcohol, calls, the rate table
  *
  * Run it before VAT: on import, excise joins the VAT base (164¹.2.ა).
@@ -41,6 +42,7 @@ final class Excise extends Tax
         return [
             Stage\IdentifyOperation::class,
             Stage\ApplyExemptions::class,
+            Stage\CreditRawMaterials::class,
             Stage\ApplyRate::class => [R\Cars::class, R\Motorcycles::class, R\Tobacco::class, R\Alcohol::class, R\Calls::class, R\TableRate::class],
         ];
     }

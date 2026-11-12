@@ -6,7 +6,7 @@ The working list for the four packages: [money](https://github.com/MCHEKHASHVILI
 
 A question stays here until it is answered. Items that depend on it are blocked until then.
 
-None open.
+- 2026-11-12 — **Excise credit on exports (189.1).** 189.1 gives an exporter of excise goods the credit (or refund) of the excise on the raw materials, "but not more than the excise calculated on the excise goods made from them". The export itself is exempt with credit (194.6.ა), so no excise is calculated on it. Options: (a) cap the credit at the excise the exported goods would bear at the rate in force (quantity × rate), and report that creditable amount on the export's `ExemptWithCredit`; (b) leave the export credit to the caller, as now. **Recommendation: (a)** — it is the only reading under which the export credit in 189.1 does anything. Blocks the export half of "Next" item 1's 189.
 
 ### Answered
 
@@ -28,7 +28,7 @@ The MVP is done when the items marked **[MVP]** in "Next" are done. This definit
 In order. Skip anything blocked by an open question.
 
 1. **Features the README lists as not modelled**, one per session, each with tests citing the article:
-   - 189: excise credit;
+   - 189.1 on exports (blocked by the open question) and 189.5: raw materials bought for maturing (დასავარგებელი), credited without the cap;
    - 189.8 and 198.3: refunds;
    - 98.4: banks;
    - 177: VAT apportionment;
@@ -48,6 +48,8 @@ In order. Skip anything blocked by an open question.
 ## Done
 
 Newest first. One line per session: the date, what changed, and the commits.
+
+- 2026-11-12: **189.1–4: excise credit for excise raw materials.** A producer's supply (`Pay`) takes `exciseInputs`, a list of `ExciseInput`: the excise paid or payable on the excise raw materials that went into the goods supplied (spreading a batch over its supplies is for the caller), the document proving it — `ExciseEvidence::TaxInvoice` (bought from their producer, 189.3), `CustomsDeclaration` (imported by the producer, 189.2–3), `ExciseDeclaration` (a 190¹ sale, 189.3¹), or null (no credit, 189.3) — and `exciseShare`, the excise goods' share of what the raw materials made (189.4). A new excise stage `CreditRawMaterials`, after the exemptions, takes the credit off the `Levied` of a producer's supply, at most down to zero (189.1); the outcome cites 189.1 and its notes show the excise before the credit, each input and any cap. Exempt supplies, exports, imports and resellers are unchanged. 189 has no figures, so no law file or seeder change. Not modelled: the credit on exports (question above), 189.5, a refund instead of the credit. Tests: invoice, imported, both, capped at zero, no document, 190¹, 189.4 share, an invalid share, export and resale unchanged, a refund reversing the net. Tested georgian-tax on Laravel 13, file and database (no framework API touched; no other repo changed). georgian-tax (this commit).
 
 - 2026-11-11: **197.4–5: import tax on temporary admission.** A new event `TemporaryAdmission` (goods placed under temporary admission, 8.48 — not an import, 8.47) holds the goods as an `Import` on the day the declaration was registered and `until`, the day the procedure ended (or, with `ended: false`, the day counted to). A new import tax stage `ChargeTemporaryAdmission` lets the rest of the pipeline assess that import (exemptions, 199.კ–კ² among them, and rates) and charges 3% of its import tax for each full or partial calendar month (197.4), capped at the whole amount (197.5, cited when it applies), as a `Levied` of months × 3% of the import tax, due by the 15th of the month after registration (or on the last day, if the procedure ended before then); the notes say how it was built. Exempt, 0% and unresolved imports pass through unchanged. The 3% is the import tax rate `197.4` (`resources/law/rates.php`, so the seeder; `Clearance::rate()` reads it on the registration day). VAT (160²) and excise (183.ბ) answer NotTaxable for it. "Calendar month" read as the calendar's months, as the Code uses the term for reporting periods. Tests: 3 months, partial months, a one-day stay, the due date (ended or running), 99% and the 197.5 cap, a car's per-cm³ duty, 199.კ–კ² relief, 0% goods, VAT and excise, an end before registration; through `AmendLaw`, 4% from 2028; the README's new example. Tested georgian-tax on Laravel 13, file and database (no framework API touched; no other repo changed). georgian-tax (this commit).
 
