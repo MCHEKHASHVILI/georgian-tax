@@ -508,15 +508,16 @@ Car age is the year of the operation (or customs declaration) minus the year mad
 | Pharmaceutical alcohol | Exempt | 194.5.მ |
 | Confiscated state property | Exempt | 194.5.ო |
 
-## Credit for excise raw materials (Art. 189)
+## Credit for excise raw materials and goods for maturing (Art. 189)
 
 | Case | Excise | Article |
 |---|---|---|
 | Producer's supply made from excise raw materials bought from their producer, or imported | Excise on the goods less the excise on the raw materials, at most down to zero | 189.1–2 |
 | Proved by a tax invoice or customs declaration (or, for a 190¹ sale, the excise declaration) | Credited; without one, not | 189.3, 189.3¹ |
 | Raw materials that made excise and non-excise goods together | Credited in proportion to the excise goods, by quantity | 189.4 |
+| Excise goods imported or bought for maturing | The excise paid or payable on them credited on the acquisition, with no cap | 189.5 |
 
-The raw materials and their excise come with the supply (`Pay::$exciseInputs`, a list of `ExciseInput`); spreading a batch over its supplies is for the caller. Not modelled: the credit on exports (exempt with credit, 194.6.ა), raw materials bought for maturing (189.5), a refund instead of the credit, and the 100% refund for cars re-exported within 180 days (189.8). The motorcycle row of 188.1 (4¹) excludes a ეტლი under heading 8711; the engine still taxes all of 8711.
+The raw materials and their excise come with the supply (`Pay::$exciseInputs`, a list of `ExciseInput`); spreading a batch over its supplies is for the caller. Goods for maturing are their own event (`AcquireForMaturing`), whose excise outcome is the credit, a negative `Levied`; the import or purchase itself is charged as usual, and the goods are not credited again as raw materials. Not modelled: the credit on exports (exempt with credit, 194.6.ა), a refund instead of the credit, and the 100% refund for cars re-exported within 180 days (189.8). The motorcycle row of 188.1 (4¹) excludes a ეტლი under heading 8711; the engine still taxes all of 8711.
 
 # Import tax
 

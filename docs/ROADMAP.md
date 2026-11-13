@@ -28,7 +28,7 @@ The MVP is done when the items marked **[MVP]** in "Next" are done. This definit
 In order. Skip anything blocked by an open question.
 
 1. **Features the README lists as not modelled**, one per session, each with tests citing the article:
-   - 189.1 on exports (blocked by the open question) and 189.5: raw materials bought for maturing (დასავარგებელი), credited without the cap;
+   - 189.1 on exports (blocked by the open question);
    - 189.8 and 198.3: refunds;
    - 98.4: banks;
    - 177: VAT apportionment;
@@ -48,6 +48,8 @@ In order. Skip anything blocked by an open question.
 ## Done
 
 Newest first. One line per session: the date, what changed, and the commits.
+
+- 2026-11-13: **189.5: excise credit for goods acquired for maturing.** A new event `AcquireForMaturing` — excise goods (დასავარგებელი) imported or bought to be matured, with `excise`, the excise paid or payable on them, and whether they were `imported`. Excise identifies it as `Operation::Maturing` (only for excise goods; others are NotTaxable under 188) and a new stage `CreditMaturing`, right after `IdentifyOperation`, answers with the credit: a negative `Levied` for the acquirer citing 189.5, the whole excise with no 189.1 cap, for the month of the acquisition (190.1) with that month's 15th as its date (190.2). 189.3's documents are not required: 189.3 speaks of parts 1 and 2 only. The import or purchase itself is charged as before, and the goods must not be an `ExciseInput` of a later supply again (for the caller, said in the docblock and CATALOGUE). Every other tax answers it as not taxable. Not modelled: a refund instead of the credit. No figures, so no law file or seeder change. Tests: imported, bought, the import still levied, non-excise goods, a refund reversing the credit, every other tax not charged, negative excise refused. Tested georgian-tax on Laravel 13, file and database (no framework API touched; no other repo changed). georgian-tax (this commit).
 
 - 2026-11-12: **189.1–4: excise credit for excise raw materials.** A producer's supply (`Pay`) takes `exciseInputs`, a list of `ExciseInput`: the excise paid or payable on the excise raw materials that went into the goods supplied (spreading a batch over its supplies is for the caller), the document proving it — `ExciseEvidence::TaxInvoice` (bought from their producer, 189.3), `CustomsDeclaration` (imported by the producer, 189.2–3), `ExciseDeclaration` (a 190¹ sale, 189.3¹), or null (no credit, 189.3) — and `exciseShare`, the excise goods' share of what the raw materials made (189.4). A new excise stage `CreditRawMaterials`, after the exemptions, takes the credit off the `Levied` of a producer's supply, at most down to zero (189.1); the outcome cites 189.1 and its notes show the excise before the credit, each input and any cap. Exempt supplies, exports, imports and resellers are unchanged. 189 has no figures, so no law file or seeder change. Not modelled: the credit on exports (question above), 189.5, a refund instead of the credit. Tests: invoice, imported, both, capped at zero, no document, 190¹, 189.4 share, an invalid share, export and resale unchanged, a refund reversing the net. Tested georgian-tax on Laravel 13, file and database (no framework API touched; no other repo changed). georgian-tax (this commit).
 

@@ -25,8 +25,8 @@ use Mchekhashvili\TaxLegislation\Law\Citation;
  *
  * The outcome is the excise left to pay, with the credit in the notes. What exceeds the cap is not
  * credited on this supply. Not modelled here: the credit on exports (189.1, the export being exempt
- * with credit under 194.6.ა), raw materials bought for maturing (189.5), and taking a refund
- * instead of the credit (189.1, 189.5).
+ * with credit under 194.6.ა) and taking a refund instead of the credit (189.1). Goods bought for
+ * maturing are credited on their acquisition instead (189.5, `CreditMaturing`).
  */
 #[Article('189.1–4', 'Excise credit for excise raw materials')]
 final class CreditRawMaterials implements Stage

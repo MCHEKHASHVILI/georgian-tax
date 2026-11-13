@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Excise\Stage;
 
 use Closure;
+use GeorgianTax\Domain\Event\AcquireForMaturing;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\TemporaryAdmission;
@@ -20,7 +21,8 @@ use Mchekhashvili\TaxLegislation\Law\Citation;
 /**
  * Who pays excise and on what (Art. 182–187). Excise is charged once, at the start of the chain:
  * the producer's supply, the import, the export — plus gas sold for vehicles, call termination and
- * an importer's onward supply of raw tobacco. A shop reselling excise goods pays none.
+ * an importer's onward supply of raw tobacco. A shop reselling excise goods pays none. Excise goods
+ * acquired for maturing are passed on as `Maturing`, for their excise to be credited (189.5).
  */
 #[Article('182–184', 'Excise taxpayer and taxable operations')]
 final class IdentifyOperation implements Stage
@@ -33,7 +35,7 @@ final class IdentifyOperation implements Stage
             return $d->notTaxable(new Citation('183.ბ'), 'Excise is charged on import, release into free circulation (8.47); temporary admission is another customs procedure (8.48).');
         }
 
-        $commodity = $event instanceof Import || $event instanceof Pay ? $event->commodity : null;
+        $commodity = $event instanceof Import || $event instanceof Pay || $event instanceof AcquireForMaturing ? $event->commodity : null;
 
         if ($commodity === null) {
             return $d->notTaxable(new Citation('183'), 'No excise goods are involved.');
@@ -41,6 +43,10 @@ final class IdentifyOperation implements Stage
 
         if (!$this->isExcisable($d, $commodity)) {
             return $d->notTaxable(new Citation('188'), "HS {$commodity->hsCode} is not excise goods.");
+        }
+
+        if ($event instanceof AcquireForMaturing) {
+            return $next($d->as($commodity, $event->acquirer, Operation::Maturing));
         }
 
         if ($event instanceof Import) {

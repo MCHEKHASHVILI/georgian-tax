@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use GeorgianTax\Domain\Event\AcquireForMaturing;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Goods\Commodity;
@@ -16,6 +17,7 @@ use GeorgianTax\Domain\Party\Status;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\ExemptWithCredit;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use GeorgianTax\Excise\Excise;
 use GeorgianTax\Excise\Rate\Calls;
@@ -333,6 +335,63 @@ test('a refund reverses the excise left after the credit', function () {
 
     $this->assertSame(-3000, $this->excise(new Refund($sale, $this->today))->amount->minor);
 });
+
+/* ── Credit for goods acquired for maturing (189.5) ── */
+
+test('excise on spirit imported for maturing is credited in full', function () {
+    $spirit = new Commodity('2208 20', 1000, alcoholPercent: 70);
+    $credit = $this->excise(new AcquireForMaturing($this->producer, $spirit, Money::GEL(15_750), $this->today, imported: true,
+        description: 'grape spirit'));
+
+    $this->assertLevied($credit, '189.5', -15_750);
+    $this->assertSame('distillery', $credit->taxpayer->id);
+    $this->assertSame(Collection::MonthlyDeclaration, $credit->collection);
+    $this->assertSame('2026-11-15', $credit->due->format('Y-m-d'));
+    expect($credit->notes)->toBe(['Excise of 15750.00 GEL paid or payable on grape spirit (HS 2208 20), imported for maturing: credited in full, without the 189.1 cap (189.5).']);
+});
+
+test('excise on goods bought for maturing is credited, with no 189.3 document', function () {
+    $wine = new Commodity('2204 21', 500, alcoholPercent: 13);
+    $credit = $this->excise(new AcquireForMaturing($this->shop, $wine, Money::GEL(300), $this->today));
+
+    $this->assertLevied($credit, '189.5', -300);
+    expect($credit->notes[0])->toContain('bought for maturing');
+});
+
+test('the import itself still pays excise at customs', function () {
+    $spirit = new Commodity('2208 30', 10, alcoholPercent: 40);
+
+    $this->assertLevied($this->excise($this->import($spirit)), '188¹.1', 90);
+});
+
+test('goods that are not excise goods earn no maturing credit', function () {
+    $coffee = new AcquireForMaturing($this->shop, new Commodity('0901 21', 100), Money::GEL(50), $this->today);
+
+    $this->assertNotTaxable($this->excise($coffee), '188');
+});
+
+test('a refund of the purchase reverses the maturing credit', function () {
+    $bought = new AcquireForMaturing($this->shop, new Commodity('2208 20', 100, alcoholPercent: 70), Money::GEL(1000), $this->today);
+
+    $this->assertSame(100_000, $this->excise(new Refund($bought, $this->today))->amount->minor);
+});
+
+test('no other tax is charged on an acquisition for maturing', function () {
+    $acquired = new AcquireForMaturing($this->producer, new Commodity('2208 20', 1000, alcoholPercent: 70), Money::GEL(15_750), $this->today, imported: true);
+    $report = $this->taxEngine()->process($acquired);
+
+    expect($report->outcomes->keys()->all())->toContain('vat', 'income', 'profit', 'import', 'property');
+    foreach ($report->outcomes as $tax => $outcome) {
+        if ($tax !== 'excise') {
+            expect($outcome)->toBeInstanceOf(NotTaxable::class);
+        }
+    }
+    $this->assertLevied($report->for('excise'), '189.5', -15_750);
+});
+
+test('the excise on goods acquired for maturing cannot be negative', function () {
+    new AcquireForMaturing($this->shop, new Commodity('2208 20', 100), Money::GEL(-1), $this->today);
+})->throws(InvalidArgumentException::class);
 
 /* ── Refund and the law ── */
 
