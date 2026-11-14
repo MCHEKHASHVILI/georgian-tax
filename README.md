@@ -181,19 +181,21 @@ src/
     Goods/        Commodity (HS code and measurements), ImportRelief
     Property/     PropertyItem, PropertyKind, PropertyExemption
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
-                  Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing
+                  Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
+    VehicleRefund.php  the 189.8 and 198.3 refund on a re-exported vehicle
     LawTables.php the excise table and rules, import lists, land rates and property caps
                   as they stood on a day
   IncomeTax/      Assessment → IdentifyTaxpayer → ResolveSource → ApplyExemptions
                   → ApplySpecialRegime → ApplyAnnualAllowance → ApplyRules
   Vat/            Supply → IdentifyOperation → ResolvePlaceOfSupply → ApplyExemptions → ApplyLiability
   ProfitTax/      Outflow → IdentifyOutflow → ApplyExemptions → ApplyRules
-  Excise/         Duty → IdentifyOperation → CreditMaturing → ApplyExemptions → CreditRawMaterials
+  Excise/         Duty → RefundReexportedVehicle → IdentifyOperation → CreditMaturing → ApplyExemptions → CreditRawMaterials
                   → ApplyRate
-  ImportTax/      Clearance → IdentifyImport → ChargeTemporaryAdmission → ApplyExemptions → ApplyRules
+  ImportTax/      Clearance → RefundReexportedCar → IdentifyImport → ChargeTemporaryAdmission
+                  → ApplyExemptions → ApplyRules
   PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
   Database/       the base model: table prefix and connection from config
   Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger,
@@ -242,7 +244,7 @@ An unregistered supplier's supplies below the threshold come back `NotTaxable` b
 | Import | 195–196: an import with an HS code; a temporary admission pays 3% a month of it (197.4–5) | 199 by code and by relief | 197.6 cars, 197.3 alcohol in euro, 197.1–2 lists, else 0% |
 | Property | 201, 203: an `OwnProperty` holding | 206, with the 206.2 leasing carve-out | 204 land, 202.1–3¹ company, 202.5 individual |
 
-Excise and import tax per unit come back as `Levied` (quantity × rate per unit, plus any ad-valorem part). A producer's supply carrying the excise raw materials it was made from (`Pay::$exciseInputs`, each an `ExciseInput` with its tax invoice or customs declaration) comes back with that excise credited, at most down to zero (189.1–4); the notes show the excise before the credit. Excise goods imported or bought for maturing (`AcquireForMaturing`, with the excise paid or payable on them) come back as the credit itself, a negative `Levied` with no cap (189.5); the import or purchase is charged as usual.
+Excise and import tax per unit come back as `Levied` (quantity × rate per unit, plus any ad-valorem part). A producer's supply carrying the excise raw materials it was made from (`Pay::$exciseInputs`, each an `ExciseInput` with its tax invoice or customs declaration) comes back with that excise credited, at most down to zero (189.1–4); the notes show the excise before the credit. Excise goods imported or bought for maturing (`AcquireForMaturing`, with the excise paid or payable on them) come back as the credit itself, a negative `Levied` with no cap (189.5); the import or purchase is charged as usual. A car or motorcycle exported within 180 days of its release (`ReexportVehicle`, holding the release's `Import`) comes back as the refund of the excise (189.8) and, for a car, the import tax (198.3) paid on the release, negative `Levied`s dated the export day.
 
 ## Adding a rule
 
@@ -294,7 +296,7 @@ Outside the per-event model:
 - VAT credit apportionment for mixed use (177) and the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much);
 - tax-free refunds to foreign shoppers (181.5);
 - banks' profit tax on annual net profit (98.4);
-- excise credit on exports (189.1), a refund instead of the 189 credit, and refunds on re-exported cars (189.8, 198.3);
+- excise credit on exports (189.1) and a refund instead of the 189 credit;
 - the 15 June current payment of company property tax (205.3) — the same amount, paid early.
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):

@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use GeorgianTax\Domain\Event\AcquireForMaturing;
+use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\Refund;
+use GeorgianTax\Domain\Event\ReexportVehicle;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ExciseEvidence;
 use GeorgianTax\Domain\Goods\ExciseInput;
@@ -19,6 +21,7 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\ExemptWithCredit;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use GeorgianTax\Excise\Excise;
 use GeorgianTax\Excise\Rate\Calls;
 use Mchekhashvili\TaxLegislation\Law\Article;
@@ -391,6 +394,73 @@ test('no other tax is charged on an acquisition for maturing', function () {
 
 test('the excise on goods acquired for maturing cannot be negative', function () {
     new AcquireForMaturing($this->shop, new Commodity('2208 20', 100), Money::GEL(-1), $this->today);
+})->throws(InvalidArgumentException::class);
+
+/* ── Refund on a car or motorcycle exported within 180 days (189.8) ── */
+
+test('a car exported within 180 days of release gets its excise back', function () {
+    $refund = $this->excise(new ReexportVehicle($this->car(engineCc: 2000, yearMade: 2019), new DateTimeImmutable('2027-01-15')));
+
+    $this->assertLevied($refund, '189.8', -9000);   // 188.13: 2,000 cm³ × 4.50 paid on the release
+    $this->assertSame('importer', $refund->taxpayer->id);
+    $this->assertSame(Collection::AtCustoms, $refund->collection);
+    $this->assertSame('2027-01-15', $refund->due->format('Y-m-d'));
+    expect($refund->notes[0])->toBe('9000.00 GEL paid on the release on 2026-10-30 (188.13): 100% of it refunded (189.8).')
+        ->and($refund->notes[1])->toContain('last day 2027-04-28');
+});
+
+test('a motorcycle gets its excise back too', function () {
+    $bike = $this->import(new Commodity('8711 20', engineCc: 250, yearMade: 2023));
+
+    $this->assertLevied($this->excise(new ReexportVehicle($bike, new DateTimeImmutable('2026-12-01'))), '189.8', -175);
+});
+
+test('the 180 days count from the day after the release', function () {
+    $car = $this->car(engineCc: 2000, yearMade: 2022);
+
+    $this->assertLevied($this->excise(new ReexportVehicle($car, new DateTimeImmutable('2027-04-28'))), '189.8', -3000);
+    $this->assertNotTaxable($this->excise(new ReexportVehicle($car, new DateTimeImmutable('2027-04-29'))), '189.8');
+});
+
+test('a vehicle still in Georgia gets no refund', function () {
+    $outcome = $this->excise(new ReexportVehicle($this->car(engineCc: 2000, yearMade: 2022), new DateTimeImmutable('2026-12-01'), leftGeorgia: false));
+
+    $this->assertNotTaxable($outcome, '189.8');
+    expect($outcome->reason)->toContain('has not left Georgia');
+});
+
+test('the refund is of the excise on the release, at the car age then', function () {
+    // Made in 2020: 6 years old on release in 2026 (188.12), 7 by the export in 2027 (188.13)
+    $car = new Import($this->importer, Money::GEL(10_000), new DateTimeImmutable('2026-12-20'),
+        commodity: new Commodity('8703 23', 1, engineCc: 2000, yearMade: 2020));
+
+    $this->assertLevied($this->excise(new ReexportVehicle($car, new DateTimeImmutable('2027-01-10'))), '189.8', -3000);
+});
+
+test('the excise the importer says it paid is refunded instead', function () {
+    $exported = new ReexportVehicle($this->car(engineCc: 2000, yearMade: 2019), new DateTimeImmutable('2027-01-15'), excisePaid: Money::GEL(8500));
+
+    $this->assertLevied($this->excise($exported), '189.8', -8500);
+});
+
+test('a car that paid no excise on release gets nothing back', function () {
+    $electric = $this->import(new Commodity('8703 80', electric: true));
+    $outcome = $this->excise(new ReexportVehicle($electric, new DateTimeImmutable('2026-12-01')));
+
+    $this->assertNotTaxable($outcome, '189.8');
+    expect($outcome->reason)->toContain('194.5.ლ');
+});
+
+test('only cars and motorcycles get their excise back on export', function () {
+    $whisky = $this->import(new Commodity('2208 30', 10, alcoholPercent: 40));
+
+    $this->assertNotTaxable($this->excise(new ReexportVehicle($whisky, new DateTimeImmutable('2026-12-01'))), '189.8');
+    expect($this->excise(new ReexportVehicle(new Import($this->importer, Money::GEL(1), $this->today), new DateTimeImmutable('2026-12-01'))))
+        ->toBeInstanceOf(Unresolved::class);
+});
+
+test('a vehicle cannot be exported before its release', function () {
+    new ReexportVehicle($this->car(engineCc: 2000, yearMade: 2022), new DateTimeImmutable('2026-10-29'));
 })->throws(InvalidArgumentException::class);
 
 /* ── Refund and the law ── */

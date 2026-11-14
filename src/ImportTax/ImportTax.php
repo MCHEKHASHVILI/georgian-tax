@@ -15,6 +15,7 @@ use GeorgianTax\ImportTax\Rule as R;
 /**
  * Import tax as one stage of the engine, and a pipeline of its own:
  *
+ *   RefundReexportedCar  198.3     a car exported within 180 days of release: its import tax back
  *   IdentifyImport   Art. 195–196  goods crossing the customs border, with an HS code
  *   ChargeTemporaryAdmission  197.4–5  3% a month of what the rest would charge, for goods admitted temporarily
  *   ApplyExemptions  Art. 199      by goods and by relief
@@ -40,6 +41,7 @@ final class ImportTax extends Tax
     protected function stages(): array
     {
         return [
+            Stage\RefundReexportedCar::class,
             Stage\IdentifyImport::class,
             Stage\ChargeTemporaryAdmission::class,
             Stage\ApplyExemptions::class,

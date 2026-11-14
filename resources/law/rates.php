@@ -50,6 +50,10 @@ return [
     // VAT — Art. 166
     '166'       => ['2011-01-01' => 18],
 
-    // Import tax — Art. 197
+    // Excise — Art. 189
+    '189.8'     => ['2011-01-01' => 100],  // refund on a car or motorcycle exported within 180 days of release
+
+    // Import tax — Art. 197–198
     '197.4'     => ['2011-01-01' => 3],    // temporary admission: per calendar month, of the import tax on release
+    '198.3'     => ['2011-01-01' => 100],  // refund on a car exported within 180 days of release
 ];

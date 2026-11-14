@@ -516,8 +516,9 @@ Car age is the year of the operation (or customs declaration) minus the year mad
 | Proved by a tax invoice or customs declaration (or, for a 190¹ sale, the excise declaration) | Credited; without one, not | 189.3, 189.3¹ |
 | Raw materials that made excise and non-excise goods together | Credited in proportion to the excise goods, by quantity | 189.4 |
 | Excise goods imported or bought for maturing | The excise paid or payable on them credited on the acquisition, with no cap | 189.5 |
+| Passenger car (8703) or motorcycle (8711) released into free circulation, placed under export within 180 calendar days and gone from Georgia | The excise paid on the release refunded, 100% (rate `189.8`) | 189.8 |
 
-The raw materials and their excise come with the supply (`Pay::$exciseInputs`, a list of `ExciseInput`); spreading a batch over its supplies is for the caller. Goods for maturing are their own event (`AcquireForMaturing`), whose excise outcome is the credit, a negative `Levied`; the import or purchase itself is charged as usual, and the goods are not credited again as raw materials. Not modelled: the credit on exports (exempt with credit, 194.6.ა), a refund instead of the credit, and the 100% refund for cars re-exported within 180 days (189.8). The motorcycle row of 188.1 (4¹) excludes a ეტლი under heading 8711; the engine still taxes all of 8711.
+The raw materials and their excise come with the supply (`Pay::$exciseInputs`, a list of `ExciseInput`); spreading a batch over its supplies is for the caller. Goods for maturing are their own event (`AcquireForMaturing`), whose excise outcome is the credit, a negative `Levied`; the import or purchase itself is charged as usual, and the goods are not credited again as raw materials. A re-exported vehicle is its own event (`ReexportVehicle`: the release as an `Import`, the export day, whether it left Georgia), whose excise outcome is the refund, a negative `Levied` dated the export day: of what the release charged, worked out on the release day, or of `excisePaid` when given. The 180 days count from the day after the release (3.2); moving a last day off a non-working day (3.6) is not modelled. Not modelled: the credit on exports (exempt with credit, 194.6.ა) and a refund instead of the credit. The motorcycle row of 188.1 (4¹) excludes a ეტლი under heading 8711; the engine still taxes all of 8711.
 
 # Import tax
 
@@ -572,7 +573,7 @@ The lists live in `resources/law/import.php`; the 3% is the rate `197.4` in `res
 | Origin in a state party to the 1994 CIS free-trade agreement | 199.რ |
 | Released from customs duty under the Customs Code | 199.ს |
 
-Not modelled: the refund for cars re-exported within 180 days (198.3). Quantity and frequency limits on traveller and postal reliefs are the caller's to check. Not yet modelled: 199.დ.ვ also relieves tobacco and up to 4 litres of alcohol by post, with no value limit; the engine relieves postal chapters 28–97 only.
+Refund: a passenger car (8703 only, not motorcycles) released into free circulation, placed under export within 180 calendar days and gone from Georgia gets the import tax paid on the release back, 100% (198.3, rate `198.3`) — the `ReexportVehicle` event, as for excise (189.8). Quantity and frequency limits on traveller and postal reliefs are the caller's to check. Not yet modelled: 199.დ.ვ also relieves tobacco and up to 4 litres of alcohol by post, with no value limit; the engine relieves postal chapters 28–97 only.
 
 # Property tax
 

@@ -15,6 +15,7 @@ use GeorgianTax\Excise\Rate as R;
 /**
  * Excise as one stage of the engine, and a pipeline of its own:
  *
+ *   RefundReexportedVehicle  189.8  a car or motorcycle exported within 180 days of release: its excise back
  *   IdentifyOperation  Art. 182–187  production, import, export, gas for vehicles, call termination
  *   CreditMaturing     Art. 189.5    goods imported or bought for maturing: their excise credited
  *   ApplyExemptions    Art. 194      with credit (export, duty-free) and without (import reliefs)
@@ -41,6 +42,7 @@ final class Excise extends Tax
     protected function stages(): array
     {
         return [
+            Stage\RefundReexportedVehicle::class,
             Stage\IdentifyOperation::class,
             Stage\CreditMaturing::class,
             Stage\ApplyExemptions::class,

@@ -8,6 +8,7 @@ use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
+use GeorgianTax\Domain\Event\ReexportVehicle;
 use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
@@ -147,6 +148,19 @@ it('applies an amended temporary admission rate from its date', function () {
 
     expect($admitted('2027-06-01', '2027-07-31'))->toBe('72.00 GEL')   // 197.4: 3%
         ->and($admitted('2028-06-01', '2028-07-31'))->toBe('96.00 GEL'); // 4% under the amendment, read on the registration day
+});
+
+it('refunds a re-exported car at an amended refund rate from its date, read on the export day', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('excise')->id, 'key' => '189.8', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 50]);
+    $this->refreshEngine();
+    // 2,000 cm³, under 6 years: 3,000 GEL excise on the release (188.12)
+    $refund = fn (string $released, string $exported) => (string) GeorgianTax::assess(new ReexportVehicle(
+        new Import(Party::company('autos', Status::VatPayer), Money::GEL(30_000), new DateTimeImmutable($released), commodity: new Commodity('8703 23', 1, engineCc: 2000, yearMade: 2025)),
+        new DateTimeImmutable($exported),
+    ))->for('excise')->amount;
+
+    expect($refund('2027-09-01', '2027-12-31'))->toBe('-3000.00 GEL')   // 189.8: 100%
+        ->and($refund('2027-09-01', '2028-01-02'))->toBe('-1500.00 GEL'); // 50% under the amendment
 });
 
 it('stops an exemption the law repealed', function () {
