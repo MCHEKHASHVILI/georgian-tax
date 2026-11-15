@@ -39,7 +39,7 @@ final class IdentifyOutflow implements Stage
         }
 
         if ($company->is(Status::CreditInstitution)) {
-            return $o->notTaxable(new Citation('97.12'), 'Banks and lenders pay profit tax on annual net profit at 20% (98.4), not on distributions.');
+            return $o->notTaxable(new Citation('97.12'), 'Banks and lenders pay profit tax on the year (a CloseYear event) at 20% (98.4), not on distributions.');
         }
 
         return match (true) {

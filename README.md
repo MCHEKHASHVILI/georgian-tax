@@ -181,7 +181,8 @@ src/
     Goods/        Commodity (HS code and measurements), ImportRelief
     Property/     PropertyItem, PropertyKind, PropertyExemption
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
-                  Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle
+                  Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle,
+                  CloseYear
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
@@ -239,7 +240,7 @@ An unregistered supplier's supplies below the threshold come back `NotTaxable` b
 
 | Tax | Identify | Exemptions | Rates |
 |---|---|---|---|
-| Profit | 96–97: a resident company paying out — dividend, non-market deal, non-business cost, free supply | 98¹.2, 98³.3, 99, 23¹ | 98⁴ representation over 1%, 23.10 international 5%, 98.1 15% grossed up |
+| Profit | 96–97: a resident company paying out — dividend, non-market deal, non-business cost, free supply; a bank or lender closing its year (`CloseYear`, 97.12) | 98¹.2, 98³.3, 99, 23¹ | 98.4 banks and lenders 20% of the year's profit, 98⁴ representation over 1%, 23.10 international 5%, 98.1 15% grossed up |
 | Excise | 182–187: producer's supply, import, export, gas for vehicles, call termination | 194.5–7; 189 credit for raw materials and for goods acquired for maturing | 188.9–18 cars, 188.1 motorcycles and table, 188.1¹ tobacco, 188¹ alcohol, 188.3 calls |
 | Import | 195–196: an import with an HS code; a temporary admission pays 3% a month of it (197.4–5) | 199 by code and by relief | 197.6 cars, 197.3 alcohol in euro, 197.1–2 lists, else 0% |
 | Property | 201, 203: an `OwnProperty` holding | 206, with the 206.2 leasing carve-out | 204 land, 202.1–3¹ company, 202.5 individual |
@@ -295,7 +296,7 @@ Outside the per-event model:
 - VAT on forced sales by enforcement or insolvency administrators (161¹), and collateral taken over by a creditor (161.1.ბ);
 - VAT credit apportionment for mixed use (177) and the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much);
 - tax-free refunds to foreign shoppers (181.5);
-- banks' profit tax on annual net profit (98.4);
+- banks' and lenders' gross income and deductions (97.12, Chapters XIV–XV): `CloseYear` takes them, and the losses still carried (121.4), from the caller;
 - excise credit on exports (189.1) and a refund instead of the 189 credit;
 - the 15 June current payment of company property tax (205.3) — the same amount, paid early.
 

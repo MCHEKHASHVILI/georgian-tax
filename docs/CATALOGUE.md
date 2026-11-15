@@ -384,9 +384,24 @@ Georgia taxes profit when it leaves the company, not when it is earned (the "Est
 | Resident company or organization, or a non-resident's Georgian PE | Taxpayer | 96 |
 | Company receives income | Nothing until distributed | 97.1 |
 | Foreign company's Georgian-source income | Left to withholding (income tax) | 97.4, 134 |
-| Bank, credit union, microfinance or lender | On annual net profit at 20%, not on distributions | 97.12, 98.4 |
+| Bank, credit union, microfinance or lender | Not on distributions, but on the year (below) | 97.12 |
 | Non-profit organization | Only on non-purpose costs and free supplies | 97.2 |
 | Ordinary business payment | Not taxed | 97.1 |
+
+## Banks and lenders: the year's profit (Art. 97.12, 98.4)
+
+A bank, credit union, microfinance organization or lender (`Status::CreditInstitution`) closing its calendar year is the `CloseYear` event: the year's gross income and deductions, the losses still carried, and any current payments made — all the caller's figures.
+
+| Case | Profit tax | Article |
+|---|---|---|
+| Gross income less deductions, less losses still carried | 20%, not grossed up, declared and paid by 1 April of the next year | 97.12, 98.4, 153.1 |
+| Losses carried from earlier years | Set against the year's profit; what is left stays carried | 121.4 |
+| Deductions exceed gross income | Not taxed; the excess is carried forward for 5 years (10 under 122) | 121.4 |
+| Current payments made in the year | Credited against the year's tax; the notes show what is left or overpaid | 155.6 |
+| A year before 2023 — the same object, at a rate the current text does not give | Unresolved | 309.94–95 |
+| Any other company closing its year | Not taxed on the year | 97.1 |
+
+Not modelled: computing gross income and deductions; which years' losses are still open (121.4, 122); the next year's current payments (155.1–5); a period ending with liquidation (153.3); insurers before 2024 (309.95¹).
 
 ## Taxed outflows (Art. 98¹–98⁴)
 

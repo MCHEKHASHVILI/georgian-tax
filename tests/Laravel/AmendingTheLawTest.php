@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
+use GeorgianTax\Domain\Event\CloseYear;
 use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
@@ -161,6 +162,15 @@ it('refunds a re-exported car at an amended refund rate from its date, read on t
 
     expect($refund('2027-09-01', '2027-12-31'))->toBe('-3000.00 GEL')   // 189.8: 100%
         ->and($refund('2027-09-01', '2028-01-02'))->toBe('-1500.00 GEL'); // 50% under the amendment
+});
+
+it('taxes a banks year at the 98.4 rate in force on its last day', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('profit')->id, 'key' => '98.4', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 25]);
+    $this->refreshEngine();
+    $year = fn (int $year) => (string) GeorgianTax::assess(new CloseYear(Party::company('bank', Status::CreditInstitution), $year, Money::GEL(1_000), Money::GEL(200)))->for('profit')->amount;
+
+    expect($year(2027))->toBe('160.00 GEL')   // 98.4: 20%
+        ->and($year(2028))->toBe('200.00 GEL'); // 25% under the amendment
 });
 
 it('stops an exemption the law repealed', function () {

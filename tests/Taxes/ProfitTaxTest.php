@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use GeorgianTax\Domain\Event\CloseYear;
 use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Gift;
@@ -14,6 +15,8 @@ use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Status;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\ProfitTax\ProfitTax;
@@ -116,6 +119,86 @@ test('charity is free up to ten percent of last years net profit', function () {
 test('inventory shortage is a free supply', function () {
     $this->assertTaxed($this->profit(new SelfSupply($this->company, Money::GEL(850), $this->today, SelfSupplyReason::Shortage)), '98³', '15%', base: 1000);
 });
+
+/* ── Banks and lenders: the year's profit (Art. 97.12, 98.4) ── */
+
+test('a bank pays twenty percent of the years gross income less deductions', function () {
+    $bank = Party::company('bank', Status::CreditInstitution);
+    $outcome = $this->profit(new CloseYear($bank, 2026, Money::GEL(5_000_000), Money::GEL(3_000_000)));
+
+    $this->assertTaxed($outcome, '98.4', '20%', base: 2_000_000, tax: 400_000); // not grossed up: 97.10 is for 97.1–3
+    expect($outcome->collection)->toBe(Collection::AnnualDeclaration)
+        ->and($outcome->due->format('Y-m-d'))->toBe('2027-04-01') // 153.1, 62.2
+        ->and($outcome->taxpayer)->toBe($bank)
+        ->and($outcome->turnover())->toBeNull();
+});
+
+test('a microfinance organization or lender is taxed on the year too', function () {
+    $mfo = Party::company('mfo', Status::CreditInstitution, Status::LicensedFinancialInstitution);
+
+    $this->assertTaxed($this->profit(new CloseYear($mfo, 2025, Money::GEL(800), Money::GEL(300))), '98.4', '20%', base: 500, tax: 100);
+});
+
+test('earlier losses still carried are set against the years profit', function () {
+    $bank = Party::company('bank', Status::CreditInstitution);
+    $outcome = $this->profit(new CloseYear($bank, 2026, Money::GEL(1_000), Money::GEL(400), lossesCarried: Money::GEL(250)));
+
+    $this->assertTaxed($outcome, '98.4', '20%', base: 350, tax: 70);
+    expect(implode(' ', $outcome->notes))->toContain('250.00 GEL (121.4)');
+});
+
+test('losses that cover the whole profit leave nothing to tax and the rest carried', function () {
+    $bank = Party::company('bank', Status::CreditInstitution);
+    $outcome = $this->profit(new CloseYear($bank, 2026, Money::GEL(1_000), Money::GEL(400), lossesCarried: Money::GEL(900)));
+
+    $this->assertNotTaxable($outcome, '121.4');
+    expect($outcome->reason)->toContain('300.00 GEL still carried');
+});
+
+test('a year whose deductions exceed gross income is not taxed and adds to the losses carried', function () {
+    $bank = Party::company('bank', Status::CreditInstitution);
+    $outcome = $this->profit(new CloseYear($bank, 2026, Money::GEL(1_000), Money::GEL(1_600), lossesCarried: Money::GEL(100)));
+
+    $this->assertNotTaxable($outcome, '121.4');
+    expect($outcome->reason)->toContain('excess of 600.00 GEL')->toContain('Losses carried into 2027: 700.00 GEL');
+});
+
+test('current payments are credited against the years tax', function () {
+    $bank = Party::company('bank', Status::CreditInstitution);
+    $notes = fn (int $paid) => implode(' ', $this->profit(new CloseYear($bank, 2026, Money::GEL(1_000), Money::GEL(0), currentPayments: Money::GEL($paid)))->notes);
+
+    expect($notes(150))->toContain('50.00 GEL left to pay by 2027-04-01') // 200 tax
+        ->and($notes(260))->toContain('60.00 GEL overpaid');
+});
+
+test('a year before 2023 is left unresolved', function () {
+    $year = fn (int $year) => $this->profit(new CloseYear(Party::company('bank', Status::CreditInstitution), $year, Money::GEL(1_000), Money::GEL(0)));
+
+    expect($year(2022))->toBeInstanceOf(Unresolved::class)
+        ->and($year(2022)->basis()->ref)->toBe('309.95');
+    $this->assertTaxed($year(2023), '98.4', '20%', tax: 200); // 309.94
+});
+
+test('only banks and lenders are taxed on the year', function () {
+    $this->assertNotTaxable($this->profit(new CloseYear($this->company, 2026, Money::GEL(1_000), Money::GEL(0))), '97.1');
+    $this->assertNotTaxable($this->profit(new CloseYear(Party::foreignCompany('bank', 'DE'), 2026, Money::GEL(1_000), Money::GEL(0))), '96');
+});
+
+test('no other tax is charged on a closed year', function () {
+    $report = $this->taxEngine()->process(new CloseYear(Party::company('bank', Status::CreditInstitution), 2026, Money::GEL(1_000), Money::GEL(0)));
+
+    expect($report->outcomes->keys()->all())->toContain('vat', 'income', 'excise', 'import', 'property');
+    foreach ($report->outcomes as $tax => $outcome) {
+        if ($tax !== 'profit') {
+            expect($outcome)->toBeInstanceOf(NotTaxable::class, "$tax: $outcome");
+        }
+    }
+    $this->assertTaxed($report->for('profit'), '98.4', '20%', tax: 200);
+});
+
+test('a closed years figures cannot be negative', function () {
+    new CloseYear(Party::company('bank', Status::CreditInstitution), 2026, Money::GEL(1_000), Money::GEL(-1));
+})->throws(InvalidArgumentException::class);
 
 /* ── Scope ── */
 
