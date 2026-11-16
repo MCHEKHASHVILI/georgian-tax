@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
 use GeorgianTax\Domain\Event\CloseYear;
+use GeorgianTax\Domain\Event\CorrectApportionment;
 use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
@@ -11,6 +12,7 @@ use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\ReexportVehicle;
 use GeorgianTax\Domain\Event\TemporaryAdmission;
+use GeorgianTax\Domain\Event\Turnover;
 use GeorgianTax\Domain\Goods\Commodity;
 use GeorgianTax\Domain\Goods\ImportRelief;
 use GeorgianTax\Domain\Income\IncomeKind;
@@ -171,6 +173,19 @@ it('taxes a banks year at the 98.4 rate in force on its last day', function () {
 
     expect($year(2027))->toBe('160.00 GEL')   // 98.4: 20%
         ->and($year(2028))->toBe('200.00 GEL'); // 25% under the amendment
+});
+
+it('credits mixed-use input VAT in full under an amended 177.7 share from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('vat')->id, 'key' => '177.7', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 10]);
+    $this->refreshEngine();
+    // 6% of the year's turnover without the right to credit
+    $year = fn (int $year) => GeorgianTax::assess(new CorrectApportionment(Party::company('clinic', Status::VatPayer), $year,
+        Money::GEL(1_000), Money::GEL(0), new Turnover(Money::GEL(94_000), Money::GEL(6_000))))->for('vat');
+
+    expect($year(2027)->basis()->ref)->toBe('177.4')                // 177.7: under 5% only
+        ->and((string) $year(2027)->amount)->toBe('-940.00 GEL')
+        ->and($year(2028)->basis()->ref)->toBe('177.7')             // under 10% under the amendment
+        ->and((string) $year(2028)->amount)->toBe('-1000.00 GEL');
 });
 
 it('stops an exemption the law repealed', function () {

@@ -182,7 +182,7 @@ src/
     Property/     PropertyItem, PropertyKind, PropertyExemption
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
                   Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle,
-                  CloseYear
+                  CloseYear, ApportionInputVat, CorrectApportionment (with Turnover)
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
@@ -229,6 +229,7 @@ Each tax reads the same event in its own terms. A `Pay` of 1,000 GEL for a servi
 
 | Stage | Article | Answers when |
 |---|---|---|
+| `ApportionInput` | 177 | The event is mixed-use input VAT: a month's credit at last year's or the month's percentage (`ApportionInputVat`, 177.4.ა–ბ), or the year's correction (`CorrectApportionment`, 177.4; in full under 5%, 177.7), each a `Levied`, negative for a credit |
 | `IdentifyOperation` | 158–160³ | It isn't a supply, import or deemed supply — salary, a private one-off sale, a gift without credited input VAT |
 | `ResolvePlaceOfSupply` | 162–162¹ | The supply is made outside Georgia |
 | `ApplyExemptions` | 170–173 | Exempt without credit (`Exempt`), with credit (`ExemptWithCredit`), or an exempt import |
@@ -294,7 +295,7 @@ Outside the per-event model:
 - gaming organizers' monthly net (80.7);
 - the annual recalculation with deductions (Chapter XV);
 - VAT on forced sales by enforcement or insolvency administrators (161¹), and collateral taken over by a creditor (161.1.ბ);
-- VAT credit apportionment for mixed use (177) and the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much);
+- the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much); mixed-use input VAT is apportioned (177.1–4, 177.7), but the input VAT and turnover are the caller's figures, and fixed assets in mixed use (177.5–6, 177.8, 177.10) are not modelled;
 - tax-free refunds to foreign shoppers (181.5);
 - banks' and lenders' gross income and deductions (97.12, Chapters XIV–XV): `CloseYear` takes them, and the losses still carried (121.4), from the caller;
 - excise credit on exports (189.1) and a refund instead of the 189 credit;

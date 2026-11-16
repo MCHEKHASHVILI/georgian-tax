@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use GeorgianTax\Domain\Asset\Asset;
 use GeorgianTax\Domain\Asset\AssetType;
+use GeorgianTax\Domain\Event\ApportionInputVat;
+use GeorgianTax\Domain\Event\CorrectApportionment;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
@@ -11,6 +13,7 @@ use GeorgianTax\Domain\Event\Refund;
 use GeorgianTax\Domain\Event\SelfSupply;
 use GeorgianTax\Domain\Event\SelfSupplyReason;
 use GeorgianTax\Domain\Event\Sell;
+use GeorgianTax\Domain\Event\Turnover;
 use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Income\SupplyCategory as C;
@@ -19,6 +22,9 @@ use GeorgianTax\Domain\Party\PartyKind;
 use GeorgianTax\Domain\Party\Residency;
 use GeorgianTax\Domain\Party\Status;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Levied;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Tests\Support\VatCase;
@@ -223,6 +229,107 @@ test('margin scheme taxes the margin without credit', function () {
     $this->assertCharged($vat, '161²', Collection::MonthlyDeclaration, 180);
     $this->assertSame(null, $vat->creditableBy);
 });
+
+/* ── Proportional credit (177) ── */
+
+function vatTurnover(int $creditable, int $nonCreditable): Turnover
+{
+    return new Turnover(Money::GEL($creditable), Money::GEL($nonCreditable));
+}
+
+test('mixed use input vat is credited at last years annual percentage', function () {
+    $outcome = $this->vat(new ApportionInputVat($this->seller, 2026, 10, Money::GEL(1_000),
+        monthTurnover: vatTurnover(50_000, 50_000), priorYear: vatTurnover(600_000, 200_000)));
+
+    $this->assertInstanceOf(Levied::class, $outcome, (string) $outcome);
+    $this->assertSame('177.4.ა', $outcome->basis()->ref);
+    $this->assertSame(-75_000, $outcome->amount->minor);                    // 75% of 1,000
+    $this->assertSame(0.75, $outcome->quantity);
+    $this->assertSame(Collection::MonthlyDeclaration, $outcome->collection);
+    $this->assertSame('2026-11-15', $outcome->due->format('Y-m-d'));
+    expect(implode(' ', $outcome->notes))->toContain('75%')->toContain('250.00 GEL')->toContain('2025');
+});
+
+test('without last years percentage the month fixes its own', function () {
+    $outcome = $this->vat(new ApportionInputVat($this->seller, 2026, 3, Money::GEL(900), monthTurnover: vatTurnover(20_000, 10_000)));
+
+    $this->assertSame('177.4.ბ', $outcome->basis()->ref);
+    $this->assertSame(-60_000, $outcome->amount->minor);                    // 2/3 of 900
+    $this->assertSame('2026-04-15', $outcome->due->format('Y-m-d'));
+
+    // a prior year with no turnover fixed no percentage
+    $outcome = $this->vat(new ApportionInputVat($this->seller, 2026, 3, Money::GEL(900), monthTurnover: vatTurnover(20_000, 10_000), priorYear: vatTurnover(0, 0)));
+    $this->assertSame('177.4.ბ', $outcome->basis()->ref);
+});
+
+test('a month with no turnover to divide is unresolved', function () {
+    $outcome = $this->vat(new ApportionInputVat($this->seller, 2026, 1, Money::GEL(500), monthTurnover: vatTurnover(0, 0)));
+
+    $this->assertInstanceOf(Unresolved::class, $outcome, (string) $outcome);
+    $this->assertSame('177.4.ბ', $outcome->basis()->ref);
+});
+
+test('the months are apportioned even below five percent', function () {
+    $outcome = $this->vat(new ApportionInputVat($this->seller, 2026, 5, Money::GEL(1_000), priorYear: vatTurnover(97_000, 3_000)));
+
+    $this->assertSame(-97_000, $outcome->amount->minor);                    // 177.7 is the year's test
+});
+
+test('the years last period corrects the credit to the years percentage', function () {
+    // 12,000 input, credited 9,000 at last year's 75%; this year 60%: 7,200, so 1,800 given back
+    $back = $this->vat(new CorrectApportionment($this->seller, 2026, Money::GEL(12_000), Money::GEL(9_000), vatTurnover(300_000, 200_000)));
+
+    $this->assertInstanceOf(Levied::class, $back, (string) $back);
+    $this->assertSame('177.4', $back->basis()->ref);
+    $this->assertSame(180_000, $back->amount->minor);
+    $this->assertSame('2027-01-15', $back->due->format('Y-m-d'));
+    expect(implode(' ', $back->notes))->toContain('60%')->toContain('given back');
+
+    // this year 90%: 10,800, so 1,800 more credited
+    $more = $this->vat(new CorrectApportionment($this->seller, 2026, Money::GEL(12_000), Money::GEL(9_000), vatTurnover(450_000, 50_000)));
+    $this->assertSame(-180_000, $more->amount->minor);
+    expect(implode(' ', $more->notes))->toContain('more is credited');
+});
+
+test('under five percent without credit the whole input vat is credited', function () {
+    $outcome = $this->vat(new CorrectApportionment($this->seller, 2026, Money::GEL(10_000), Money::GEL(9_600), vatTurnover(96_000, 4_000)));
+
+    $this->assertSame('177.7', $outcome->basis()->ref);
+    $this->assertSame(-40_000, $outcome->amount->minor);                    // 10,000 − 9,600
+
+    // exactly 5% is not under it
+    $outcome = $this->vat(new CorrectApportionment($this->seller, 2026, Money::GEL(10_000), Money::GEL(9_500), vatTurnover(95_000, 5_000)));
+    $this->assertSame('177.4', $outcome->basis()->ref);
+    $this->assertTrue($outcome->amount->isZero());
+});
+
+test('only a registered vat payer apportions input vat', function () {
+    $unregistered = Party::company('shop');
+
+    $this->assertNotTaxable($this->vat(new ApportionInputVat($unregistered, 2026, 1, Money::GEL(100), monthTurnover: vatTurnover(1, 1))), '174.3');
+    $this->assertNotTaxable($this->vat(new CorrectApportionment($unregistered, 2026, Money::GEL(100), Money::GEL(0), vatTurnover(1, 1))), '174.3');
+});
+
+test('no other tax is charged on apportioned input vat', function () {
+    $report = $this->taxEngine()->process(new ApportionInputVat($this->seller, 2026, 10, Money::GEL(1_000), priorYear: vatTurnover(3, 1)));
+
+    expect($report->outcomes->keys()->all())->toContain('vat', 'income', 'profit', 'excise', 'import', 'property');
+    foreach ($report->outcomes as $tax => $outcome) {
+        if ($tax !== 'vat') {
+            expect($outcome)->toBeInstanceOf(NotTaxable::class, "$tax: $outcome");
+        }
+    }
+});
+
+test('apportionment refuses impossible figures', function (Closure $make) {
+    $make();
+})->with([
+    'month 13' => [fn () => new ApportionInputVat(Party::company('x'), 2026, 13, Money::GEL(1), monthTurnover: vatTurnover(1, 1))],
+    'negative input' => [fn () => new ApportionInputVat(Party::company('x'), 2026, 1, Money::GEL(-1), monthTurnover: vatTurnover(1, 1))],
+    'no turnover given' => [fn () => new ApportionInputVat(Party::company('x'), 2026, 1, Money::GEL(1))],
+    'negative turnover' => [fn () => vatTurnover(-1, 1)],
+    'negative credit' => [fn () => new CorrectApportionment(Party::company('x'), 2026, Money::GEL(1), Money::GEL(-1), vatTurnover(1, 1))],
+])->throws(InvalidArgumentException::class);
 
 /* ── Engine, refunds, traceability ── */
 

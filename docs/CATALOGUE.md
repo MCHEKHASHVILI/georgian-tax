@@ -367,9 +367,11 @@ Only a registered VAT payer credits input VAT (174.3), and only against a tax in
 |---|---|
 | VAT paid to Georgian suppliers, on imports and by reverse charge, for taxable operations | 175.1 |
 | VAT on costs of operations abroad, exempt-with-credit operations, and financial services to foreign customers or for exports | 175.2 |
-| Mixed use: in proportion to annual turnover; full credit if non-creditable turnover is under 5% | 177 |
+| Mixed use: in proportion to the turnover with credit over all turnover, without VAT — each month at last year's annual percentage, or the month's own if none was fixed, corrected to the year's in its last period; in full if the year's turnover without credit is under 5% (rate `177.7`) | 177.1–4, 177.7 |
 | Never: entertainment, social and representation costs; faulty, fictitious or over-3-year-old invoices | 178 |
 | Margin-scheme purchases | 161².5–6 |
+
+Mixed use is its own pair of events: `ApportionInputVat` (a month's input VAT on goods and services used for both kinds of operation, with the month's `Turnover` or last year's) answers with the month's credit, and `CorrectApportionment` (the year's input VAT, what was credited of it, the year's `Turnover`) with the year-end difference — each a `Levied` in the month's declaration, negative for a credit. The turnover is the caller's, without the 177.3 items and with 163.2's (177.9). The percentage is not rounded. Not modelled: fixed assets in mixed use (177.5–6, 177.8) and the credit on registration, deregistration or a fixed asset's supply (177.10).
 
 Refunds: excess credit is refunded (181.1). Foreign citizens get VAT back on goods over 200 GEL per receipt taken out within 3 months (181.5–181.6).
 

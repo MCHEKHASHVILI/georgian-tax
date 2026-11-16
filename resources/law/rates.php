@@ -47,8 +47,9 @@ return [
     '98⁴.2'     => ['2017-01-01' => 1],    // representation costs: free up to this share of last year's revenue
     '98⁴.3'     => ['2017-01-01' => 1],    // … in the founding year, of the year's own costs
 
-    // VAT — Art. 166
+    // VAT — Art. 166, 177
     '166'       => ['2011-01-01' => 18],
+    '177.7'     => ['2011-01-01' => 5],    // mixed use: full credit if operations without credit are under this share of the year's turnover
 
     // Excise — Art. 189
     '189.8'     => ['2011-01-01' => 100],  // refund on a car or motorcycle exported within 180 days of release

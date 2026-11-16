@@ -17,6 +17,7 @@ use GeorgianTax\Vat\Rule as R;
 /**
  * VAT as one stage of the engine, and a pipeline of its own:
  *
+ *   ApportionInput        Art. 177       mixed-use input VAT: the month's credit, the year's correction
  *   IdentifyOperation     Art. 158–160³  a supply, an import, or a deemed supply?
  *   ResolvePlaceOfSupply  Art. 162–162¹  supplied in Georgia?
  *   ApplyExemptions       Art. 170–173   exempt with credit, without credit, or exempt import
@@ -42,6 +43,7 @@ final class Vat extends Tax
     protected function stages(): array
     {
         return [
+            Stage\ApportionInput::class,
             Stage\IdentifyOperation::class,
             Stage\ResolvePlaceOfSupply::class => [
                 P\GoodsLocation::class,
