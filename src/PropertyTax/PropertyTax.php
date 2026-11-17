@@ -15,6 +15,7 @@ use GeorgianTax\PropertyTax\Rule as R;
 /**
  * Property tax — the local tax — as one stage of the engine, and a pipeline of its own:
  *
+ *   CurrentPayment    Art. 205.3     a company's 15 June current payment (PayPropertyInstalment)
  *   IdentifyTaxpayer  Art. 201, 203  who pays on what
  *   ApplyExemptions   Art. 206       by owner, by item, and the 206.2 leasing carve-out
  *   rate rules        Art. 202, 204  land per hectare or m²; company and individual property by value
@@ -43,6 +44,7 @@ final class PropertyTax extends Tax
     protected function stages(): array
     {
         return [
+            Stage\CurrentPayment::class,
             Stage\IdentifyTaxpayer::class,
             Stage\ApplyExemptions::class,
             Stage\ApplyRules::class => [R\AgriculturalLand::class, R\OtherLand::class, R\CompanyProperty::class, R\IndividualProperty::class],

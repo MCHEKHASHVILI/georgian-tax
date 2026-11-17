@@ -182,7 +182,8 @@ src/
     Property/     PropertyItem, PropertyKind, PropertyExemption
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
                   Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle,
-                  CloseYear, ApportionInputVat, CorrectApportionment (with Turnover)
+                  CloseYear, ApportionInputVat, CorrectApportionment (with Turnover),
+                  PayPropertyInstalment
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
     Deadline.php  when each way of collecting is due under Georgian law
@@ -197,7 +198,7 @@ src/
                   → ApplyRate
   ImportTax/      Clearance → RefundReexportedCar → IdentifyImport → ChargeTemporaryAdmission
                   → ApplyExemptions → ApplyRules
-  PropertyTax/    Holding → IdentifyTaxpayer → ApplyExemptions → ApplyRules
+  PropertyTax/    Holding → CurrentPayment → IdentifyTaxpayer → ApplyExemptions → ApplyRules
   Database/       the base model: table prefix and connection from config
   Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger,
                   StaticBooks; Eloquent/ ledger, books and models
@@ -244,7 +245,7 @@ An unregistered supplier's supplies below the threshold come back `NotTaxable` b
 | Profit | 96–97: a resident company paying out — dividend, non-market deal, non-business cost, free supply; a bank or lender closing its year (`CloseYear`, 97.12) | 98¹.2, 98³.3, 99, 23¹ | 98.4 banks and lenders 20% of the year's profit, 98⁴ representation over 1%, 23.10 international 5%, 98.1 15% grossed up |
 | Excise | 182–187: producer's supply, import, export, gas for vehicles, call termination | 194.5–7; 189 credit for raw materials and for goods acquired for maturing | 188.9–18 cars, 188.1 motorcycles and table, 188.1¹ tobacco, 188¹ alcohol, 188.3 calls |
 | Import | 195–196: an import with an HS code; a temporary admission pays 3% a month of it (197.4–5) | 199 by code and by relief | 197.6 cars, 197.3 alcohol in euro, 197.1–2 lists, else 0% |
-| Property | 201, 203: an `OwnProperty` holding | 206, with the 206.2 leasing carve-out | 204 land, 202.1–3¹ company, 202.5 individual |
+| Property | 201, 203: an `OwnProperty` holding; a company's 15 June current payment (`PayPropertyInstalment`, 205.3) | 206, with the 206.2 leasing carve-out | 204 land, 202.1–3¹ company, 202.5 individual |
 
 Excise and import tax per unit come back as `Levied` (quantity × rate per unit, plus any ad-valorem part). A producer's supply carrying the excise raw materials it was made from (`Pay::$exciseInputs`, each an `ExciseInput` with its tax invoice or customs declaration) comes back with that excise credited, at most down to zero (189.1–4); the notes show the excise before the credit. Excise goods imported or bought for maturing (`AcquireForMaturing`, with the excise paid or payable on them) come back as the credit itself, a negative `Levied` with no cap (189.5); the import or purchase is charged as usual. A car or motorcycle exported within 180 days of its release (`ReexportVehicle`, holding the release's `Import`) comes back as the refund of the excise (189.8) and, for a car, the import tax (198.3) paid on the release, negative `Levied`s dated the export day.
 
@@ -299,7 +300,7 @@ Outside the per-event model:
 - tax-free refunds to foreign shoppers (181.5);
 - banks' and lenders' gross income and deductions (97.12, Chapters XIV–XV): `CloseYear` takes them, and the losses still carried (121.4), from the caller;
 - excise credit on exports (189.1) and a refund instead of the 189 credit;
-- the 15 June current payment of company property tax (205.3) — the same amount, paid early.
+- the property tax a company's current payment is based on (205.3): `PayPropertyInstalment` takes last year's tax, and the year's expected tax for a 205.4 reduction, from the caller, and does not charge 205.5's interest when the reduction proves wrong.
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):
 

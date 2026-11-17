@@ -10,6 +10,7 @@ use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
+use GeorgianTax\Domain\Event\PayPropertyInstalment;
 use GeorgianTax\Domain\Event\ReexportVehicle;
 use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Event\Turnover;
@@ -186,6 +187,19 @@ it('credits mixed-use input VAT in full under an amended 177.7 share from its da
         ->and((string) $year(2027)->amount)->toBe('-940.00 GEL')
         ->and($year(2028)->basis()->ref)->toBe('177.7')             // under 10% under the amendment
         ->and((string) $year(2028)->amount)->toBe('-1000.00 GEL');
+});
+
+it('reduces a current payment under an amended 205.4 share from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('property')->id, 'key' => '205.4', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 30]);
+    $this->refreshEngine();
+    // the expected tax 40% below last year's, told in May
+    $year = fn (int $year) => GeorgianTax::assess(new PayPropertyInstalment(Party::company('acme'), $year, Money::GEL(10_000), Money::GEL(6_000),
+        new DateTimeImmutable("$year-05-15")))->for('property');
+
+    expect($year(2027)->basis()->ref)->toBe('205.3')                // 205.4: at least 50% only
+        ->and((string) $year(2027)->amount)->toBe('10000.00 GEL')
+        ->and($year(2028))->toBeInstanceOf(NotTaxable::class)       // at least 30% under the amendment
+        ->and($year(2028)->basis()->ref)->toBe('205.4');
 });
 
 it('stops an exemption the law repealed', function () {

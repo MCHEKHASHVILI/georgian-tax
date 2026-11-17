@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use GeorgianTax\Domain\Event\Pay;
+use GeorgianTax\Domain\Event\PayPropertyInstalment;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
@@ -246,8 +247,93 @@ test('state university keeps its exemption when leasing', function () {
     $this->assertExempt($this->property($this->own(Party::company('tsu'), $building)), '206.1.ჰ⁵');
 });
 
+/* ── Current payment (205.3–4, 205.6, 205.9) ── */
+
+test('a company pays last years tax as a current payment by 15 June', function () {
+    $payment = $this->property(new PayPropertyInstalment($this->company, 2026, Money::GEL(12_000)));
+
+    $this->assertLevied($payment, '205.3', 12_000);
+    $this->assertSame('2026-06-15', $payment->due->format('Y-m-d'));
+    $this->assertSame('acme', $payment->taxpayer->id);
+    $this->assertStringContainsString('declared by 1 April 2027', implode(' ', $payment->notes));
+});
+
+test('the current payment is answered by property tax alone', function () {
+    $report = $this->engine->process(new PayPropertyInstalment($this->company, 2026, Money::GEL(12_000)));
+
+    foreach (['import', 'excise', 'vat', 'income', 'profit'] as $tax) {
+        $this->assertSame(0, $report->amountOf($tax)->minor, $tax);
+    }
+
+    $this->assertSame(1_200_000, $report->totalTax()->minor);
+});
+
+test('a company with no tax last year pays nothing', function () {
+    $this->assertNotTaxable($this->property(new PayPropertyInstalment($this->company, 2026, Money::GEL(0))), '205.3');
+});
+
+test('individuals and the state make no current payment', function () {
+    $this->assertNotTaxable($this->property(new PayPropertyInstalment($this->person, 2026, Money::GEL(500))), '205.3');
+    $this->assertNotTaxable($this->property(new PayPropertyInstalment(Party::person('gia')->withKind(PartyKind::IndividualEntrepreneur), 2026, Money::GEL(500))), '205.3');
+    $this->assertNotTaxable($this->property(new PayPropertyInstalment(Party::state(), 2026, Money::GEL(500))), '205.3');
+});
+
+test('a company founded after the year began makes no current payment for it', function () {
+    $founded = new PayPropertyInstalment($this->company, 2026, Money::GEL(0), foundedOn: new DateTimeImmutable('2026-03-10'));
+    $onNewYear = new PayPropertyInstalment($this->company, 2026, Money::GEL(5_000), foundedOn: new DateTimeImmutable('2026-01-01'));
+    $earlier = new PayPropertyInstalment($this->company, 2026, Money::GEL(5_000), foundedOn: new DateTimeImmutable('2025-03-10'));
+
+    $this->assertNotTaxable($this->property($founded), '205.9');
+    $this->assertLevied($this->property($onNewYear), '205.3', 5_000);
+    $this->assertLevied($this->property($earlier), '205.3', 5_000);
+});
+
+test('an expected fall of half or more, told by 1 June, lets the company pay nothing', function () {
+    $event = new PayPropertyInstalment($this->company, 2026, Money::GEL(10_000), Money::GEL(5_000), new DateTimeImmutable('2026-06-01'));
+
+    $this->assertNotTaxable($this->property($event), '205.4');
+});
+
+test('or pay the reduced amount it chose', function () {
+    $event = new PayPropertyInstalment($this->company, 2026, Money::GEL(10_000), Money::GEL(3_000), new DateTimeImmutable('2026-05-20'), reducedTo: Money::GEL(3_000));
+
+    $payment = $this->property($event);
+
+    $this->assertLevied($payment, '205.4', 3_000);
+    $this->assertSame('2026-06-15', $payment->due->format('Y-m-d'));
+});
+
+test('a fall of less than half is not a reason to reduce', function () {
+    $event = new PayPropertyInstalment($this->company, 2026, Money::GEL(10_000), Money::GEL(5_001), new DateTimeImmutable('2026-05-01'));
+
+    $payment = $this->property($event);
+
+    $this->assertLevied($payment, '205.3', 10_000);
+    $this->assertStringContainsString('not at least 50% below', implode(' ', $payment->notes));
+});
+
+test('a reduction told after 1 June, or not told, does not count', function () {
+    $late = new PayPropertyInstalment($this->company, 2026, Money::GEL(10_000), Money::GEL(1_000), new DateTimeImmutable('2026-06-02'));
+    $untold = new PayPropertyInstalment($this->company, 2026, Money::GEL(10_000), Money::GEL(1_000));
+
+    $this->assertLevied($this->property($late), '205.3', 10_000);
+    $this->assertStringContainsString('was told on 2026-06-02, not by 2026-06-01', implode(' ', $this->property($late)->notes));
+    $this->assertLevied($this->property($untold), '205.3', 10_000);
+});
+
+test('after a change of rate the company may pay at the years rate', function () {
+    $event = new PayPropertyInstalment($this->company, 2026, Money::GEL(10_000), atCurrentRates: Money::GEL(8_000));
+
+    $this->assertLevied($this->property($event), '205.6', 8_000);
+});
+
+test('a current payments figures cannot be negative, nor reduced above last years tax', function () {
+    expect(fn () => new PayPropertyInstalment($this->company, 2026, Money::GEL(-1)))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => new PayPropertyInstalment($this->company, 2026, Money::GEL(100), reducedTo: Money::GEL(101)))->toThrow(InvalidArgumentException::class);
+});
+
 test('every rule and stage cites an article', function () {
-    foreach (['Rule\AgriculturalLand', 'Rule\OtherLand', 'Rule\CompanyProperty', 'Rule\IndividualProperty', 'Stage\IdentifyTaxpayer', 'Stage\ApplyExemptions'] as $class) {
+    foreach (['Rule\AgriculturalLand', 'Rule\OtherLand', 'Rule\CompanyProperty', 'Rule\IndividualProperty', 'Stage\CurrentPayment', 'Stage\IdentifyTaxpayer', 'Stage\ApplyExemptions'] as $class) {
         $this->assertNotEmpty((new ReflectionClass("GeorgianTax\\PropertyTax\\$class"))->getAttributes(Article::class), $class);
     }
 });

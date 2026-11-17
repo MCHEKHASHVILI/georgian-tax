@@ -27,7 +27,7 @@ use Mchekhashvili\TaxLegislation\Rates\ThresholdTable;
  *   company land       by 15 November of the year (205.7)
  *   individual         declared by 1 November and paid by 15 November of the year after the
  *                      property year (205.12, 205.14); land, by 15 November of the land's year
- * The 15 June current payment companies make (205.3) is an instalment of this same amount.
+ * The 15 June current payment companies make on account of it (205.3) is a PayPropertyInstalment.
  */
 final readonly class Holding
 {

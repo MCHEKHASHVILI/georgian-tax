@@ -624,6 +624,17 @@ Property tax is local: the Code sets caps and base rates, and each municipal cou
 
 Due: companies declare and pay by 1 April for the past year (205.2), land by 15 November (205.7); individuals by 15 November (205.14).
 
+Current payment (`PayPropertyInstalment`): a company or organization pays last year's annual property tax (not land) by 15 June of the year, on account of the year's tax (205.3). Individuals and the state make none.
+
+| Case | Current payment | Article |
+|---|---|---|
+| Ordinary year | Last year's annual tax on property | 205.3 |
+| Year's expected tax at least 50% (rate `205.4`) below last year's, tax authority told by 1 June | Reduced to the amount the company chooses, or nothing | 205.4 |
+| Rate changed from the previous period | May be paid at the year's rate (the caller's figure) | 205.6 |
+| Founded after the year began | None for that year; next year's is that year's tax in full | 205.9 |
+
+Not modelled: the 205.5 interest when the actual year does not bear out the reduction.
+
 ## Exemptions (Art. 206)
 
 | Case | Article |

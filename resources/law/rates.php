@@ -57,4 +57,7 @@ return [
     // Import tax — Art. 197–198
     '197.4'     => ['2011-01-01' => 3],    // temporary admission: per calendar month, of the import tax on release
     '198.3'     => ['2011-01-01' => 100],  // refund on a car exported within 180 days of release
+
+    // Property tax — Art. 205
+    '205.4'     => ['2011-01-01' => 50],   // current payment may be reduced when the year's expected tax falls by at least this share
 ];

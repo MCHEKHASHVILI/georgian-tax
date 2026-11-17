@@ -168,6 +168,7 @@ final class GeorgiaLegislationSeeder extends Seeder
             $chapter >= 154 && $chapter < 182 => 'vat',
             $chapter >= 182 && $chapter < 195 => 'excise',
             $chapter >= 195 && $chapter < 200 => 'import',
+            $chapter >= 200 && $chapter < 210 => 'property',
             default => 'income',
         };
     }
