@@ -5,8 +5,10 @@ declare(strict_types=1);
 use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
 use GeorgianTax\Domain\Event\CloseYear;
 use GeorgianTax\Domain\Event\CorrectApportionment;
+use GeorgianTax\Domain\Event\CreditFixedAsset;
 use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\ExpenseNature;
+use GeorgianTax\Domain\Event\FixedAsset;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
@@ -187,6 +189,19 @@ it('credits mixed-use input VAT in full under an amended 177.7 share from its da
         ->and((string) $year(2027)->amount)->toBe('-940.00 GEL')
         ->and($year(2028)->basis()->ref)->toBe('177.7')             // under 10% under the amendment
         ->and((string) $year(2028)->amount)->toBe('-1000.00 GEL');
+});
+
+it('credits a fixed asset in full at once under an amended 177.5.ა share from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('vat')->id, 'key' => '177.5.ა', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 30]);
+    $this->refreshEngine();
+    // 25% of last year's turnover without the right to credit
+    $first = fn (int $year) => GeorgianTax::assess(new CreditFixedAsset(Party::company('clinic', Status::VatPayer), $year, 1,
+        new FixedAsset(Money::GEL(5_000), realEstate: false, inUseFrom: $year), new Turnover(Money::GEL(75_000), Money::GEL(25_000))))->for('vat');
+
+    expect($first(2027)->basis()->ref)->toBe('177.5.ბ')              // 177.5.ა: under 20% only
+        ->and($first(2027)->amount->isZero())->toBeTrue()
+        ->and($first(2028)->basis()->ref)->toBe('177.5.ა')           // under 30% under the amendment
+        ->and((string) $first(2028)->amount)->toBe('-5000.00 GEL');
 });
 
 it('reduces a current payment under an amended 205.4 share from its date', function () {

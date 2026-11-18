@@ -183,6 +183,7 @@ src/
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
                   Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle,
                   CloseYear, ApportionInputVat, CorrectApportionment (with Turnover),
+                  CreditFixedAsset, CloseFixedAssetYear (with FixedAsset),
                   PayPropertyInstalment
   Engine/
     Tax.php       a Georgian tax: country GE, lari, config('georgian-tax.pipelines')
@@ -230,7 +231,7 @@ Each tax reads the same event in its own terms. A `Pay` of 1,000 GEL for a servi
 
 | Stage | Article | Answers when |
 |---|---|---|
-| `ApportionInput` | 177 | The event is mixed-use input VAT: a month's credit at last year's or the month's percentage (`ApportionInputVat`, 177.4.ა–ბ), or the year's correction (`CorrectApportionment`, 177.4; in full under 5%, 177.7), each a `Levied`, negative for a credit |
+| `ApportionInput` | 177 | The event is mixed-use input VAT: a month's credit at last year's or the month's percentage (`ApportionInputVat`, 177.4.ა–ბ), or the year's correction (`CorrectApportionment`, 177.4; in full under 5%, 177.7); or a fixed asset in mixed use — its first period (`CreditFixedAsset`: all of its VAT when last year's turnover without credit was under 20%, 177.5.ა, else none) and each year end (`CloseFixedAssetYear`: a tenth or fifth given back or credited in the year's share, 177.5–6, 177.8) — each a `Levied`, negative for a credit |
 | `IdentifyOperation` | 158–160³ | It isn't a supply, import or deemed supply — salary, a private one-off sale, a gift without credited input VAT |
 | `ResolvePlaceOfSupply` | 162–162¹ | The supply is made outside Georgia |
 | `ApplyExemptions` | 170–173 | Exempt without credit (`Exempt`), with credit (`ExemptWithCredit`), or an exempt import |
@@ -296,7 +297,7 @@ Outside the per-event model:
 - gaming organizers' monthly net (80.7);
 - the annual recalculation with deductions (Chapter XV);
 - VAT on forced sales by enforcement or insolvency administrators (161¹), and collateral taken over by a creditor (161.1.ბ);
-- the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much); mixed-use input VAT is apportioned (177.1–4, 177.7), but the input VAT and turnover are the caller's figures, and fixed assets in mixed use (177.5–6, 177.8, 177.10) are not modelled;
+- the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much); mixed-use input VAT is apportioned (177.1–4, 177.7), but the input VAT and turnover are the caller's figures, fixed assets in mixed use are spread over their 10 or 5 years (177.5–6, 177.8) from the caller's yearly turnover, and the credit on registration, deregistration or a fixed asset's supply (177.10, on the Minister's terms) is not modelled;
 - tax-free refunds to foreign shoppers (181.5);
 - banks' and lenders' gross income and deductions (97.12, Chapters XIV–XV): `CloseYear` takes them, and the losses still carried (121.4), from the caller;
 - excise credit on exports (189.1) and a refund instead of the 189 credit;

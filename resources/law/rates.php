@@ -49,6 +49,7 @@ return [
 
     // VAT — Art. 166, 177
     '166'       => ['2011-01-01' => 18],
+    '177.5.ა'   => ['2011-01-01' => 20],   // fixed asset in mixed use: VAT credited in full at once if last year's operations without credit were under this share of the turnover
     '177.7'     => ['2011-01-01' => 5],    // mixed use: full credit if operations without credit are under this share of the year's turnover
 
     // Excise — Art. 189

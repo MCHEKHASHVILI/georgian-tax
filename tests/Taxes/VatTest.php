@@ -5,7 +5,10 @@ declare(strict_types=1);
 use GeorgianTax\Domain\Asset\Asset;
 use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Event\ApportionInputVat;
+use GeorgianTax\Domain\Event\CloseFixedAssetYear;
 use GeorgianTax\Domain\Event\CorrectApportionment;
+use GeorgianTax\Domain\Event\CreditFixedAsset;
+use GeorgianTax\Domain\Event\FixedAsset;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
@@ -329,6 +332,131 @@ test('apportionment refuses impossible figures', function (Closure $make) {
     'no turnover given' => [fn () => new ApportionInputVat(Party::company('x'), 2026, 1, Money::GEL(1))],
     'negative turnover' => [fn () => vatTurnover(-1, 1)],
     'negative credit' => [fn () => new CorrectApportionment(Party::company('x'), 2026, Money::GEL(1), Money::GEL(-1), vatTurnover(1, 1))],
+])->throws(InvalidArgumentException::class);
+
+/* ── Fixed assets in mixed use (177.5–6, 177.8) ── */
+
+test('a fixed asset is credited in full at once when last years turnover without credit was under 20 percent', function () {
+    $building = new FixedAsset(Money::GEL(180_000), realEstate: true, inUseFrom: 2026);
+    $outcome = $this->vat(new CreditFixedAsset($this->seller, 2026, 3, $building, vatTurnover(900_000, 100_000)));
+
+    $this->assertInstanceOf(Levied::class, $outcome, (string) $outcome);
+    $this->assertSame('177.5.ა', $outcome->basis()->ref);
+    $this->assertSame(-18_000_000, $outcome->amount->minor);                // all 180,000 in the first period
+    $this->assertSame('2026-04-15', $outcome->due->format('Y-m-d'));
+    expect(implode(' ', $outcome->notes))->toContain('20%')->toContain('2026 to 2035')->toContain('177.6.ა');
+});
+
+test('each year end gives back a tenth in the years share without credit', function () {
+    $building = new FixedAsset(Money::GEL(180_000), realEstate: true, inUseFrom: 2026);
+    // a tenth is 18,000; 25% of the year's turnover without credit: 4,500 given back
+    $outcome = $this->vat(new CloseFixedAssetYear($this->seller, 2026, $building, vatTurnover(750_000, 250_000), creditedInFull: true));
+
+    $this->assertInstanceOf(Levied::class, $outcome, (string) $outcome);
+    $this->assertSame('177.5.ა', $outcome->basis()->ref);
+    $this->assertSame(450_000, $outcome->amount->minor);
+    $this->assertSame(0.25, $outcome->quantity);
+    $this->assertSame('2027-01-15', $outcome->due->format('Y-m-d'));
+    expect(implode(' ', $outcome->notes))->toContain('18000.00 GEL')->toContain('25%');
+
+    // the tenth year is the last
+    $this->assertSame('177.5.ა', $this->vat(new CloseFixedAssetYear($this->seller, 2035, $building, vatTurnover(750_000, 250_000), true))->basis()->ref);
+    $this->assertNotTaxable($this->vat(new CloseFixedAssetYear($this->seller, 2036, $building, vatTurnover(750_000, 250_000), true)), '177.6.ა');
+});
+
+test('otherwise nothing is credited at once and each year end credits a fifth in the years share with credit', function () {
+    $machine = new FixedAsset(Money::GEL(9_000), realEstate: false, inUseFrom: 2026);
+
+    // last year 30% without credit: not under 20%
+    $first = $this->vat(new CreditFixedAsset($this->seller, 2026, 2, $machine, vatTurnover(70_000, 30_000)));
+    $this->assertInstanceOf(Levied::class, $first, (string) $first);
+    $this->assertSame('177.5.ბ', $first->basis()->ref);
+    $this->assertTrue($first->amount->isZero());
+    expect(implode(' ', $first->notes))->toContain('not under')->toContain('2026 to 2030');
+
+    // a fifth is 1,800; 60% with credit: 1,080 credited
+    $year = $this->vat(new CloseFixedAssetYear($this->seller, 2026, $machine, vatTurnover(600_000, 400_000), creditedInFull: false));
+    $this->assertSame('177.5.ბ', $year->basis()->ref);
+    $this->assertSame(-108_000, $year->amount->minor);
+    $this->assertSame(0.6, $year->quantity);
+
+    // five years from the year put into use
+    $this->assertSame(-108_000, $this->vat(new CloseFixedAssetYear($this->seller, 2030, $machine, vatTurnover(600_000, 400_000), false))->amount->minor);
+    $this->assertNotTaxable($this->vat(new CloseFixedAssetYear($this->seller, 2031, $machine, vatTurnover(600_000, 400_000), false)), '177.6.ბ');
+    $this->assertNotTaxable($this->vat(new CloseFixedAssetYear($this->seller, 2025, $machine, vatTurnover(600_000, 400_000), false)), '177.6.ბ');
+});
+
+test('exactly 20 percent or no turnover last year leaves the fixed asset to the year ends', function () {
+    $machine = new FixedAsset(Money::GEL(9_000), realEstate: false, inUseFrom: 2026);
+
+    $this->assertSame('177.5.ბ', $this->vat(new CreditFixedAsset($this->seller, 2026, 2, $machine, vatTurnover(80_000, 20_000)))->basis()->ref);
+    $this->assertSame('177.5.ბ', $this->vat(new CreditFixedAsset($this->seller, 2026, 2, $machine, vatTurnover(0, 0)))->basis()->ref);
+
+    $none = $this->vat(new CreditFixedAsset($this->seller, 2026, 2, $machine));
+    $this->assertSame('177.5.ბ', $none->basis()->ref);
+    expect(implode(' ', $none->notes))->toContain('No turnover in 2025');
+});
+
+test('a year under five percent without credit takes the years part in full', function () {
+    $machine = new FixedAsset(Money::GEL(9_000), realEstate: false, inUseFrom: 2026);
+
+    $back = $this->vat(new CloseFixedAssetYear($this->seller, 2027, $machine, vatTurnover(97_000, 3_000), creditedInFull: true));
+    $this->assertSame('177.7', $back->basis()->ref);
+    $this->assertTrue($back->amount->isZero());                             // nothing given back
+
+    $credit = $this->vat(new CloseFixedAssetYear($this->seller, 2027, $machine, vatTurnover(97_000, 3_000), creditedInFull: false));
+    $this->assertSame('177.7', $credit->basis()->ref);
+    $this->assertSame(-180_000, $credit->amount->minor);                    // the whole fifth
+});
+
+test('a year with no turnover is unresolved for a fixed asset', function () {
+    $machine = new FixedAsset(Money::GEL(9_000), realEstate: false, inUseFrom: 2026);
+    $outcome = $this->vat(new CloseFixedAssetYear($this->seller, 2026, $machine, vatTurnover(0, 0), false));
+
+    $this->assertInstanceOf(Unresolved::class, $outcome, (string) $outcome);
+    $this->assertSame('177.5', $outcome->basis()->ref);
+});
+
+test('a building put into use or repaired as a self supply goes as if bought', function () {
+    $built = new FixedAsset(Money::GEL(90_000), realEstate: true, inUseFrom: 2026, selfSupply: SelfSupplyReason::OwnBuildingPutIntoUse);
+    $outcome = $this->vat(new CloseFixedAssetYear($this->seller, 2026, $built, vatTurnover(500_000, 500_000), false));
+
+    $this->assertSame('177.5.ბ', $outcome->basis()->ref);
+    $this->assertSame(-450_000, $outcome->amount->minor);                   // half of a tenth of 90,000
+    expect(implode(' ', $outcome->notes))->toContain('177.8')->toContain('160.3.ბ')->toContain('the building');
+
+    $repair = new FixedAsset(Money::GEL(10_000), realEstate: true, inUseFrom: 2026, selfSupply: SelfSupplyReason::OwnBuildingRepair);
+    expect(implode(' ', $this->vat(new CreditFixedAsset($this->seller, 2026, 6, $repair, vatTurnover(95_000, 5_000)))->notes))
+        ->toContain('160¹.2.ბ')->toContain('the repair');
+});
+
+test('only a registered vat payer credits a fixed asset', function () {
+    $unregistered = Party::company('shop');
+    $machine = new FixedAsset(Money::GEL(9_000), realEstate: false, inUseFrom: 2026);
+
+    $this->assertNotTaxable($this->vat(new CreditFixedAsset($unregistered, 2026, 1, $machine, vatTurnover(1, 0))), '174.3');
+    $this->assertNotTaxable($this->vat(new CloseFixedAssetYear($unregistered, 2026, $machine, vatTurnover(1, 1), false)), '174.3');
+});
+
+test('no other tax is charged on a fixed assets credit', function () {
+    $machine = new FixedAsset(Money::GEL(9_000), realEstate: false, inUseFrom: 2026);
+
+    foreach ([new CreditFixedAsset($this->seller, 2026, 1, $machine, vatTurnover(9, 1)), new CloseFixedAssetYear($this->seller, 2026, $machine, vatTurnover(1, 1), true)] as $event) {
+        foreach ($this->taxEngine()->process($event)->outcomes as $tax => $outcome) {
+            if ($tax !== 'vat') {
+                expect($outcome)->toBeInstanceOf(NotTaxable::class, "$tax: $outcome");
+            }
+        }
+    }
+});
+
+test('a fixed asset refuses impossible figures', function (Closure $make) {
+    $make();
+})->with([
+    'negative vat' => [fn () => new FixedAsset(Money::GEL(-1), true, 2026)],
+    'a building that is not real estate' => [fn () => new FixedAsset(Money::GEL(1), false, 2026, SelfSupplyReason::OwnBuildingPutIntoUse)],
+    'a self supply 177.8 does not name' => [fn () => new FixedAsset(Money::GEL(1), true, 2026, SelfSupplyReason::Shortage)],
+    'month 0' => [fn () => new CreditFixedAsset(Party::company('x'), 2026, 0, new FixedAsset(Money::GEL(1), true, 2026))],
 ])->throws(InvalidArgumentException::class);
 
 /* ── Engine, refunds, traceability ── */

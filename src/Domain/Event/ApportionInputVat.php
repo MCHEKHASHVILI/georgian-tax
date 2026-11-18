@@ -24,8 +24,8 @@ use Mchekhashvili\Money\Money;
  * `$inputVat` is VAT the person could credit under 174–176 if the goods served taxable operations
  * only: VAT 178 refuses outright (representation, a defective invoice, …) is not part of it, and
  * input VAT attributable wholly to one kind of operation is credited (or not) without apportionment.
- * Fixed assets used for both kinds of operation go by 177.5–6 instead, which this event does not
- * model.
+ * Fixed assets used for both kinds of operation go by 177.5–6 instead: `CreditFixedAsset` and
+ * `CloseFixedAssetYear`.
  */
 final readonly class ApportionInputVat implements TaxableEvent
 {
