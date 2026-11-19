@@ -21,13 +21,13 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 use Mchekhashvili\Money\Money;
-use Mchekhashvili\TaxLegislation\Contracts\Ledger;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
 use Mchekhashvili\TaxLegislation\Engine\TaxEngine;
 use Mchekhashvili\TaxLegislation\Engine\TaxRegistry;
 use Mchekhashvili\TaxLegislation\Engine\TaxReport;
 use Mchekhashvili\TaxLegislation\Events\TaxableEventAssessed;
+use Mchekhashvili\TaxLegislation\Ledger\CountryLedgers;
 use Mchekhashvili\TaxLegislation\Rates\ConfigRateTable;
 use Mchekhashvili\TaxLegislation\Rates\ConfigThresholdTable;
 use Mchekhashvili\TaxLegislation\Rates\CountryTables;
@@ -37,7 +37,7 @@ use Mchekhashvili\TaxLegislation\Rates\EloquentThresholdTable;
 
 /**
  * Georgia's law on top of mchekhashvili/tax-legislation: registers Georgia's six taxes with the
- * engine, binds the Georgian ledger and tables, and adds Georgian questions to the TaxReport.
+ * engine, registers the Georgian ledger and tables, and adds Georgian questions to the TaxReport.
  */
 final class GeorgianTaxServiceProvider extends ServiceProvider
 {
@@ -89,7 +89,8 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
             'memory' => new InMemoryLedger(),
             default => $app->make(EloquentLedger::class),
         });
-        $this->app->singleton(Ledger::class, fn (Container $app) => $app->make(YearToDate::class));
+        // Georgia's own, so another country's package in the same app keeps its own ledger.
+        $this->callAfterResolving(CountryLedgers::class, fn (CountryLedgers $ledgers) => $ledgers->register(Tax::COUNTRY, YearToDate::class));
         $this->app->bindIf(CompanyBooks::class, fn (Container $app) => $app->make(config('georgian-tax.books')));
 
         // The engine narrowed to Georgia — what the GeorgianTax facade resolves.

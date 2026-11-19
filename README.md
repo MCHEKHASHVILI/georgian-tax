@@ -201,7 +201,7 @@ src/
                   → ApplyExemptions → ApplyRules
   PropertyTax/    Holding → CurrentPayment → IdentifyTaxpayer → ApplyExemptions → ApplyRules
   Database/       the base model: table prefix and connection from config
-  Ledger/         YearToDate (tax-legislation's Ledger), CompanyBooks; InMemoryLedger,
+  Ledger/         YearToDate (Georgia's Ledger in CountryLedgers), CompanyBooks; InMemoryLedger,
                   StaticBooks; Eloquent/ ledger, books and models
   Events/         VatRegistrationRequired
   Listeners/      FlagVatRegistration

@@ -96,6 +96,36 @@ it('keeps Georgia\'s law apart from another country\'s package in the same app',
         ->and((string) app(CountryTables::class)->thresholds('GE')->threshold('vat', 'registration', new DateTimeImmutable('2026-10-30')))->toBe('100000.00 GEL');
 });
 
+it('keeps Georgia\'s ledger apart from another country\'s', function () {
+    // An invented second country's ledger; Georgia's is the year-to-date ledger.
+    $other = new class implements \Mchekhashvili\TaxLegislation\Contracts\Ledger {
+        public array $recorded = [];
+
+        public function record(\Mchekhashvili\TaxLegislation\Contracts\TaxableEvent $event, \Mchekhashvili\TaxLegislation\Engine\TaxReport $report): void
+        {
+            $this->recorded[] = $report;
+        }
+    };
+    $ledgers = app(\Mchekhashvili\TaxLegislation\Ledger\CountryLedgers::class)->register('AM', $other);
+    $since = new DateTimeImmutable('2026-01-01');
+
+    expect(GeorgianTax::ledger())->toBe(app(\GeorgianTax\Ledger\YearToDate::class))
+        ->and($ledgers->for('GE'))->toBe(GeorgianTax::ledger())
+        ->and(app(TaxEngine::class)->ledger())->toBe($ledgers)
+        ->and(app(TaxEngine::class)->forCountry('AM')->ledger())->toBe($other);
+
+    app(TaxEngine::class)->process(serviceFromGermany());      // the shared engine: Georgia's outcomes to Georgia's ledger
+
+    expect((string) GeorgianTax::ledger()->received(Party::foreignCompany('gmbh', 'DE'), 2026))->toBe('1000.00 GEL')
+        ->and($other->recorded)->toBe([]);                       // no Armenian outcome, nothing for Armenia
+
+    $sale = new Pay(Party::company('buyer', Status::VatPayer), Party::company('seller', Status::VatPayer), IncomeKind::GoodsSupply, Money::GEL(1000), new DateTimeImmutable('2026-10-30'));
+    app(TaxEngine::class)->forCountry('AM')->process($sale);  // no Armenian taxes here: nothing for Georgia's ledger
+
+    expect((string) GeorgianTax::ledger()->turnover(Party::company('seller', Status::VatPayer), 'vat', $since))->toBe('0.00 GEL')
+        ->and($other->recorded)->toHaveCount(1);
+});
+
 it('reads the law tables once, from the package or an overriding file', function () {
     expect(app(CountryTables::class)->rates('GE'))->toBe(app(CountryTables::class)->rates('GE'))
         ->and(app(ExciseTable::class)->find(new \GeorgianTax\Domain\Goods\Commodity('2710 12'))['rate'])->toBe(500.0);
