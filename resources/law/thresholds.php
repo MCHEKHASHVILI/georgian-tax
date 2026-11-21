@@ -18,6 +18,7 @@ return [
         'allowance_disability'     => ['82.2.ბ', ['' => 6_000]],      // disabled since childhood, severe or significant disability, a year
         'allowance_peacekeeper'    => ['82.2.ბ¹', ['' => 6_000]],     // seriously injured in a peace operation, a year
         'allowance_high_mountain'  => ['82.2.გ', ['' => 6_000]],      // high-mountain residents, from work there, a year
+        'allowance_high_mountain_parent' => ['82.2.ა.ვ', ['' => 3_000]], // a high-mountain parent of one or two, budget salary there whose tax is halved, a year
         'small_business'           => ['90.2', ['' => 500_000]],      // turnover in a year
         'small_business_wine'      => ['88.3', ['' => 700_000]],      // wine-making and agro-tourism
         'small_business_salaries'  => ['94.4', ['' => 6_000]],        // salaries untaxed at source in a year

@@ -305,7 +305,6 @@ Outside the per-event model:
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):
 
-- 82.2.ა.ვ: high-mountain residents with children, on salary from a budget organization there;
 - 98⁴.2: the representation limit on last year's costs, when they exceeded revenue (the engine uses revenue);
 - 199.დ.ვ: tobacco and alcohol by post, relieved from import tax without the 300 GEL cap (the engine relieves chapters 28–97 only);
 - 188.1 row 4¹: the ეტლი that heading 8711 leaves out (the engine taxes all of 8711);

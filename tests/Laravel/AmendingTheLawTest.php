@@ -123,6 +123,15 @@ it('applies an amended annual allowance from its date', function () {
         ->and($salary('2028-06-01'))->toBe('1000.00 GEL'); // 4,000 under the amendment
 });
 
+it('applies an amended 82.2.ა.ვ reduction from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('income')->id, 'key' => '82.2.ა.ვ', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 75]);
+    $salary = fn (string $on) => (string) GeorgianTax::assess(new Pay(Party::company('school', Status::BudgetOrganization), Party::person('eka', Relief::HighMountainParentOfOneOrTwo),
+        IncomeKind::Salary, Money::GEL(2000), new DateTimeImmutable($on), inHighMountainSettlement: true))->for('income')->amount;
+
+    expect($salary('2027-06-01'))->toBe('200.00 GEL')     // half of 400
+        ->and($salary('2028-06-01'))->toBe('100.00 GEL'); // a quarter under the amendment
+});
+
 it('applies an amended import relief limit from its date', function () {
     app(AmendLaw::class)->handle(ValueKind::Threshold, ['tax_type_id' => ($this->tax)('import')->id, 'key' => 'postal_goods', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'amount' => '500', 'currency' => 'GEL']);
     $parcel = fn (string $on) => GeorgianTax::assess(new Import(Party::person('nino'), Money::GEL(400), new DateTimeImmutable($on), commodity: new Commodity('3926 10 000 00'), relief: ImportRelief::PostalSmall))->for('import');

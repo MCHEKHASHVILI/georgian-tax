@@ -170,8 +170,10 @@ Only the highest one applies.
 | Disabled since childhood; severe or significant disability | 6,000 GEL | 82.2.ბ |
 | Peacekeepers with serious injury | 6,000 GEL | 82.2.ბ¹ |
 | High-mountain residents, on local activity (not budget-org or state clinic salary) | 6,000 GEL | 82.2.გ |
+| High-mountain residents with three or more children under 18 (`HighMountainParentOfThree`), on salary from a budget organization for work there | 3,000 GEL (82.2.ა's figure; provisional, see the roadmap) | 82.2.ა.ვ |
+| High-mountain residents with one or two children under 18 (`HighMountainParentOfOneOrTwo`), on the same salary | the tax on 3,000 GEL halved (rate `82.2.ა.ვ`, 50%) | 82.2.ა.ვ |
 
-Not yet modelled: 82.2.ა.ვ — a high-mountain resident with three or more children under 18 pays no income tax on salary from a budget organization there; with one or two, the tax on the first 3,000 GEL a year of it is halved.
+For 82.2.ა.ვ the salary must come from a `Status::BudgetOrganization` and the `Pay` say `inHighMountainSettlement`; its 3,000 counts what that organization paid the person this year (two budget employers in one year are for the caller), and how many children are in the person's keep is the caller's tag. Halving the tax is done by sheltering half the base, the same on salary's flat 20%; for 82.3 it is worth half its 3,000.
 
 ## Outside the per-event engine
 

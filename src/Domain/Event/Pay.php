@@ -58,6 +58,8 @@ final readonly class Pay implements TaxableEvent
         public ?ExemptProfit $fromExemptProfit = null,
         /** Excise 189 — excise raw materials the producer used for $commodity, and the excise paid on them. @var list<ExciseInput> */
         public array $exciseInputs = [],
+        /** Art. 82.2.ა.ვ — the salary is paid for work in a high-mountain settlement. */
+        public bool $inHighMountainSettlement = false,
     ) {
         $this->place = $place ?? Place::georgia();
     }

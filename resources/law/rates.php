@@ -18,6 +18,7 @@ return [
     '81.3¹'     => ['2011-01-01' => 20],   // gaming-hall / online gambling organizer
     '81.3²'     => ['2011-01-01' => 5],    // withdrawals from gaming machines or accounts (Art. 80.8)
     '81.3³'     => ['2011-01-01' => 5],    // organizer's income from foreign players
+    '82.2.ა.ვ'  => ['2011-01-01' => 50],   // a high-mountain parent of one or two: the tax on budget salary there, up to 3,000 a year, is cut by this share
 
     // Status regimes
     '23.7'      => ['2017-01-01' => 5],    // international company employees

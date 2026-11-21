@@ -298,6 +298,69 @@ test('only the highest allowance applies when a person has several', function ()
     $this->assertStringContainsString('Art. 82.2.ბ', implode(' ', $salary->notes));
 });
 
+/* 82.2.ა.ვ — budget salary in a high-mountain settlement, for a parent living there permanently. */
+
+test('a high-mountain parent of three is sheltered on budget salary there up to 3000 a year', function () {
+    $school = Party::company('school', Status::BudgetOrganization);
+    $parent = Party::person('eka', Relief::HighMountainParentOfThree);
+    $salary = fn (int $gel) => new Pay($school, $parent, K::Salary, Money::GEL($gel), $this->today, inHighMountainSettlement: true);
+
+    $first = $this->process($salary(2000))->for('income');
+    $second = $this->income($salary(2000));
+
+    $this->assertSame(0, $first->amount->minor);
+    $this->assertStringContainsString('Art. 82.2.ა.ვ', implode(' ', $first->notes));
+    $this->assertSame(100000, $second->base->minor);   // 1,000 of the 3,000 still sheltered
+    $this->assertSame(20000, $second->amount->minor);
+});
+
+test('a high-mountain parent of one or two pays half the tax on budget salary there up to 3000 a year', function () {
+    $school = Party::company('school', Status::BudgetOrganization);
+    $parent = Party::person('eka', Relief::HighMountainParentOfOneOrTwo);
+    $salary = fn (int $gel) => new Pay($school, $parent, K::Salary, Money::GEL($gel), $this->today, inHighMountainSettlement: true);
+
+    $first = $this->process($salary(2000))->for('income');
+    $second = $this->income($salary(2000));
+
+    $this->assertSame(20000, $first->amount->minor);    // half of 400
+    $this->assertStringContainsString('cut by 50%', implode(' ', $first->notes));
+    $this->assertSame(30000, $second->amount->minor);   // half the tax on the 1,000 left, full on 1,000: 100 + 200
+});
+
+test('82.2.ა.ვ reaches only budget salary for work in a high-mountain settlement', function () {
+    $parent = Party::person('eka', Relief::HighMountainParentOfThree);
+    $school = Party::company('school', Status::BudgetOrganization);
+
+    $inTbilisi = $this->income(new Pay($school, $parent, K::Salary, Money::GEL(2000), $this->today));
+    $private = $this->income(new Pay($this->company, $parent, K::Salary, Money::GEL(2000), $this->today, inHighMountainSettlement: true));
+    $rent = $this->income(new Pay($school, $parent, K::Rent, Money::GEL(2000), $this->today, inHighMountainSettlement: true));
+
+    $this->assertSame(40000, $inTbilisi->amount->minor);
+    $this->assertSame(40000, $private->amount->minor);
+    $this->assertNotSame(0, $rent->amount->minor);
+});
+
+test('82.3 picks between 82.2.ა.ვ and the other allowances by what each is worth', function () {
+    $school = Party::company('school', Status::BudgetOrganization);
+
+    // 82.2.გ excludes budget salary, so 82.2.ა.ვ shelters it; on private work there 82.2.გ's 6,000 applies.
+    $resident = Party::person('eka', Relief::HighMountainResident, Relief::HighMountainParentOfThree);
+    $budget = $this->income(new Pay($school, $resident, K::Salary, Money::GEL(2000), $this->today, inHighMountainSettlement: true));
+    $private = $this->income(new Pay($this->company, Party::person('levan', Relief::HighMountainResident, Relief::HighMountainParentOfThree), K::Salary, Money::GEL(5000), $this->today, inHighMountainSettlement: true));
+
+    $this->assertSame(0, $budget->amount->minor);
+    $this->assertStringContainsString('Art. 82.2.ა.ვ', implode(' ', $budget->notes));
+    $this->assertSame(0, $private->amount->minor);
+    $this->assertStringContainsString('Art. 82.2.გ', implode(' ', $private->notes));
+
+    // A veteran's 3,000 sheltered in full is worth more than the tax halved on 3,000.
+    $veteran = Party::person('giorgi', Relief::HighMountainParentOfOneOrTwo, Relief::Veteran);
+    $salary = $this->income(new Pay($school, $veteran, K::Salary, Money::GEL(3000), $this->today, inHighMountainSettlement: true));
+
+    $this->assertSame(0, $salary->amount->minor);
+    $this->assertStringContainsString('Art. 82.2.ა:', implode(' ', $salary->notes));
+});
+
 test('refund reverses in proportion', function () {
     $salary = $this->pay($this->company, $this->person, K::Salary, 3000);
     $refund = $this->income(new Refund($salary, $this->today, Money::GEL(1500)));
