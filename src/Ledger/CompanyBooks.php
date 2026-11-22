@@ -16,6 +16,9 @@ interface CompanyBooks
     /** Art. 98⁴.2 — representation costs above 1% of this are taxed. Null if not known. */
     public function revenue(Party $company, int $year): ?Money;
 
+    /** Art. 98⁴.2 — the year's costs; when they exceed its revenue, the limit is 1% of them. Null if not known. */
+    public function costs(Party $company, int $year): ?Money;
+
     /** Art. 98³.3.ა — charity donations above 10% of this are taxed. Null if not known. */
     public function netProfit(Party $company, int $year): ?Money;
 

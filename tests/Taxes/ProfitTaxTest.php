@@ -79,10 +79,56 @@ test('loan to an individual is taxed unless the lender is licensed', function ()
 });
 
 test('representation is taxed only above one percent of last years revenue', function () {
-    $this->books->set($this->company, 2025, revenue: Money::GEL(100_000)); // limit 1,000
+    $this->books->set($this->company, 2025, revenue: Money::GEL(100_000), costs: Money::GEL(90_000)); // 98⁴.2: limit 1,000
 
     $this->assertNotTaxable($this->process($this->expense(800, ExpenseNature::Representation))->for('profit'), '98⁴');
     $this->assertTaxed($this->profit($this->expense(500, ExpenseNature::Representation)), '98⁴', '15%', base: 300 / 0.85);
+});
+
+test('representation is measured against last years costs when they exceeded revenue', function () {
+    $this->books->set($this->company, 2025, revenue: Money::GEL(100_000), costs: Money::GEL(150_000)); // 98⁴.2: limit 1,500
+
+    $within = $this->process($this->expense(1200, ExpenseNature::Representation))->for('profit');
+    $this->assertNotTaxable($within, '98⁴');
+    expect($within->reason)->toContain("1500.00 GEL (1% of last year's costs)");
+
+    $over = $this->profit($this->expense(500, ExpenseNature::Representation));
+    $this->assertTaxed($over, '98⁴', '15%', base: 200 / 0.85);
+    expect($over->notes)->toContain("Only the 200.00 GEL above this year's limit of 1500.00 GEL (1% of last year's costs) is taxed.");
+});
+
+test('representation with costs equal to revenue is measured against revenue', function () {
+    $this->books->set($this->company, 2025, revenue: Money::GEL(100_000), costs: Money::GEL(100_000)); // 98⁴.2: costs do not exceed revenue
+
+    expect($this->profit($this->expense(1000, ExpenseNature::Representation))->reason)->toContain("(1% of last year's revenue)");
+});
+
+test('representation within one known figure needs no other', function () {
+    // 98⁴.2: the limit is 1% of the larger of the two, so 1% of either is at least the limit's floor
+    $this->books->set($this->company, 2025, revenue: Money::GEL(100_000));
+    $this->assertNotTaxable($this->profit($this->expense(500, ExpenseNature::Representation)), '98⁴');
+
+    $this->books->set($this->company, 2025, costs: Money::GEL(100_000)); // revenue now unknown; 1,000 spent in all
+    $this->assertNotTaxable($this->profit($this->expense(500, ExpenseNature::Representation)), '98⁴');
+});
+
+test('representation over one known figure waits for the other', function () {
+    $this->books->set($this->company, 2025, revenue: Money::GEL(100_000)); // costs not given
+
+    $over = $this->profit($this->expense(1500, ExpenseNature::Representation));
+    expect($over)->toBeInstanceOf(Unresolved::class)
+        ->and($over->basis()->ref)->toBe('98⁴')
+        ->and($over->reason)->toContain("if last year's costs exceeded it");
+
+    $this->books->set($this->company, 2025, costs: Money::GEL(100_000)); // revenue not given
+    expect($this->profit($this->expense(1500, ExpenseNature::Representation)))->toBeInstanceOf(Unresolved::class);
+});
+
+test('representation with no figures for last year is unresolved', function () {
+    $outcome = $this->profit($this->expense(100, ExpenseNature::Representation));
+
+    expect($outcome)->toBeInstanceOf(Unresolved::class)
+        ->and($outcome->reason)->toContain('or of its costs if they exceeded it');
 });
 
 test('representation in the founding year waits for year end', function () {

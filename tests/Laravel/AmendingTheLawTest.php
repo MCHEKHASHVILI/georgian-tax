@@ -143,7 +143,7 @@ it('applies an amended import relief limit from its date', function () {
 it('applies an amended profit tax limit from its date', function () {
     app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('profit')->id, 'key' => '98⁴.2', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 2]);
     $company = Party::company('acme');
-    $books = (new StaticBooks())->set($company, 2026, revenue: Money::GEL(100_000))->set($company, 2027, revenue: Money::GEL(100_000));
+    $books = (new StaticBooks())->set($company, 2026, revenue: Money::GEL(100_000), costs: Money::GEL(80_000))->set($company, 2027, revenue: Money::GEL(100_000), costs: Money::GEL(80_000));
     $this->app->instance(CompanyBooks::class, $books);
     $this->refreshEngine();
     $dinner = fn (string $on) => GeorgianTax::assess(new Expense($company, Money::GEL(1500), new DateTimeImmutable($on), ExpenseNature::Representation))->for('profit');

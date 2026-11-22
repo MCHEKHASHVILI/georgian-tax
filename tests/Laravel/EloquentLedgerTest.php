@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use GeorgianTax\Domain\Event\Expense;
+use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Gift;
 use GeorgianTax\Domain\Event\Import;
 use GeorgianTax\Domain\Event\Pay;
@@ -20,6 +22,7 @@ use GeorgianTax\Ledger\Eloquent\Models\IncomeEntry;
 use GeorgianTax\Ledger\YearToDate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mchekhashvili\Money\Money;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 
 uses(RefreshDatabase::class);
 
@@ -89,6 +92,18 @@ it('keeps company figures for the profit tax limits', function () {
     expect($within->for('profit')->basis()->ref)->toBe('98³.3.ა')
         ->and($beyond->for('profit')->basis()->ref)->toBe('98³')
         ->and(app(CompanyBooks::class)->foundedIn($acme))->toBe(2010);
+});
+
+it('keeps a year\'s costs for the representation limit', function () {
+    $acme = Party::company('acme');
+    app(EloquentBooks::class)->close($acme, 2025, revenue: Money::GEL(100_000), netProfit: null, costs: Money::GEL(150_000));
+
+    // 98⁴.2: costs over revenue, so the limit is 1% of 150,000
+    $dinner = GeorgianTax::assess(new Expense($acme, Money::GEL(1400), $this->today, ExpenseNature::Representation))->for('profit');
+
+    expect((string) app(CompanyBooks::class)->costs($acme, 2025))->toBe('150000.00 GEL')
+        ->and($dinner)->toBeInstanceOf(NotTaxable::class)
+        ->and($dinner->basis()->ref)->toBe('98⁴');
 });
 
 it('stores every report with its outcomes', function () {

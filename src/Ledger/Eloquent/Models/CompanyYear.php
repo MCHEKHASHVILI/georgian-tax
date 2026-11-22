@@ -8,7 +8,7 @@ use GeorgianTax\Database\Model;
 use Mchekhashvili\Money\Laravel\MoneyCast;
 
 /**
- * A company's closed year as profit tax limits need it: revenue (98⁴.2) and net profit (98³.3.ა),
+ * A company's closed year as profit tax limits need it: revenue and costs (98⁴.2), net profit (98³.3.ა),
  * and the year it was founded (98⁴.3). Fill it from your accounting.
  */
 final class CompanyYear extends Model
@@ -22,6 +22,7 @@ final class CompanyYear extends Model
             'founded_in' => 'integer',
             'revenue' => MoneyCast::in('GEL'),
             'net_profit' => MoneyCast::in('GEL'),
+            'costs' => MoneyCast::in('GEL'),
         ];
     }
 }

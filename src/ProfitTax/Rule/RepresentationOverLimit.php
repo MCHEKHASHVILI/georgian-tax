@@ -16,6 +16,9 @@ use GeorgianTax\ProfitTax\OutflowKind;
  * costs, if those exceeded revenue (98⁴.2). Only the part of this expense above the yearly limit
  * is taxed. In the founding year the limit is 1% of the year's own costs (98⁴.3), known only at
  * year end. The shares are rates (98⁴.2, 98⁴.3 in resources/law/rates.php or the database).
+ *
+ * The limit is 1% of the larger of last year's revenue and costs, so one of them is enough while
+ * the year's representation stays within 1% of it; beyond that, the other is needed to decide.
  */
 #[Article('98⁴', 'Representation costs over the limit')]
 final class RepresentationOverLimit implements Rule
@@ -32,21 +35,32 @@ final class RepresentationOverLimit implements Rule
 
         $share = $o->rate('98⁴.2');
         $revenue = $o->books->revenue($o->company, $o->year() - 1);
+        $costs = $o->books->costs($o->company, $o->year() - 1);
 
-        if ($revenue === null) {
-            return $o->unresolved($this, "The limit is $share of last year's revenue, which the books don't give.");
+        if ($revenue === null && $costs === null) {
+            return $o->unresolved($this, "The limit is $share of last year's revenue, or of its costs if they exceeded it, which the books don't give.");
         }
 
-        $limit = $revenue->percent($share->percent);
+        $byCosts = $revenue === null || ($costs !== null && $costs->greaterThan($revenue));
+        $limit = ($byCosts ? $costs : $revenue)->percent($share->percent);
+        $measure = $byCosts ? "last year's costs" : "last year's revenue";
         $before = $o->ledger->spent($o->company, $o->year(), ExpenseNature::Representation->value);
         $after = $before->plus($o->amount);
 
         if ($after->lessThanOrEqual($limit)) {
-            return $o->notTaxable($this, "Within this year's representation limit of $limit.");
+            return $o->notTaxable($this, "Within this year's representation limit of $limit ($share of $measure).");
+        }
+
+        if ($revenue === null) {
+            return $o->unresolved($this, "Over $limit, $share of last year's costs; the limit is $share of last year's revenue if the costs did not exceed it, which the books don't give.");
+        }
+
+        if ($costs === null) {
+            return $o->unresolved($this, "Over $limit, $share of last year's revenue; if last year's costs exceeded it, the limit is $share of the costs, which the books don't give.");
         }
 
         $excess = Money::min($o->amount, $after->minus($limit));
 
-        return $o->taxed($this, '98.1', $excess, ["Only the $excess above this year's limit of $limit is taxed."]);
+        return $o->taxed($this, '98.1', $excess, ["Only the $excess above this year's limit of $limit ($share of $measure) is taxed."]);
     }
 }

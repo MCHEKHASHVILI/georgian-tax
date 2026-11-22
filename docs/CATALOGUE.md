@@ -420,7 +420,7 @@ Not modelled: computing gross income and deductions; which years' losses are sti
 | Loan to an individual or non-resident, cash collateral for a partner's loan, lender loan to a partner — unless the lender is licensed | 98².3.ზ–თ |
 | Representation costs over 1% of last year's revenue (or costs, if higher); in the founding year 1% of the year's own costs | 98⁴ |
 
-The engine takes 1% of last year's revenue only; the 98⁴.2 limit on costs, when they exceeded revenue, is not yet modelled.
+`CompanyBooks` gives last year's `revenue()` and `costs()`; the limit is 1% of the costs when they exceeded the revenue, else of the revenue. With only one of them known, representation within 1% of it is not taxed, and beyond that the outcome is Unresolved until the other is given.
 
 ## Not distributions, and untaxed free supplies (Art. 98¹.2, 98³.3)
 

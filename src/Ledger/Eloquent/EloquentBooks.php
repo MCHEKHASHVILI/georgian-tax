@@ -20,6 +20,11 @@ final class EloquentBooks implements CompanyBooks
         return $this->year($company, $year)?->revenue;
     }
 
+    public function costs(Party $company, int $year): ?Money
+    {
+        return $this->year($company, $year)?->costs;
+    }
+
     public function netProfit(Party $company, int $year): ?Money
     {
         return $this->year($company, $year)?->net_profit;
@@ -33,11 +38,11 @@ final class EloquentBooks implements CompanyBooks
     }
 
     /** Records a closed year — call it from your year-end close. */
-    public function close(Party $company, int $year, ?Money $revenue, ?Money $netProfit, ?int $foundedIn = null): CompanyYear
+    public function close(Party $company, int $year, ?Money $revenue, ?Money $netProfit, ?int $foundedIn = null, ?Money $costs = null): CompanyYear
     {
         return CompanyYear::query()->updateOrCreate(
             ['company' => $company->id, 'year' => $year],
-            ['revenue' => $revenue, 'net_profit' => $netProfit, 'founded_in' => $foundedIn],
+            ['revenue' => $revenue, 'net_profit' => $netProfit, 'founded_in' => $foundedIn, 'costs' => $costs],
         );
     }
 

@@ -112,8 +112,10 @@ GeorgianTax::process(new OwnProperty(Party::company('acme'), new PropertyItem(Pr
 | `income_entries` | Income per recipient and payer — the gift, heir, small-business and allowance thresholds read it |
 | `turnover_entries` | Turnover per party and tax — VAT's rolling 12 months |
 | `spending_entries` | Company spending by category — charity and representation limits |
-| `company_years` | Revenue, net profit and founding year — fill it from your accounting with `EloquentBooks::close()`, or bind your own `CompanyBooks` |
+| `company_years` | Revenue, costs, net profit and founding year — fill it from your accounting with `EloquentBooks::close()`, or bind your own `CompanyBooks` |
 | (tax-legislation) `tax_assessments`, `tax_assessment_outcomes` | Every report: the country whose law assessed it, each tax's outcome, article, base, rate, amount, who pays and when |
+
+`CompanyBooks::costs()` (added 2026-11-22) gives a year's costs for 98⁴.2: when last year's costs exceeded its revenue, the representation limit is 1% of the costs. Your own `CompanyBooks` needs the method (return null if you don't know them), and representation above 1% of last year's revenue is now Unresolved until the costs are given. Published migrations: re-publish to get `2026_11_22_000000_add_costs_to_georgian_tax_company_years`.
 
 Ledger models live in `GeorgianTax\Ledger\Eloquent\Models`, reports in `Mchekhashvili\TaxLegislation\Assessments\Models` — `Assessment::ofCountry('GE')->with('outcomes')`, `AssessedOutcome::where('due_on', '<=', now())` — and money columns cast to `Money`. `Assessment::event()` gives back the original event, to re-assess after a rate change.
 
@@ -305,7 +307,6 @@ Outside the per-event model:
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):
 
-- 98⁴.2: the representation limit on last year's costs, when they exceeded revenue (the engine uses revenue);
 - 199.დ.ვ: tobacco and alcohol by post, relieved from import tax without the 300 GEL cap (the engine relieves chapters 28–97 only);
 - 188.1 row 4¹: the ეტლი that heading 8711 leaves out (the engine taxes all of 8711);
 - 202.2.ბ: state enterprises the Government names keep historic cost (the engine revalues them).
