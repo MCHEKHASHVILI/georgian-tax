@@ -307,7 +307,6 @@ Outside the per-event model:
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):
 
-- 199.დ.ვ: tobacco and alcohol by post, relieved from import tax without the 300 GEL cap (the engine relieves chapters 28–97 only);
 - 188.1 row 4¹: the ეტლი that heading 8711 leaves out (the engine taxes all of 8711);
 - 202.2.ბ: state enterprises the Government names keep historic cost (the engine revalues them).
 

@@ -22,7 +22,7 @@ enum ImportRelief
     case ReturningResident;       // ≤ 15,000 GEL after 6+ months abroad, no vehicles (ch. 87)
     case ReturningDiplomat;       // a diplomat back from rotation: per family one vehicle, fridge, computer, TV
     case Relocation;              // moving to Georgia permanently, with one vehicle per family
-    case PostalSmall;             // ≤ 300 GEL and 30 kg by post
+    case PostalSmall;             // ≤ 300 GEL and 30 kg by post; tobacco and 4 l of alcohol uncapped
     case AirTravellerGoods;       // ≤ 3,000 GEL and 30 kg by air
     case BabyOrDiabeticFood;
     case AviationOrShipSupplies;

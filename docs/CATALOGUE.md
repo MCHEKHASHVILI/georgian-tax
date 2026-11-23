@@ -578,6 +578,7 @@ The lists live in `resources/law/import.php`; the 3% is the rate `197.4` in `res
 | Diplomat back from rotation: per family one vehicle, fridge, computer and TV, in addition | 199.დ.დ |
 | Moving to Georgia permanently | 199.დ.ე |
 | Postal parcel, chapters 28–97, up to 300 GEL and 30 kg | 199.დ.ვ |
+| By post, with no value limit: cigarettes, cigars, cigarillos and other tobacco products but raw tobacco (2402, 2403, 2404 11, 2404 12, 2404 19 9), and alcoholic drinks (2203–2206, 2208; not 2207) | 199.დ.ვ |
 | By air, chapters 28–97, up to 3,000 GEL and 30 kg | 199.დ.ზ |
 | Baby and diabetic food, X-ray film, insulin syringes, glucometers, test systems | 199.ე |
 | Aviation and ship supplies | 199.ვ |
@@ -593,7 +594,7 @@ The lists live in `resources/law/import.php`; the 3% is the rate `197.4` in `res
 | Origin in a state party to the 1994 CIS free-trade agreement | 199.რ |
 | Released from customs duty under the Customs Code | 199.ს |
 
-Refund: a passenger car (8703 only, not motorcycles) released into free circulation, placed under export within 180 calendar days and gone from Georgia gets the import tax paid on the release back, 100% (198.3, rate `198.3`) — the `ReexportVehicle` event, as for excise (189.8). Quantity and frequency limits on traveller and postal reliefs are the caller's to check. Not yet modelled: 199.დ.ვ also relieves tobacco and up to 4 litres of alcohol by post, with no value limit; the engine relieves postal chapters 28–97 only.
+Refund: a passenger car (8703 only, not motorcycles) released into free circulation, placed under export within 180 calendar days and gone from Georgia gets the import tax paid on the release back, 100% (198.3, rate `198.3`) — the `ReexportVehicle` event, as for excise (189.8). Quantity and frequency limits on traveller and postal reliefs are the caller's to check.
 
 # Property tax
 

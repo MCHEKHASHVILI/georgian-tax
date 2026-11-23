@@ -140,6 +140,14 @@ it('applies an amended import relief limit from its date', function () {
         ->and($parcel('2028-06-01')->basis()->ref)->toBe('199.დ.ვ');    // within 500 under the amendment
 });
 
+it('keeps tobacco and alcohol by post uncapped under an amended postal limit', function () {
+    app(AmendLaw::class)->handle(ValueKind::Threshold, ['tax_type_id' => ($this->tax)('import')->id, 'key' => 'postal_goods', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'amount' => '100', 'currency' => 'GEL']);
+    $parcel = fn (string $on, string $hs) => GeorgianTax::assess(new Import(Party::person('nino'), Money::GEL(250), new DateTimeImmutable($on), commodity: new Commodity($hs, 200), relief: ImportRelief::PostalSmall))->for('import');
+
+    expect($parcel('2028-06-01', '3926 10 000 00'))->toBeInstanceOf(Taxable::class)     // over the amended 100
+        ->and($parcel('2028-06-01', '2402 20 900 00')->basis()->ref)->toBe('199.დ.ვ'); // cigarettes: no value limit
+});
+
 it('applies an amended profit tax limit from its date', function () {
     app(AmendLaw::class)->handle(ValueKind::Rate, ['tax_type_id' => ($this->tax)('profit')->id, 'key' => '98⁴.2', 'from' => '2028-01-01', 'legal_act_id' => $this->law->id, 'percent' => 2]);
     $company = Party::company('acme');

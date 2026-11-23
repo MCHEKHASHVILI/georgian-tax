@@ -135,6 +135,31 @@ test('postal relief covers chapters 28 to 97 up to 300', function () {
     $this->assertTaxed($this->tax($this->import(new Commodity('3926 10 000 00'), 400, ImportRelief::PostalSmall)), '197.2', 20);
 });
 
+test('postal relief covers tobacco and alcohol without the 300 cap', function () {
+    // 199.დ.ვ: "and also" 200 cigarettes (…) and 4 litres of every kind of alcoholic drink — no value limit
+    $whisky = new Commodity('2208 30', 4, alcoholPercent: 40);
+
+    $this->assertExempt($this->tax($this->import($whisky, 400, ImportRelief::PostalSmall, eur: 3.0)), '199.დ.ვ');
+    $this->assertExempt($this->tax($this->import(new Commodity('2402 20 900 00', 200), 1000, ImportRelief::PostalSmall)), '199.დ.ვ');
+    $this->assertExempt($this->tax($this->import(new Commodity('2403 19'), 250, ImportRelief::PostalSmall)), '199.დ.ვ');
+    $this->assertExempt($this->tax($this->import(new Commodity('2404 11 000 00'), 500, ImportRelief::PostalSmall)), '199.დ.ვ');
+    $this->assertExempt($this->tax($this->import(new Commodity('2404 12 000 00'), 500, ImportRelief::PostalSmall)), '199.დ.ვ');
+    $this->assertExempt($this->tax($this->import(new Commodity('2203 00', 4, alcoholPercent: 5), 350, ImportRelief::PostalSmall)), '199.დ.ვ');
+    // Without the relief the same goods pay
+    $this->assertTaxed($this->tax($this->import(new Commodity('2402 20 900 00', 200), 1000)), '197.1', 120);
+});
+
+test('postal relief leaves raw tobacco and the rest of 2404 taxed', function () {
+    // Raw tobacco is excepted in the text; nicotine products of 2404 91–99 are not among the listed ones
+    $this->assertTaxed($this->tax($this->import(new Commodity('2401 10'), 250, ImportRelief::PostalSmall)), '197.1', 30);
+    $this->assertTaxed($this->tax($this->import(new Commodity('2404 91'), 100, ImportRelief::PostalSmall)), '197.1', 12);
+});
+
+test('tobacco and alcohol relief is the postal one only', function () {
+    // 199.დ.ბ covers chapters 28–97, not a bottle of whisky
+    $this->assertInstanceOf(Levied::class, $this->tax($this->import(new Commodity('2208 30', 4, alcoholPercent: 40), 400, ImportRelief::PersonalGoods, eur: 3.0)));
+});
+
 test('traveller food relief covers food chapters only', function () {
     $this->assertExempt($this->tax($this->import(new Commodity('0201 30'), 400, ImportRelief::TravellerFood)), '199.დ.ა');
     $this->assertTaxed($this->tax($this->import(new Commodity('3926 10 000 00'), 400, ImportRelief::TravellerFood)), '197.2', 20);
