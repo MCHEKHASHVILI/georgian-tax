@@ -167,6 +167,22 @@ test('motorcycle rate follows age', function () {
     $this->assertLevied($this->excise($this->import(new Commodity('8711 20', engineCc: 250, yearMade: 2000))), '188.1', 600);
 });
 
+test('a side-car on its own is not excise goods', function () {
+    // 188.1 row 4¹: "8711 (გარდა 8711 სასაქონლო პოზიციით გათვალისწინებული ეტლისა)"
+    $outcome = $this->excise($this->import(new Commodity('8711 90', sideCar: true)));
+
+    $this->assertNotTaxable($outcome, '188.1');
+    expect($outcome->reason)->toContain('side-car');
+});
+
+test('a motorcycle of 8711 90 is still taxed', function () {
+    $this->assertLevied($this->excise($this->import(new Commodity('8711 90', engineCc: 250, yearMade: 2023))), '188.1', 175);
+});
+
+test('a side-car flag outside heading 8711 changes nothing', function () {
+    $this->assertNotTaxable($this->excise($this->import(new Commodity('8714 10', sideCar: true))), '188');
+});
+
 /* ── Tobacco (188.1, 188.1¹) ── */
 
 test('cigarettes pay specific plus 20 percent of retail', function () {
@@ -413,6 +429,14 @@ test('a motorcycle gets its excise back too', function () {
     $bike = $this->import(new Commodity('8711 20', engineCc: 250, yearMade: 2023));
 
     $this->assertLevied($this->excise(new ReexportVehicle($bike, new DateTimeImmutable('2026-12-01'))), '189.8', -175);
+});
+
+test('a side-car gets no refund on export', function () {
+    $sideCar = $this->import(new Commodity('8711 90', sideCar: true));
+    $outcome = $this->excise(new ReexportVehicle($sideCar, new DateTimeImmutable('2026-12-01')));
+
+    $this->assertNotTaxable($outcome, '189.8');
+    expect($outcome->reason)->toContain('side-car');
 });
 
 test('the 180 days count from the day after the release', function () {

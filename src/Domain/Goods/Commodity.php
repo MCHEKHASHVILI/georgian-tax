@@ -37,6 +37,13 @@ final readonly class Commodity
          * intermediate drink (row 4). Null when unknown.
          */
         public ?bool $fullyFermented = null,
+        /**
+         * A side-car (ეტლი) presented on its own. Heading 8711 names them ("ეტლით ან მის გარეშე;
+         * ეტლები") but no subheading gives them a code of their own, so the caller says so. Excise
+         * 188.1 row 4¹ leaves them out of motorcycles ("გარდა 8711 სასაქონლო პოზიციით
+         * გათვალისწინებული ეტლისა"). A motorcycle fitted with one is still a motorcycle.
+         */
+        public bool $sideCar = false,
     ) {}
 
     /** The code as bare digits, for prefix matching. */
@@ -61,9 +68,16 @@ final readonly class Commodity
         return $this->startsWith('8703');
     }
 
+    /** Heading 8711 but a side-car on its own (188.1 row 4¹). */
     public function isMotorcycle(): bool
     {
-        return $this->startsWith('8711');
+        return $this->startsWith('8711') && !$this->sideCar;
+    }
+
+    /** A side-car of heading 8711 presented on its own. */
+    public function isSideCar(): bool
+    {
+        return $this->startsWith('8711') && $this->sideCar;
     }
 
     /** Litres of pure alcohol. */

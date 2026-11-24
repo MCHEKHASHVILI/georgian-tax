@@ -477,7 +477,7 @@ Due by the 15th of the month after the operation (190.2); on import, with the im
 | Heated tobacco, capsules | 2.70 GEL per 20 + 20% of retail price | 188.1¹.ბ |
 | Cigarillos | 2.40 GEL per 20 + 30% of retail price | 188.1¹.გ |
 | Nicotine liquids | 1.20 GEL/ml | 188.1 |
-| Motorcycles and mopeds, by age (under 1 year … over 14) | 1.5 … 0.7 … 2.4 GEL/cm³ | 188.1 |
+| Motorcycles and mopeds, by age (under 1 year … over 14); not a side-car on its own (`sideCar`) | 1.5 … 0.7 … 2.4 GEL/cm³ | 188.1 |
 | Gas condensate, liquefied gases, acyclic hydrocarbons | 300 GEL/t | 188.1 |
 | Natural gas, gaseous | 200 GEL per 1,000 m³ | 188.1 |
 | Petrol | 500 GEL/t | 188.1 |
@@ -538,7 +538,7 @@ Car age is the year of the operation (or customs declaration) minus the year mad
 | Excise goods imported or bought for maturing | The excise paid or payable on them credited on the acquisition, with no cap | 189.5 |
 | Passenger car (8703) or motorcycle (8711) released into free circulation, placed under export within 180 calendar days and gone from Georgia | The excise paid on the release refunded, 100% (rate `189.8`) | 189.8 |
 
-The raw materials and their excise come with the supply (`Pay::$exciseInputs`, a list of `ExciseInput`); spreading a batch over its supplies is for the caller. Goods for maturing are their own event (`AcquireForMaturing`), whose excise outcome is the credit, a negative `Levied`; the import or purchase itself is charged as usual, and the goods are not credited again as raw materials. A re-exported vehicle is its own event (`ReexportVehicle`: the release as an `Import`, the export day, whether it left Georgia), whose excise outcome is the refund, a negative `Levied` dated the export day: of what the release charged, worked out on the release day, or of `excisePaid` when given. The 180 days count from the day after the release (3.2); moving a last day off a non-working day (3.6) is not modelled. Not modelled: the credit on exports (exempt with credit, 194.6.ა) and a refund instead of the credit. The motorcycle row of 188.1 (4¹) excludes a ეტლი under heading 8711; the engine still taxes all of 8711.
+The raw materials and their excise come with the supply (`Pay::$exciseInputs`, a list of `ExciseInput`); spreading a batch over its supplies is for the caller. Goods for maturing are their own event (`AcquireForMaturing`), whose excise outcome is the credit, a negative `Levied`; the import or purchase itself is charged as usual, and the goods are not credited again as raw materials. A re-exported vehicle is its own event (`ReexportVehicle`: the release as an `Import`, the export day, whether it left Georgia), whose excise outcome is the refund, a negative `Levied` dated the export day: of what the release charged, worked out on the release day, or of `excisePaid` when given. The 180 days count from the day after the release (3.2); moving a last day off a non-working day (3.6) is not modelled. Not modelled: the credit on exports (exempt with credit, 194.6.ა) and a refund instead of the credit. The motorcycle row of 188.1 (4¹) leaves out the ეტლი of heading 8711, its side-cars ("ეტლით ან მის გარეშე; ეტლები" in the heading's text): no subheading gives them a code of their own (they fall in the residual 8711 90 with other motorcycles), so `Commodity::$sideCar` says a side-car is presented on its own. It is then not excise goods (`NotTaxable` under 188.1) and gets no 189.8 refund; a motorcycle fitted with one is still a motorcycle.
 
 # Import tax
 

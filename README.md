@@ -307,8 +307,9 @@ Outside the per-event model:
 
 Known gaps, each on the roadmap (`docs/ROADMAP.md`):
 
-- 188.1 row 4¹: the ეტლი that heading 8711 leaves out (the engine taxes all of 8711);
 - 202.2.ბ: state enterprises the Government names keep historic cost (the engine revalues them).
+
+A side-car of heading 8711 presented on its own is the caller's to say (`new Commodity('8711 90', sideCar: true)`): no subheading gives it a code of its own, and 188.1 row 4¹ leaves it out of the motorcycles' excise.
 
 Where an amount needs something only the caller knows — a retail price for cigarettes, the euro rate for alcohol, last year's family income for property tax — the engine returns `Unresolved` or `NotTaxable` naming it.
 

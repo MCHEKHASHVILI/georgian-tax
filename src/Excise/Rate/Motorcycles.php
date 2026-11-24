@@ -11,7 +11,8 @@ use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
 
 /**
- * Motorcycles and mopeds (HS 8711), per cm³, by age — the event year minus
+ * Motorcycles and mopeds (HS 8711, but a side-car on its own: "გარდა 8711 სასაქონლო პოზიციით
+ * გათვალისწინებული ეტლისა"), per cm³, by age — the event year minus
  * the year made (188.1 table, row 4¹: from 1.5 GEL under a year to 2.4 over 14). The rates are rows
  * of ExciseRules::MOTORCYCLES, keyed by age; '>14' is "over 14 years".
  */

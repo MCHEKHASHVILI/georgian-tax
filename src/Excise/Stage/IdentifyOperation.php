@@ -41,6 +41,10 @@ final class IdentifyOperation implements Stage
             return $d->notTaxable(new Citation('183'), 'No excise goods are involved.');
         }
 
+        if ($commodity->isSideCar()) {
+            return $d->notTaxable(new Citation('188.1'), 'Row 4¹ taxes heading 8711 but its side-cars (ეტლი); a side-car on its own is not excise goods.');
+        }
+
         if (!$this->isExcisable($d, $commodity)) {
             return $d->notTaxable(new Citation('188'), "HS {$commodity->hsCode} is not excise goods.");
         }

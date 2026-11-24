@@ -48,7 +48,9 @@ final class RefundReexportedVehicle implements Stage
         }
 
         if (!$vehicle->isPassengerCar() && !$vehicle->isMotorcycle()) {
-            return new NotTaxable(Duty::TAX, $cite, "Only passenger cars (HS 8703) and motorcycles (HS 8711) get their excise back on export; HS {$vehicle->hsCode} does not.");
+            return new NotTaxable(Duty::TAX, $cite, $vehicle->isSideCar()
+                ? 'Only passenger cars (HS 8703) and motorcycles (HS 8711) get their excise back on export; a side-car on its own is not a motorcycle (188.1 row 4¹).'
+                : "Only passenger cars (HS 8703) and motorcycles (HS 8711) get their excise back on export; HS {$vehicle->hsCode} does not.");
         }
 
         if (!$event->qualifies()) {
