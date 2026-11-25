@@ -35,4 +35,5 @@ enum Status
     case RegisteredTaxpayer;            // Art. 154.1.ლ
     case TaxableDealer;                 // VAT Art. 157.ქ, 161² — second-hand, art, antiques
     case ExciseProducer;                // VAT Art. 165.3 — must register before the first supply
+    case ListedStateEnterprise;         // Art. 202.2.ბ — a state enterprise the Government names; which ones is for the caller
 }

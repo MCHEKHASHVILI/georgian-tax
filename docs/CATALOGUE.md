@@ -615,7 +615,7 @@ Property tax is local: the Code sets caps and base rates, and each municipal cou
 | Property | Rate | Article |
 |---|---|---|
 | Company property | Up to 1% of average annual net book value | 202.1 |
-| Company real estate on historic cost | Value ×3 (before 2000 or unknown), ×2 (2000–2003), ×1.5 (2004) — not with audited revaluation, nor for state enterprises the Government names (202.2.ბ, not yet modelled) | 202.1.ა–დ, 202.2 |
+| Company real estate on historic cost | Value ×3 (before 2000 or unknown), ×2 (2000–2003), ×1.5 (2004) — not with audited revaluation, nor for state enterprises the Government names (`Status::ListedStateEnterprise`) | 202.1.ა–დ, 202.2 |
 | Property leased out | Up to 1% of book value at leasing | 202.3 |
 | Leasing company | Up to 0.6% of initial book value, for the whole lease | 202.3¹ |
 | Individual property | 0.8%–1% of market value at the end of the previous year, by months owned | 202.5, 202.9 |

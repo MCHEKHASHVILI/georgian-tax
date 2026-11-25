@@ -8,13 +8,15 @@ use Mchekhashvili\TaxLegislation\Engine\Outcome\Outcome;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Unresolved;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use Mchekhashvili\TaxLegislation\Law\Citation;
+use GeorgianTax\Domain\Party\Status;
 use GeorgianTax\PropertyTax\Holding;
 
 /**
  * A company's or organization's property, at up to 1% of its average annual net book value (202.1).
  * Real estate on the books at historic cost is revalued (202.1.ა–დ):
  *   acquired before 2000 ×3 · 2000–2003 ×2 · 2004 ×1.5 · unknown ×3
- * unless the company revalues its real estate and has audited statements (202.2.ა).
+ * unless the company revalues its real estate and has audited statements (202.2.ა), or is a
+ * state enterprise the Government names (202.2.ბ, Status::ListedStateEnterprise).
  * Property leased out is taxed on its book value at leasing, up to 1% (202.3); a leasing company
  * pays up to 0.6% of the initial book value for the whole lease (202.3¹). The council's rate is
  * checked against the cap in force on 31 December of the tax year (202.8).
@@ -52,8 +54,18 @@ final class CompanyProperty implements Rule
             return $percent;
         }
 
-        $factor = $item->kind->isRealEstate() && !$item->revaluedWithAudit ? self::revaluation($item->acquiredYear) : 1.0;
-        $notes = $factor === 1.0 ? [] : ["Real estate revalued ×$factor for its acquisition year (202.1)."];
+        $factor = $item->kind->isRealEstate() ? self::revaluation($item->acquiredYear) : 1.0;
+        $notes = [];
+
+        if ($factor !== 1.0) {
+            $kept = match (true) {
+                $h->holding->owner->is(Status::ListedStateEnterprise) => 'Real estate of a state enterprise the Government names is not revalued (202.2.ბ).',
+                $item->revaluedWithAudit => 'Real estate revalued on audited statements is not revalued again (202.2.ა).',
+                default => null,
+            };
+            $notes = [$kept ?? "Real estate revalued ×$factor for its acquisition year (202.1)."];
+            $factor = $kept === null ? $factor : 1.0;
+        }
 
         return $h->taxed(new Citation('202.1', 'Company property'), $item->value->multipliedBy($factor), $percent, $notes);
     }

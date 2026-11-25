@@ -305,9 +305,7 @@ Outside the per-event model:
 - excise credit on exports (189.1) and a refund instead of the 189 credit;
 - the property tax a company's current payment is based on (205.3): `PayPropertyInstalment` takes last year's tax, and the year's expected tax for a 205.4 reduction, from the caller, and does not charge 205.5's interest when the reduction proves wrong.
 
-Known gaps, each on the roadmap (`docs/ROADMAP.md`):
-
-- 202.2.ბ: state enterprises the Government names keep historic cost (the engine revalues them).
+Which state enterprises the Government names under 202.2.ბ is the caller's to say (`Party::company('railway', Status::ListedStateEnterprise)`): their real estate is taxed at book value, not revalued under 202.1.ა–დ.
 
 A side-car of heading 8711 presented on its own is the caller's to say (`new Commodity('8711 90', sideCar: true)`): no subheading gives it a code of its own, and 188.1 row 4¹ leaves it out of the motorcycles' excise.
 

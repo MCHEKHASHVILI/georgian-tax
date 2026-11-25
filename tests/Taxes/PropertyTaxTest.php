@@ -76,7 +76,35 @@ test('real estate of unknown date three times', function () {
 test('audited revaluation skips the multiplier', function () {
     $building = new PropertyItem(K::Building, Money::GEL(100_000), acquiredYear: 1998, revaluedWithAudit: true);
 
-    $this->assertTaxed($this->property($this->own($this->company, $building)), '202.1', 1000);
+    $tax = $this->property($this->own($this->company, $building));
+
+    $this->assertTaxed($tax, '202.1', 1000);
+    $this->assertSame(['Real estate revalued on audited statements is not revalued again (202.2.ა).'], $tax->notes);
+});
+
+test('a state enterprise the Government names keeps its real estate at book value', function () {
+    $enterprise = Party::company('railway', Status::ListedStateEnterprise);
+    $tax = $this->property($this->own($enterprise, new PropertyItem(K::Building, Money::GEL(100_000), acquiredYear: 1998)));
+
+    $this->assertTaxed($tax, '202.1', 1000);
+    $this->assertSame(['Real estate of a state enterprise the Government names is not revalued (202.2.ბ).'], $tax->notes);
+});
+
+test('202.2.ბ reaches the unknown acquisition year too, and only real estate', function () {
+    $enterprise = Party::company('railway', Status::ListedStateEnterprise);
+
+    $this->assertTaxed($this->property($this->own($enterprise, new PropertyItem(K::Building, Money::GEL(100_000)))), '202.1', 1000);
+
+    $equipment = $this->property($this->own($enterprise, new PropertyItem(K::Equipment, Money::GEL(100_000), acquiredYear: 1998)));
+    $this->assertTaxed($equipment, '202.1', 1000);
+    $this->assertSame([], $equipment->notes);
+});
+
+test('a state enterprise the Government does not name is revalued', function () {
+    $tax = $this->property($this->own(Party::company('post'), new PropertyItem(K::Building, Money::GEL(100_000), acquiredYear: 2002)));
+
+    $this->assertTaxed($tax, '202.1', 2000);
+    $this->assertSame(['Real estate revalued ×2 for its acquisition year (202.1).'], $tax->notes);
 });
 
 test('leasing company at 06 percent', function () {
