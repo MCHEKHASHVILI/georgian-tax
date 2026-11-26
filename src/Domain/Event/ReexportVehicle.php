@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Domain\Event;
 
 use DateTimeImmutable;
+use GeorgianTax\Domain\Period;
 use GeorgianTax\Domain\Income\IncomeKind;
 use GeorgianTax\Domain\Income\Place;
 use GeorgianTax\Domain\Party\Party;
@@ -27,7 +28,11 @@ use Mchekhashvili\Money\Money;
  */
 final readonly class ReexportVehicle implements TaxableEvent
 {
-    /** 189.8, 198.3 — calendar days from the release in which the vehicle must be exported. */
+    /**
+     * 189.8, 198.3 — calendar days from the release in which the vehicle must be exported, as
+     * consolidated. The refunds read the period in force on the export day from the law
+     * (`excise.periods`, `import.periods`), so an amendment changes it without code.
+     */
     public const DAYS = 180;
 
     public function __construct(
@@ -49,19 +54,19 @@ final readonly class ReexportVehicle implements TaxableEvent
     }
 
     /**
-     * The last day the vehicle may be placed under the export procedure: 180 calendar days counted
-     * from the day after the release (3.2). Not modelled: moving a last day that is not a working
-     * day to the next working day (3.6).
+     * The last day the vehicle may be placed under the export procedure: the period (180 calendar
+     * days unless given) counted from the day after the release (3.2). Not modelled: moving a last
+     * day that is not a working day to the next working day (3.6).
      */
-    public function lastDay(): DateTimeImmutable
+    public function lastDay(?Period $period = null): DateTimeImmutable
     {
-        return $this->released->on->setTime(0, 0)->modify('+' . self::DAYS . ' days');
+        return ($period ?? Period::days(self::DAYS))->after($this->released->on);
     }
 
     /** Whether it was exported in time and has left Georgia — both 189.8 and 198.3 require it. */
-    public function qualifies(): bool
+    public function qualifies(?Period $period = null): bool
     {
-        return $this->leftGeorgia && $this->exportedOn->setTime(0, 0) <= $this->lastDay();
+        return $this->leftGeorgia && $this->exportedOn->setTime(0, 0) <= $this->lastDay($period);
     }
 
     public function recipient(): Party { return $this->released->importer; }

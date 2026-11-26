@@ -25,6 +25,7 @@ use GeorgianTax\IncomeTax\IncomeTax;
 use Mchekhashvili\TaxLegislation\Law\Article;
 use GeorgianTax\Tests\Support\IncomeTaxCase;
 use Mchekhashvili\Money\Money;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
 
 /** One test per row of docs/CATALOGUE.md. */
 uses(IncomeTaxCase::class);
@@ -194,6 +195,22 @@ test('flat held over two years is exempt', function () {
 
 test('flat held under two years is five percent of the gain', function () {
     $this->assertTaxed($this->income($this->sell(AssetType::Dwelling, '2025-06-01', 100_000, 150_000)), '81.3', '5%', Collection::MonthlyDeclaration, null, 2500);
+});
+
+test('car held over six months is exempt', function () {
+    $outcome = $this->income($this->sell(AssetType::Car, '2026-04-01', 20_000, 22_000));
+
+    $this->assertExempt($outcome, '82.1.ვ.ბ');
+    expect($outcome->reason)->toContain('more than 6 months');
+});
+
+test('land used in business is exempt only once two years have passed since the use ended', function () {
+    $sell = fn (string $ended) => $this->income(new Sell($this->person, Party::person('buyer'),
+        new Asset(AssetType::Land, new DateTimeImmutable('2020-01-01'), Money::GEL(10_000), usedInBusiness: true, businessUseEndedAt: new DateTimeImmutable($ended)),
+        Money::GEL(12_000), $this->today));
+
+    $this->assertExempt($sell('2024-10-01'), '82.1.ვ.გ');
+    expect($sell('2025-01-01'))->not->toBeInstanceOf(Exempt::class);
 });
 
 test('car held under six months is five percent', function () {

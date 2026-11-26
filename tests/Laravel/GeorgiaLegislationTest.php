@@ -78,6 +78,16 @@ it('loads the excise, import and land tables', function () {
         ->and($caps['202.5']->article)->toBe('202.5');
 });
 
+it('records the periods the engine counts, by tax', function () {
+    $periods = fn (string $tax, string $table) => TaxType::query()->where('code', $tax)->sole()->tableOn($table, '2026-10-30')->keyBy('key');
+
+    expect($periods('income', 'income.periods')->keys()->sort()->values()->all())->toBe(['82.1.ვ.ა', '82.1.ვ.ბ', '82.1.ვ.გ', '82.1.ვ.გ.note'])
+        ->and($periods('income', 'income.periods')['82.1.ვ.ბ']->values)->toMatchArray(['length' => 6, 'unit' => 'months'])
+        ->and($periods('income', 'income.periods')['82.1.ვ.გ.note']->article)->toBe('82.1.ვ.გ')
+        ->and($periods('excise', 'excise.periods')['189.8']->values)->toMatchArray(['length' => 180, 'unit' => 'days'])
+        ->and($periods('import', 'import.periods')['198.3']->values)->toMatchArray(['length' => 180, 'unit' => 'days']);
+});
+
 it('records the thresholds the engine draws lines at', function () {
     $vat = TaxType::query()->where('code', 'vat')->sole()->thresholdOn('registration', '2026-10-30');
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax;
 
 use GeorgianTax\Engine\LawTables;
+use GeorgianTax\Engine\Periods;
 use GeorgianTax\Engine\Tax;
 use GeorgianTax\Excise\ExciseRules;
 use GeorgianTax\Excise\ExciseTable;
@@ -68,6 +69,7 @@ final class GeorgianTaxServiceProvider extends ServiceProvider
         $this->app->singleton(ImportTable::class, fn () => ImportTable::standard($this->law('import')));
         $this->app->singleton(LandRates::class, fn () => LandRates::standard($this->law('land')));
         $this->app->singleton(PropertyCaps::class, fn () => PropertyCaps::standard($this->law('land')));
+        $this->app->singleton(Periods::class, fn () => Periods::standard($this->law('periods')));
 
         // Your councils' property tax decisions; null takes the Code's cap. Checked against the caps on the day.
         $this->app->singleton(MunicipalRates::class, function () {

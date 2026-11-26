@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use GeorgianTax\Database\Seeders\GeorgiaLegislationSeeder;
+use GeorgianTax\Domain\Asset\Asset;
+use GeorgianTax\Domain\Asset\AssetType;
 use GeorgianTax\Domain\Event\CloseYear;
 use GeorgianTax\Domain\Event\CorrectApportionment;
 use GeorgianTax\Domain\Event\CreditFixedAsset;
@@ -14,6 +16,7 @@ use GeorgianTax\Domain\Event\OwnProperty;
 use GeorgianTax\Domain\Event\Pay;
 use GeorgianTax\Domain\Event\PayPropertyInstalment;
 use GeorgianTax\Domain\Event\ReexportVehicle;
+use GeorgianTax\Domain\Event\Sell;
 use GeorgianTax\Domain\Event\TemporaryAdmission;
 use GeorgianTax\Domain\Event\Turnover;
 use GeorgianTax\Domain\Goods\Commodity;
@@ -37,6 +40,7 @@ use Mchekhashvili\TaxLegislation\Actions\ApproveDraft;
 use Mchekhashvili\TaxLegislation\Actions\RecordLegalAct;
 use Mchekhashvili\TaxLegislation\Actions\RecordTaxType;
 use Mchekhashvili\TaxLegislation\Actions\RepealLaw;
+use Mchekhashvili\TaxLegislation\Engine\Outcome\Exempt;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotComputed;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable;
@@ -243,6 +247,70 @@ it('stops an exemption the law repealed', function () {
 
     expect($car('2027-06-01')->basis()->ref)->toBe('194.5.ლ')
         ->and($car('2028-06-01')->basis()->ref)->not->toBe('194.5.ლ');
+});
+
+it('counts a re-exported car against an amended 189.8 period, read on the export day', function () {
+    app(AmendLaw::class)->handle(ValueKind::TableEntry, ['tax_type_id' => ($this->tax)('excise')->id, 'table' => 'excise.periods', 'key' => '189.8', 'from' => '2028-01-01',
+        'legal_act_id' => $this->law->id, 'values' => ['length' => 90, 'unit' => 'days', 'description' => 'A car or motorcycle exported within, of its release']]);
+    $this->refreshEngine();
+    $report = fn (string $released, string $exported) => GeorgianTax::assess(new ReexportVehicle(
+        new Import(Party::company('autos', Status::VatPayer), Money::GEL(30_000), new DateTimeImmutable($released), commodity: new Commodity('8703 23', 1, engineCc: 2000, yearMade: 2025)),
+        new DateTimeImmutable($exported),
+    ));
+
+    // Released 1 November 2027: day 61 before the amendment, day 107 after it.
+    expect((string) $report('2027-11-01', '2027-12-31')->for('excise')->amount)->toBe('-3000.00 GEL');
+
+    $late = $report('2027-11-01', '2028-02-16');
+    expect($late->for('excise'))->toBeInstanceOf(NotTaxable::class)
+        ->and($late->for('excise')->reason)->toContain('after the last day 2028-01-30')->toContain('90 calendar days')
+        ->and((string) $late->for('import')->amount)->toBe('-110.00 GEL'); // 198.3 keeps its 180 days
+
+    // Within 90 days, the refund's notes give the amended period.
+    expect(implode(' ', $report('2028-01-10', '2028-03-01')->for('excise')->notes))->toContain('within 90 calendar days')->toContain('last day 2028-04-09');
+});
+
+it('refunds no import tax on a re-exported car once the 198.3 period is repealed', function () {
+    $period = TableEntry::query()->whereBelongsTo(($this->tax)('import'))->inTable('import.periods')->where('key', '198.3')->sole();
+    app(RepealLaw::class)->handle($period, ['on' => '2028-01-01', 'legal_act_id' => $this->law->id]);
+    $this->refreshEngine();
+    $import = fn (string $exported) => GeorgianTax::assess(new ReexportVehicle(
+        new Import(Party::company('autos', Status::VatPayer), Money::GEL(30_000), new DateTimeImmutable('2027-11-01'), commodity: new Commodity('8703 23', 1, engineCc: 2000, yearMade: 2025)),
+        new DateTimeImmutable($exported),
+    ))->for('import');
+
+    expect((string) $import('2027-12-31')->amount)->toBe('-110.00 GEL')
+        ->and($import('2028-01-02'))->toBeInstanceOf(NotTaxable::class)
+        ->and($import('2028-01-02')->reason)->toContain('No period for exporting the vehicle (198.3) is in force on 2028-01-02');
+});
+
+it('exempts a car sold under an amended 82.1.ვ.ბ holding period from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::TableEntry, ['tax_type_id' => ($this->tax)('income')->id, 'table' => 'income.periods', 'key' => '82.1.ვ.ბ', 'from' => '2028-01-01',
+        'legal_act_id' => $this->law->id, 'values' => ['length' => 1, 'unit' => 'years', 'description' => 'A car, held from registration more than']]);
+    $this->refreshEngine();
+    $sell = fn (string $acquired, string $sold) => GeorgianTax::assess(new Sell(Party::person('seller'), Party::person('buyer'),
+        new Asset(AssetType::Car, new DateTimeImmutable($acquired), Money::GEL(20_000)), Money::GEL(22_000), new DateTimeImmutable($sold)))->for('income');
+
+    // Eight months: exempt before the amendment, taxed (5% of the gain, 81.3) after it.
+    expect($sell('2027-01-01', '2027-09-01'))->toBeInstanceOf(Exempt::class)
+        ->and($sell('2027-01-01', '2027-09-01')->reason)->toContain('more than 6 months')
+        ->and($sell('2027-05-01', '2028-01-02'))->toBeInstanceOf(Taxable::class)
+        ->and((string) $sell('2027-05-01', '2028-01-02')->amount)->toBe('100.00 GEL')
+        ->and($sell('2026-12-01', '2028-01-02')->reason)->toContain('more than 1 year');
+});
+
+it('counts business use under an amended 82.1.ვ.გ note from its date', function () {
+    app(AmendLaw::class)->handle(ValueKind::TableEntry, ['tax_type_id' => ($this->tax)('income')->id, 'table' => 'income.periods', 'key' => '82.1.ვ.გ.note', 'from' => '2028-01-01',
+        'legal_act_id' => $this->law->id, 'values' => ['length' => 3, 'unit' => 'years', 'description' => 'Business use ignored once it ended at least']]);
+    $this->refreshEngine();
+    // Land held since 2020, used in business until mid-2025: 2½ years before the sale.
+    $sell = fn (string $sold) => GeorgianTax::assess(new Sell(Party::person('seller'), Party::person('buyer'),
+        new Asset(AssetType::Land, new DateTimeImmutable('2020-01-01'), Money::GEL(10_000), usedInBusiness: true, businessUseEndedAt: new DateTimeImmutable('2025-06-01')),
+        Money::GEL(12_000), new DateTimeImmutable($sold)))->for('income');
+
+    expect($sell('2027-12-31'))->toBeInstanceOf(Exempt::class)                // 2 years passed
+        ->and($sell('2028-01-02'))->not->toBeInstanceOf(Exempt::class)         // 3 years needed
+        ->and($sell('2028-06-02'))->toBeInstanceOf(Exempt::class);             // 3 years passed
 });
 
 it('applies a table amendment from its date', function () {

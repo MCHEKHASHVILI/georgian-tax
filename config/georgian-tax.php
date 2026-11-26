@@ -82,6 +82,7 @@ return [
         'excise_rules' => null,   // cars, motorcycles, tobacco, alcohol and calls (188.9–17, 188.1¹, 188¹.1, 188.3)
         'import' => null,
         'land' => null,
+        'periods' => null,        // lengths of time: 82.1.ვ holding periods, 189.8 and 198.3 export windows
     ],
 
 ];

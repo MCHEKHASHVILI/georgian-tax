@@ -22,7 +22,8 @@ use Mchekhashvili\TaxLegislation\Rates\RateTable;
  * the importer may have back the excise paid on it, 100% (189.8). The stages after this one assess
  * the release as it was — its day's excise table and rules, its age, its reliefs — and this one
  * answers with the refund of what that charged, or of `excisePaid` when the importer gives it. The
- * 100% is the rate `189.8`, read on the export day, so an amending law changes it without code.
+ * 100% is the rate `189.8` and the 180 days the period `189.8` (`excise.periods`), both read on
+ * the export day, so an amending law changes them without code.
  *
  * Not modelled: an exemption in force on the release but repealed by the export day is not applied
  * to the release (exemptions stand on the event's day, the export); give `excisePaid` then.
@@ -53,8 +54,14 @@ final class RefundReexportedVehicle implements Stage
                 : "Only passenger cars (HS 8703) and motorcycles (HS 8711) get their excise back on export; HS {$vehicle->hsCode} does not.");
         }
 
-        if (!$event->qualifies()) {
-            return VehicleRefund::notInTime(Duty::TAX, $cite, $event);
+        $period = $this->tables->periods($event->date())->of(Duty::TAX, '189.8');
+
+        if ($period === null) {
+            return VehicleRefund::noPeriod(Duty::TAX, $cite, $event);
+        }
+
+        if (!$event->qualifies($period)) {
+            return VehicleRefund::notInTime(Duty::TAX, $cite, $event, $period);
         }
 
         $on = $event->released->on;
@@ -62,6 +69,6 @@ final class RefundReexportedVehicle implements Stage
             ? $next(new Duty($event->released, $this->tables->excise($on), $this->tables->exciseRules($on)))
             : null;
 
-        return VehicleRefund::of(Duty::TAX, $cite, $event, $released, $event->excisePaid, $this->rates->rate('189.8', $event->date()));
+        return VehicleRefund::of(Duty::TAX, $cite, $event, $released, $event->excisePaid, $this->rates->rate('189.8', $event->date()), $period);
     }
 }

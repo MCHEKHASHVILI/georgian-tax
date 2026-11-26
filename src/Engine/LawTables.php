@@ -106,6 +106,19 @@ final class LawTables
         return $this->memo['property-caps|' . $on->format('Y-m-d')] ??= new PropertyCaps($this->rows('property', PropertyCaps::TABLE, $on));
     }
 
+    /** The lengths of time the Code sets (82.1.ვ, 189.8, 198.3). */
+    public function periods(DateTimeImmutable $on): Periods
+    {
+        if (!$this->fromDatabase()) {
+            return $this->app->make(Periods::class);
+        }
+
+        return $this->memo['periods|' . $on->format('Y-m-d')] ??= new Periods(array_combine(
+            Periods::TABLES,
+            array_map(fn (string $tax, string $table) => $this->rows($tax, $table, $on), array_keys(Periods::TABLES), Periods::TABLES),
+        ));
+    }
+
     private function fromDatabase(): bool
     {
         return $this->config->get('georgian-tax.law.source') === 'database';

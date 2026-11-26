@@ -19,7 +19,8 @@ use Mchekhashvili\TaxLegislation\Law\Citation;
  * paid on it, 100% (198.3). Unlike excise (189.8), motorcycles are not included. The stages after
  * this one assess the release as it was — its day's import tables, the car's age, its relief — and
  * this one answers with the refund of what that charged, or of `importTaxPaid` when the importer
- * gives it. The 100% is the rate `198.3`, read on the export day.
+ * gives it. The 100% is the rate `198.3` and the 180 days the period `198.3` (`import.periods`),
+ * both read on the export day.
  *
  * Not modelled: an exemption in force on the release but repealed by the export day is not applied
  * to the release (exemptions stand on the event's day, the export); give `importTaxPaid` then.
@@ -48,14 +49,20 @@ final class RefundReexportedCar implements Stage
             return $c->notTaxable($cite, "Only passenger cars (HS 8703) get their import tax back on export; HS {$vehicle->hsCode} does not.");
         }
 
-        if (!$event->qualifies()) {
-            return VehicleRefund::notInTime(Clearance::TAX, $cite, $event);
+        $period = $this->tables->periods($event->date())->of(Clearance::TAX, '198.3');
+
+        if ($period === null) {
+            return VehicleRefund::noPeriod(Clearance::TAX, $cite, $event);
+        }
+
+        if (!$event->qualifies($period)) {
+            return VehicleRefund::notInTime(Clearance::TAX, $cite, $event, $period);
         }
 
         $released = $event->importTaxPaid === null
             ? $next(new Clearance($event->released, $this->tables->import($event->released->on), $c->thresholds, $c->rates))
             : null;
 
-        return VehicleRefund::of(Clearance::TAX, $cite, $event, $released, $event->importTaxPaid, $c->rate('198.3'));
+        return VehicleRefund::of(Clearance::TAX, $cite, $event, $released, $event->importTaxPaid, $c->rate('198.3'), $period);
     }
 }

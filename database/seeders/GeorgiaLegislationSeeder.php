@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GeorgianTax\Database\Seeders;
 
+use GeorgianTax\Engine\Periods;
 use GeorgianTax\Excise\Excise;
 use GeorgianTax\ImportTax\ImportTax;
 use GeorgianTax\IncomeTax\IncomeTax;
@@ -36,7 +37,8 @@ use Mchekhashvili\TaxLegislation\Revisions\Editor;
  *   rates        resources/law/rates.php, by article
  *   tables       the excise (188.1), import tax (197, 199.პ) and land (204.1) tables, the
  *                figures the excise rules apply (resources/law/excise_rules.php), and the caps on
- *                the councils' property tax rates (202, 204: `property.caps`)
+ *                the councils' property tax rates (202, 204: `property.caps`), and the periods
+ *                the engine counts (82.1.ვ, 189.8, 198.3: resources/law/periods.php)
  *   thresholds   resources/law/thresholds.php — every amount the engine draws a line at
  *   exemptions   resources/law/exemptions.php — that each exemption exists; conditions stay in code
  *
@@ -221,6 +223,13 @@ final class GeorgiaLegislationSeeder extends Seeder
 
         foreach ($land['caps'] as $key => $values) {
             $add($taxes['property'], PropertyCaps::TABLE, $values['article'], (string) $key, array_diff_key($values, ['article' => true]));
+        }
+
+        foreach (require self::LAW . 'periods.php' as $table => $entries) {
+            $tax = array_search($table, Periods::TABLES, true);
+            foreach ($entries as $key => $values) {
+                $add($taxes[$tax], $table, $values['article'], (string) $key, array_diff_key($values, ['article' => true]));
+            }
         }
 
         foreach (array_chunk($rows, 500) as $chunk) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GeorgianTax\Domain\Asset;
 
 use DateTimeImmutable;
+use GeorgianTax\Domain\Period;
 use Mchekhashvili\Money\Money;
 
 /**
@@ -24,18 +25,22 @@ final readonly class Asset
         public ?DateTimeImmutable $businessUseEndedAt = null,
     ) {}
 
-    public function heldLongerThan(string $period, DateTimeImmutable $on): bool
+    /** @param string|Period $period e.g. '2 years', or the Code's period */
+    public function heldLongerThan(string|Period $period, DateTimeImmutable $on): bool
     {
         return $this->acquiredAt->modify("+$period") < $on;
     }
 
-    /** Art. 82.1.ვ.გ note — business use is ignored once 2 years have passed since it ended. */
-    public function countsAsBusinessAssetOn(DateTimeImmutable $on): bool
+    /**
+     * Art. 82.1.ვ.გ note — business use is ignored once 2 years have passed since it ended, or the
+     * note's period when given (the engine passes the one in force on the day of the sale).
+     */
+    public function countsAsBusinessAssetOn(DateTimeImmutable $on, ?Period $ignoredAfter = null): bool
     {
         if (!$this->usedInBusiness) {
             return false;
         }
 
-        return $this->businessUseEndedAt === null || $this->businessUseEndedAt->modify('+2 years') >= $on;
+        return $this->businessUseEndedAt === null || $this->businessUseEndedAt->modify('+' . ($ignoredAfter ?? '2 years')) >= $on;
     }
 }
