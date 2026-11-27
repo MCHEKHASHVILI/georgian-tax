@@ -408,6 +408,22 @@ A bank, credit union, microfinance organization or lender (`Status::CreditInstit
 
 Not modelled: computing gross income and deductions; which years' losses are still open (121.4, 122); the next year's current payments (155.1–5); a period ending with liquidation (153.3); insurers before 2024 (309.95¹).
 
+## Gambling organizers: the month (Art. 97.9–9³, 98.5–6, 309.16)
+
+A company, organization or Georgian PE closing a calendar month of one gambling activity is the `CloseGamblingMonth` event: the activity (`GamblingActivity`), the stakes received and winnings paid in the month, and whether these are the players who are foreign citizens — all the caller's figures. In that part, 97.1's objects do not apply. Each is declared and paid by the 15th of the next month (135.3–4, 153.10, 309.16), and none is grossed up (97.10 names 97.1–3).
+
+| Case | Profit tax | Article |
+|---|---|---|
+| Gaming hall, or online gambling | 20% of stakes less winnings | 97.9¹, 98.6 |
+| Online gambling, players who are foreign citizens | 5% of stakes less winnings | 97.9¹, 98.5 |
+| Online totalizator | 7% of the month's stakes; winnings not deducted | 97.9, 309.16 |
+| Online totalizator, players who are foreign citizens | 5% of stakes less winnings | 97.9³, 98.5 |
+| Winnings exceed stakes | Not taxed for the month | 97.9¹, 97.9³ |
+| An individual organizer | Income tax (not modelled), not profit tax | 96, 80.7, 309.16 |
+| A non-resident company without a Georgian PE | Unresolved: 153.10 does not name it | 153.10 |
+
+Not modelled: deeming a dividend paid from this profit first (97.9²); 97.1's objects in a company's other business.
+
 ## Taxed outflows (Art. 98¹–98⁴)
 
 | Outflow | Article |

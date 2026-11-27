@@ -43,6 +43,9 @@ return [
     // Profit tax — Art. 98, 23
     '98.1'      => ['2017-01-01' => 15],   // distributed profit and other outflows
     '98.4'      => ['2023-01-01' => 20],   // banks and lenders, on annual profit
+    '98.5'      => ['2017-01-01' => 5],    // online gambling and totalizators: the part from foreign players
+    '98.6'      => ['2017-01-01' => 20],   // gaming halls and online gambling, on stakes less winnings
+    '309.16'    => ['2017-01-01' => 7],    // online totalizator: the month's stakes
     '23.10'     => ['2017-01-01' => 5],    // international company
     '98³.3.ა'   => ['2017-01-01' => 10],   // charity donations: free up to this share of last year's net profit
     '98⁴.2'     => ['2017-01-01' => 1],    // representation costs: free up to this share of last year's revenue

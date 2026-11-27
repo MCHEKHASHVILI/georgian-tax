@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use GeorgianTax\Domain\Event\CloseGamblingMonth;
 use GeorgianTax\Domain\Event\CloseYear;
+use GeorgianTax\Domain\Event\GamblingActivity as G;
 use GeorgianTax\Domain\Event\Expense;
 use GeorgianTax\Domain\Event\ExpenseNature;
 use GeorgianTax\Domain\Event\Gift;
@@ -245,6 +247,76 @@ test('no other tax is charged on a closed year', function () {
 test('a closed years figures cannot be negative', function () {
     new CloseYear(Party::company('bank', Status::CreditInstitution), 2026, Money::GEL(1_000), Money::GEL(-1));
 })->throws(InvalidArgumentException::class);
+
+/* ── Gambling organizers: the month (Art. 97.9–9³, 98.5–6, 309.16) ── */
+
+test('a gaming hall pays twenty percent of the months stakes less winnings', function () {
+    $hall = Party::company('hall', Status::GamblingOrganizer);
+    $outcome = $this->profit(new CloseGamblingMonth($hall, 2026, 10, G::GamingHall, Money::GEL(100_000), Money::GEL(70_000)));
+
+    $this->assertTaxed($outcome, '98.6', '20%', base: 30_000, tax: 6_000); // 97.9¹; not grossed up: 97.10 is for 97.1–3
+    expect($outcome->collection)->toBe(Collection::MonthlyDeclaration)
+        ->and($outcome->due->format('Y-m-d'))->toBe('2026-11-15') // 135.4, 153.10
+        ->and($outcome->taxpayer)->toBe($hall)
+        ->and($outcome->turnover())->toBeNull()
+        ->and(implode(' ', $outcome->notes))->toContain('2026-10')->toContain('(97.9¹)');
+});
+
+test('online gambling is taxed like a gaming hall, and its foreign players part at five percent', function () {
+    $casino = Party::company('casino', Status::GamblingOrganizer);
+
+    $this->assertTaxed($this->profit(new CloseGamblingMonth($casino, 2026, 3, G::OnlineGambling, Money::GEL(50_000), Money::GEL(40_000))), '98.6', '20%', base: 10_000, tax: 2_000);
+    $this->assertTaxed($this->profit(new CloseGamblingMonth($casino, 2026, 3, G::OnlineGambling, Money::GEL(50_000), Money::GEL(40_000), foreignPlayers: true)), '98.5', '5%', base: 10_000, tax: 500); // 97.9¹, 98.5
+});
+
+test('an online totalizator pays seven percent of the months stakes, winnings not deducted', function () {
+    $outcome = $this->profit(new CloseGamblingMonth(Party::company('tote'), 2026, 12, G::OnlineTotalizator, Money::GEL(20_000), Money::GEL(18_000)));
+
+    $this->assertTaxed($outcome, '309.16', '7%', base: 20_000, tax: 1_400); // 97.9
+    expect($outcome->due->format('Y-m-d'))->toBe('2027-01-15'); // 309.16, 135.3
+});
+
+test('an online totalizators foreign players part is stakes less winnings at five percent', function () {
+    $outcome = $this->profit(new CloseGamblingMonth(Party::company('tote'), 2026, 2, G::OnlineTotalizator, Money::GEL(20_000), Money::GEL(18_000), foreignPlayers: true));
+
+    $this->assertTaxed($outcome, '98.5', '5%', base: 2_000, tax: 100);
+    expect(implode(' ', $outcome->notes))->toContain('foreign citizens')->toContain('(97.9³)');
+});
+
+test('a month whose winnings exceed its stakes is not taxed', function () {
+    $outcome = $this->profit(new CloseGamblingMonth(Party::company('hall'), 2026, 5, G::GamingHall, Money::GEL(10_000), Money::GEL(12_000)));
+
+    $this->assertNotTaxable($outcome, '97.9¹');
+    expect($outcome->reason)->toContain('Nothing to tax for 2026-05');
+});
+
+test('an individual organizer pays income tax, and a non-resident without a PE is unresolved', function () {
+    $this->assertNotTaxable($this->profit(new CloseGamblingMonth(Party::person('giorgi'), 2026, 5, G::GamingHall, Money::GEL(10_000), Money::GEL(1_000))), '96');
+
+    $foreign = $this->profit(new CloseGamblingMonth(Party::foreignCompany('bet', 'MT'), 2026, 5, G::OnlineGambling, Money::GEL(10_000), Money::GEL(1_000)));
+    expect($foreign)->toBeInstanceOf(Unresolved::class)
+        ->and($foreign->basis()->ref)->toBe('97.9¹');
+});
+
+test('no other tax is charged on a closed gambling month', function () {
+    $report = $this->taxEngine()->process(new CloseGamblingMonth(Party::company('hall'), 2026, 10, G::GamingHall, Money::GEL(1_000), Money::GEL(500)));
+
+    foreach ($report->outcomes as $tax => $outcome) {
+        if ($tax !== 'profit') {
+            expect($outcome)->toBeInstanceOf(NotTaxable::class, "$tax: $outcome");
+        }
+    }
+    $this->assertTaxed($report->for('profit'), '98.6', '20%', tax: 100);
+});
+
+test('a gaming hall has no foreign players part', function () {
+    new CloseGamblingMonth(Party::company('hall'), 2026, 10, G::GamingHall, Money::GEL(1_000), foreignPlayers: true);
+})->throws(InvalidArgumentException::class);
+
+test('a gambling months figures cannot be negative, nor its month out of range', function () {
+    expect(fn () => new CloseGamblingMonth(Party::company('hall'), 2026, 10, G::GamingHall, Money::GEL(1_000), Money::GEL(-1)))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => new CloseGamblingMonth(Party::company('hall'), 2026, 13, G::GamingHall, Money::GEL(1_000)))->toThrow(InvalidArgumentException::class);
+});
 
 /* ── Scope ── */
 

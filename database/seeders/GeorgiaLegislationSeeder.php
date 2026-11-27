@@ -166,7 +166,7 @@ final class GeorgiaLegislationSeeder extends Seeder
         $chapter = (float) strtok($article, '.¹²³⁴');
 
         return match (true) {
-            $chapter >= 96 && $chapter < 100, $article === '23.10' => 'profit',
+            $chapter >= 96 && $chapter < 100, $article === '23.10', $article === '309.16' => 'profit',
             $chapter >= 154 && $chapter < 182 => 'vat',
             $chapter >= 182 && $chapter < 195 => 'excise',
             $chapter >= 195 && $chapter < 200 => 'import',

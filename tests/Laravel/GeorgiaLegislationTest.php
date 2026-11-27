@@ -49,6 +49,7 @@ it('loads every rate the package file has, under its tax', function () {
     expect(TaxRate::query()->whereNotNull('percent')->count())->toBe(count($file))
         ->and(TaxType::query()->where('code', 'vat')->sole()->rateOn('166', '2026-10-30')->percent)->toBe(18.0)
         ->and(TaxType::query()->where('code', 'profit')->sole()->rateOn('98.1', '2026-10-30')->percent)->toBe(15.0)
+        ->and(TaxType::query()->where('code', 'profit')->sole()->rateOn('309.16', '2026-10-30')->percent)->toBe(7.0) // a transitional rate, but profit tax's
         ->and((string) TaxType::query()->where('code', 'property')->sole()->rateOn('204.2.ა', '2026-10-30')->amount)->toBe('0.24 GEL');
 });
 
