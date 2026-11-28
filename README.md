@@ -184,7 +184,8 @@ src/
     Property/     PropertyItem, PropertyKind, PropertyExemption
     Event/        the verbs: Pay, Sell, Gift, Inherit, Import, TemporaryAdmission, SelfSupply,
                   Refund, Expense, NonMarketDeal, OwnProperty, AcquireForMaturing, ReexportVehicle,
-                  CloseYear, CloseGamblingMonth (with GamblingActivity), ApportionInputVat, CorrectApportionment (with Turnover),
+                  CloseYear, CloseGamblingMonth (with GamblingActivity), CloseRentalYear, ApportionInputVat,
+                  CorrectApportionment (with Turnover),
                   CreditFixedAsset, CloseFixedAssetYear (with FixedAsset),
                   PayPropertyInstalment
   Engine/
@@ -245,7 +246,7 @@ An unregistered supplier's supplies below the threshold come back `NotTaxable` b
 
 | Tax | Identify | Exemptions | Rates |
 |---|---|---|---|
-| Profit | 96–97: a resident company paying out — dividend, non-market deal, non-business cost, free supply; a bank or lender closing its year (`CloseYear`, 97.12); a gambling organizer closing its month (`CloseGamblingMonth`, 97.9–9³) | 98¹.2, 98³.3, 99, 23¹ | 98.4 banks and lenders 20% of the year's profit, 98.6 gaming halls and online gambling 20% of stakes less winnings, 98.5 their foreign players' part 5%, 309.16 an online totalizator 7% of stakes, 98⁴ representation over 1%, 23.10 international 5%, 98.1 15% grossed up |
+| Profit | 96–97: a resident company paying out — dividend, non-market deal, non-business cost, free supply; a bank or lender closing its year (`CloseYear`, 97.12); a gambling organizer closing its month (`CloseGamblingMonth`, 97.9–9³); a non-resident company paid rent by non-agents closing its year (`CloseRentalYear`, 97.11) | 98¹.2, 98³.3, 99, 23¹ | 98.4 banks and lenders 20% of the year's profit, 98.6 gaming halls and online gambling 20% of stakes less winnings, 98.5 their foreign players' part 5%, 309.16 an online totalizator 7% of stakes, 98⁴ representation over 1%, 23.10 international 5%, 98.1 15% grossed up (a non-resident's rent year: 15% of the net, not grossed up) |
 | Excise | 182–187: producer's supply, import, export, gas for vehicles, call termination | 194.5–7; 189 credit for raw materials and for goods acquired for maturing | 188.9–18 cars, 188.1 motorcycles and table, 188.1¹ tobacco, 188¹ alcohol, 188.3 calls |
 | Import | 195–196: an import with an HS code; a temporary admission pays 3% a month of it (197.4–5) | 199 by code and by relief | 197.6 cars, 197.3 alcohol in euro, 197.1–2 lists, else 0% |
 | Property | 201, 203: an `OwnProperty` holding; a company's 15 June current payment (`PayPropertyInstalment`, 205.3) | 206, with the 206.2 leasing carve-out | 204 land, 202.1–3¹ company, 202.5 individual |
@@ -302,6 +303,7 @@ Outside the per-event model:
 - the monthly netting of output against input VAT (`creditableBy` says who may credit, not how much); mixed-use input VAT is apportioned (177.1–4, 177.7), but the input VAT and turnover are the caller's figures, fixed assets in mixed use are spread over their 10 or 5 years (177.5–6, 177.8) from the caller's yearly turnover, and the credit on registration, deregistration or a fixed asset's supply (177.10, on the Minister's terms) is not modelled;
 - tax-free refunds to foreign shoppers (181.5);
 - banks' and lenders' gross income and deductions (97.12, Chapters XIV–XV): `CloseYear` takes them, and the losses still carried (121.4), from the caller;
+- a non-resident company's rent from non-agents (97.11): `CloseRentalYear` takes the year's Georgian-source gross income and deductions, and the losses still carried (121.4), from the caller; the rent itself is no longer charged 10% under 134.1.ე when the payer is not a tax agent — a behaviour change for callers who relied on it;
 - a gambling organizer's month (97.9–9³): `CloseGamblingMonth` takes the stakes received and winnings paid, per activity and per group of players, from the caller; deeming a dividend paid from that profit first (97.9²) is the caller's (tag it with `ExemptProfit::GamblingClubOrTotalizator` where 99.1.ს reaches it);
 - excise credit on exports (189.1) and a refund instead of the 189 credit;
 - the property tax a company's current payment is based on (205.3): `PayPropertyInstalment` takes last year's tax, and the year's expected tax for a 205.4 reduction, from the caller, and does not charge 205.5's interest when the reduction proves wrong.

@@ -141,6 +141,13 @@ test('foreign company serving a georgian company from abroad is withheld ten per
     $this->assertTaxed($this->income($event), '134.1.ე', '10%', Collection::WithheldAtSource, 'acme', 100);
 });
 
+test('rent paid to a foreign company by a non agent is left to its profit tax year', function () {
+    $outcome = $this->income($this->pay(Party::person('tenant'), Party::foreignCompany('gmbh', 'DE'), K::Rent, 1000));
+
+    $this->assertNotTaxable($outcome, '97.11'); // 97.4: not 134.1.ე
+    $this->assertTaxed($this->income($this->pay($this->company, Party::foreignCompany('gmbh', 'DE'), K::Rent, 1000)), '134.1.ე', '10%', Collection::WithheldAtSource, 'acme', 100);
+});
+
 test('foreign pe abroad takes the service out of georgian source', function () {
     $event = new Pay($this->company, Party::foreignCompany('gmbh', 'DE'), K::ServiceFee, Money::GEL(1000), $this->today, Place::abroad('DE', providerProvedForeignPE: true));
 

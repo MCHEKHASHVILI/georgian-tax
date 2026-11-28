@@ -71,17 +71,29 @@ final class IdentifyOutflow implements Stage
         return $party->isResident() || $party->hasGeorgianPE;
     }
 
-    /** A company *receiving* income pays nothing until it distributes (97.1); a foreign one is withheld under 134 (97.4). */
+    /**
+     * A company *receiving* income pays nothing until it distributes (97.1); a foreign one is withheld
+     * under 134 (97.4) — but for rent paid by someone who is not a tax agent, which it declares on the
+     * year (97.11).
+     */
     private function receiverNote(Outflow $o): ?Outcome
     {
-        $recipient = $o->event->recipient();
+        $event = $o->event;
+        $recipient = $event->recipient();
 
-        if (!in_array($recipient->kind, [PartyKind::Company, PartyKind::Organization], true) || $o->event->income()->isZero()) {
+        if (!in_array($recipient->kind, [PartyKind::Company, PartyKind::Organization], true) || $event->income()->isZero()) {
             return null;
         }
 
-        return $recipient->isNonResidentWithoutPE()
-            ? $o->notTaxable(new Citation('97.4'), "A non-resident's Georgian-source income is withheld at source under Art. 134 — see the income outcome.")
-            : $o->notTaxable(new Citation('97.1'), 'Income received is not taxed; profit tax arises when it is distributed.');
+        if (!$recipient->isNonResidentWithoutPE()) {
+            return $o->notTaxable(new Citation('97.1'), 'Income received is not taxed; profit tax arises when it is distributed.');
+        }
+
+        if ($recipient->kind === PartyKind::Company && in_array($event->kind(), [IncomeKind::Rent, IncomeKind::ResidentialRent], true)
+            && !($event->payer()?->kind->canWithhold() ?? false)) {
+            return $o->notTaxable(new Citation('97.11'), 'Rent paid to a non-resident company by someone who is not a tax agent (154.1) is not withheld (97.4): the company declares the year\'s Georgian-source income less deductions, at 15% (a CloseRentalYear event).');
+        }
+
+        return $o->notTaxable(new Citation('97.4'), "A non-resident's Georgian-source income is withheld at source under Art. 134 — see the income outcome.");
     }
 }

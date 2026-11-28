@@ -72,6 +72,7 @@ final class IncomeTax extends Tax
                 N\NonResidentTransportTelecom::class,
                 N\NonResidentOilGas::class,
                 N\NonResidentRent::class,
+                N\NonResidentCompanyRent::class,
                 N\NonResidentSalary::class,
                 N\NonResidentPropertyGain::class,
                 W\Dividend::class,

@@ -80,6 +80,7 @@ Only a legal entity, enterprise, organization or individual entrepreneur is a ta
 | International transport or telecom, paid by an enterprise, organization or entrepreneur | 10% | 134.1.გ |
 | Oil and gas subcontracting | 4% | 134.1.დ |
 | Rent paid to an individual | Art. 81 rate | 134.1.დ¹ |
+| Rent paid to a company by someone who is not a tax agent | Not income tax: profit tax on the year (below) | 97.4, 97.11 |
 | Any other Georgian-source income | 10% | 134.1.ე |
 | Salary | Art. 81 rate | 134.1.ვ |
 | Interest, royalty, other income, payee in a preferential-tax country | 15% | 134.1¹ |
@@ -389,6 +390,7 @@ Georgia taxes profit when it leaves the company, not when it is earned (the "Est
 | Resident company or organization, or a non-resident's Georgian PE | Taxpayer | 96 |
 | Company receives income | Nothing until distributed | 97.1 |
 | Foreign company's Georgian-source income | Left to withholding (income tax) | 97.4, 134 |
+| Foreign company's rent from someone who is not a tax agent | Not withheld, but on the year (below) | 97.4, 97.11 |
 | Bank, credit union, microfinance or lender | Not on distributions, but on the year (below) | 97.12 |
 | Non-profit organization | Only on non-purpose costs and free supplies | 97.2 |
 | Ordinary business payment | Not taxed | 97.1 |
@@ -407,6 +409,20 @@ A bank, credit union, microfinance organization or lender (`Status::CreditInstit
 | Any other company closing its year | Not taxed on the year | 97.1 |
 
 Not modelled: computing gross income and deductions; which years' losses are still open (121.4, 122); the next year's current payments (155.1–5); a period ending with liquidation (153.3); insurers before 2024 (309.95¹).
+
+## A non-resident's rent from non-agents: the year (Art. 97.11, 98.1)
+
+A non-resident company without a Georgian PE paid rent for property by someone who is not a 154.1 tax agent closing its calendar year is the `CloseRentalYear` event: the year's gross income from a Georgian source, the deductions connected with earning it, and the losses still carried — all the caller's figures. The rent itself (a `Pay` of `Rent` or `ResidentialRent` from a non-agent) is not withheld or taxed on receipt (97.4).
+
+| Case | Profit tax | Article |
+|---|---|---|
+| Gross income less deductions, less losses still carried | 15%, not grossed up (97.10 names 97.1–3), declared and paid by 1 April of the next year | 97.11, 98.1, 153.1.გ |
+| Losses carried from earlier years | Set against the year's profit; what is left stays carried | 121.4 |
+| Deductions exceed gross income | Not taxed; the excess is carried forward for 5 years (10 under 122) | 121.4 |
+| A resident company, a Georgian PE, an organization or an individual | Not taxed on the year | 97.11 |
+| The same rent paid by a tax agent | Withheld at 10% (income tax) | 134.1.ე |
+
+Not modelled: computing gross income and deductions; which of the year's Georgian-source income 97.11 reaches beyond that rent; which years' losses are still open (121.4, 122); when 97.11 began (the rate is 98.1's).
 
 ## Gambling organizers: the month (Art. 97.9–9³, 98.5–6, 309.16)
 

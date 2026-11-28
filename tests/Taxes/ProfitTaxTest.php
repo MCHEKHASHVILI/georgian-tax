@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use GeorgianTax\Domain\Event\CloseGamblingMonth;
+use GeorgianTax\Domain\Event\CloseRentalYear;
 use GeorgianTax\Domain\Event\CloseYear;
 use GeorgianTax\Domain\Event\GamblingActivity as G;
 use GeorgianTax\Domain\Event\Expense;
@@ -16,6 +17,7 @@ use GeorgianTax\Domain\Income\ExemptProfit;
 use GeorgianTax\Domain\Income\IncomeKind as K;
 use GeorgianTax\Domain\Party\Party;
 use GeorgianTax\Domain\Party\PartyKind;
+use GeorgianTax\Domain\Party\Residency;
 use GeorgianTax\Domain\Party\Status;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\Collection;
 use Mchekhashvili\TaxLegislation\Engine\Outcome\NotTaxable;
@@ -317,6 +319,82 @@ test('a gambling months figures cannot be negative, nor its month out of range',
     expect(fn () => new CloseGamblingMonth(Party::company('hall'), 2026, 10, G::GamingHall, Money::GEL(1_000), Money::GEL(-1)))->toThrow(InvalidArgumentException::class)
         ->and(fn () => new CloseGamblingMonth(Party::company('hall'), 2026, 13, G::GamingHall, Money::GEL(1_000)))->toThrow(InvalidArgumentException::class);
 });
+
+/* ── A non-resident's rent from non-agents: the year (Art. 97.11, 98.1) ── */
+
+test('a non resident company paid rent by non agents pays fifteen percent of the years net income', function () {
+    $owner = Party::foreignCompany('gmbh', 'DE');
+    $outcome = $this->profit(new CloseRentalYear($owner, 2026, Money::GEL(24_000), Money::GEL(4_000)));
+
+    $this->assertTaxed($outcome, '98.1', '15%', base: 20_000, tax: 3_000); // 97.11; not grossed up: 97.10 is for 97.1–3
+    expect($outcome->collection)->toBe(Collection::AnnualDeclaration)
+        ->and($outcome->due->format('Y-m-d'))->toBe('2027-04-01') // 153.1.გ
+        ->and($outcome->taxpayer)->toBe($owner)
+        ->and($outcome->turnover())->toBeNull()
+        ->and(implode(' ', $outcome->notes))->toContain('(97.11)')->toContain('153.1.გ');
+});
+
+test('a non resident companys rent year sets earlier losses against the profit', function () {
+    $owner = Party::foreignCompany('gmbh', 'DE');
+
+    $partly = $this->profit(new CloseRentalYear($owner, 2026, Money::GEL(10_000), Money::GEL(2_000), lossesCarried: Money::GEL(3_000)));
+    $this->assertTaxed($partly, '98.1', '15%', base: 5_000, tax: 750);
+    expect(implode(' ', $partly->notes))->toContain('3000.00 GEL (121.4)');
+
+    $wholly = $this->profit(new CloseRentalYear($owner, 2026, Money::GEL(10_000), Money::GEL(2_000), lossesCarried: Money::GEL(9_000)));
+    $this->assertNotTaxable($wholly, '121.4');
+    expect($wholly->reason)->toContain('1000.00 GEL still carried');
+});
+
+test('a non resident companys loss year is not taxed and is carried forward', function () {
+    $outcome = $this->profit(new CloseRentalYear(Party::foreignCompany('gmbh', 'DE'), 2026, Money::GEL(5_000), Money::GEL(6_500)));
+
+    $this->assertNotTaxable($outcome, '121.4');
+    expect($outcome->reason)->toContain('excess of 1500.00 GEL')->toContain('Losses carried into 2027: 1500.00 GEL');
+});
+
+test('only a non resident enterprise without a georgian pe is taxed on its rent year', function () {
+    $withPe = new Party('branch', PartyKind::Company, Residency::NonResident, 'DE', hasGeorgianPE: true);
+    $foundation = new Party('fund', PartyKind::Organization, Residency::NonResident, 'DE');
+    $year = fn (Party $p) => $this->profit(new CloseRentalYear($p, 2026, Money::GEL(1_000), Money::GEL(0)));
+
+    $this->assertNotTaxable($year($this->company), '97.11');
+    $this->assertNotTaxable($year($withPe), '97.11');
+    $this->assertNotTaxable($year($foundation), '97.11');
+    $this->assertNotTaxable($year(Party::foreigner('john', 'US')), '97.11');
+    expect($year(Party::foreigner('john', 'US'))->reason)->toContain('134.1.დ¹');
+});
+
+test('no other tax is charged on a non resident companys rent year', function () {
+    $report = $this->taxEngine()->process(new CloseRentalYear(Party::foreignCompany('gmbh', 'DE'), 2026, Money::GEL(1_000), Money::GEL(0)));
+
+    expect($report->outcomes->keys()->all())->toContain('vat', 'income', 'excise', 'import', 'property');
+    foreach ($report->outcomes as $tax => $outcome) {
+        if ($tax !== 'profit') {
+            expect($outcome)->toBeInstanceOf(NotTaxable::class, "$tax: $outcome");
+        }
+    }
+    $this->assertTaxed($report->for('profit'), '98.1', '15%', tax: 150);
+});
+
+test('rent paid to a non resident company is declared on the year when the payer is not a tax agent', function () {
+    $owner = Party::foreignCompany('gmbh', 'DE');
+    $report = $this->process(new Pay(Party::person('tenant'), $owner, K::Rent, Money::GEL(1_000), $this->today));
+
+    $this->assertNotTaxable($report->for('profit'), '97.11');
+    $this->assertNotTaxable($report->for('income'), '97.11'); // not 134.1.ე: 97.4 sets 97.11 aside
+    expect($report->for('profit')->reason)->toContain('CloseRentalYear');
+
+    $byAgent = $this->process(new Pay($this->company, $owner, K::ResidentialRent, Money::GEL(1_000), $this->today));
+    $this->assertNotTaxable($byAgent->for('profit'), '97.4');
+    expect($byAgent->for('income'))->toBeInstanceOf(\Mchekhashvili\TaxLegislation\Engine\Outcome\Taxable::class)
+        ->and($byAgent->for('income')->basis()->ref)->toBe('134.1.ე')
+        ->and($byAgent->for('income')->collection)->toBe(Collection::WithheldAtSource);
+});
+
+test('a rent years figures cannot be negative', function () {
+    new CloseRentalYear(Party::foreignCompany('gmbh', 'DE'), 2026, Money::GEL(1_000), Money::GEL(0), lossesCarried: Money::GEL(-1));
+})->throws(InvalidArgumentException::class);
 
 /* ── Scope ── */
 
